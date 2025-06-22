@@ -1,0 +1,50 @@
+# LLM Provider Configuration
+providers:
+  anthropic:
+    models:
+      - claude-3-opus-20240229
+      - claude-3-sonnet-20240229
+      - claude-3-haiku-20240307
+    default: claude-3-sonnet-20240229
+    api_key_env: ANTHROPIC_API_KEY
+    
+  openai:
+    models:
+      - gpt-4-turbo-preview
+      - gpt-4
+      - gpt-3.5-turbo
+    default: gpt-4-turbo-preview
+    api_key_env: OPENAI_API_KEY
+    
+  xai:
+    models:
+      - grok-2
+      - grok-2-mini
+    default: grok-2
+    api_key_env: XAI_API_KEY
+    
+  gemini:
+    models:
+      - gemini-1.5-pro
+      - gemini-1.5-flash
+      - gemini-pro
+    default: gemini-1.5-pro
+    api_key_env: GOOGLE_API_KEY
+
+# Provider selection rules
+selection_rules:
+  complex_reasoning:
+    preferred: [anthropic, openai]
+    model_preference: [claude-3-opus-20240229, gpt-4]
+    
+  quick_tasks:
+    preferred: [anthropic, gemini]
+    model_preference: [claude-3-haiku-20240307, gemini-1.5-flash]
+    
+  code_generation:
+    preferred: [anthropic, openai]
+    model_preference: [claude-3-sonnet-20240229, gpt-4-turbo-preview]
+    
+  cost_optimized:
+    preferred: [gemini, anthropic]
+    model_preference: [gemini-1.5-flash, claude-3-haiku-20240307]
