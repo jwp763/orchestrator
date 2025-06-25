@@ -8,20 +8,30 @@
 # MAGIC %pip install pydantic pydantic-ai delta-spark pyyaml anthropic openai google-generativeai
 
 # COMMAND ----------
-
-import sys
-sys.path.append("..")
-
-from src.agent import get_agent
-from src.storage import DeltaManager, StateManager
-from src.models import AgentRequest, AgentContext
-from src.config import get_settings
 import json
+import os
+import sys
+from typing import Optional
+
+from pyspark.sql import SparkSession
+
+# Correct order for workspace path modification if needed, then other imports
+workspace_root = os.path.abspath(os.path.join(os.getcwd(), os.path.join(os.pardir, os.pardir, os.pardir)))
+if workspace_root not in sys.path:
+    print(f"Adding {workspace_root} to sys.path")
+    sys.path.insert(0, workspace_root)
+
+
+from src.agent import get_agent  # noqa: E402
+from src.config import get_settings  # noqa: E402
+from src.models import AgentRequest, AgentResponse  # noqa: E402
+from src.storage import DeltaManager, StateManager  # noqa: E402
 
 # COMMAND ----------
 
 # Initialize components
 settings = get_settings()
+spark = SparkSession.builder.appName("01-agent-interface").getOrCreate()
 delta_manager = DeltaManager(spark)
 state_manager = StateManager(delta_manager)
 agent = get_agent()
@@ -49,7 +59,7 @@ print(f"Started conversation: {conversation.conversation_id}")
 
 # MAGIC %md
 # MAGIC ## Chat with the Agent
-# MAGIC 
+# MAGIC
 # MAGIC Example requests:
 # MAGIC - "Create a project called 'Q1 Planning' with a due date of March 31"
 # MAGIC - "Add a task to review documentation with 2 hours estimate"
@@ -58,44 +68,46 @@ print(f"Started conversation: {conversation.conversation_id}")
 
 # COMMAND ----------
 
-def chat(message: str, task_type: str = None, preferred_provider: str = None):
+
+def chat(message: str, task_type: Optional[str] = None, preferred_provider: Optional[str] = None) -> AgentResponse:
     """Send a message to the agent"""
-    request = AgentRequest(
-        message=message,
-        task_type=task_type,
-        preferred_provider=preferred_provider
-    )
-    
+    request = AgentRequest(message=message, task_type=task_type, preferred_provider=preferred_provider)
+
     print(f"You: {message}")
     print("-" * 50)
-    
+
     # Process request
     response = agent.process_request_sync(request)
-    
+
     print(f"Agent ({response.provider_used}:{response.model_used}): {response.message}")
-    
+
     if response.actions:
         print("\nSuggested actions:")
         for i, action in enumerate(response.actions, 1):
             print(f"{i}. {action.action_type}: {json.dumps(action.parameters, indent=2)}")
-    
+
     if response.errors:
         print(f"\nErrors: {response.errors}")
-    
+
     # Save to conversation history
     state_manager.add_message(conversation.conversation_id, request, response)
-    
+
     return response
+
 
 # COMMAND ----------
 
 # Example: Create a project
-response = chat("Create a new project called 'Personal Task Manager Development' with a due date of end of next month. This is for building our task management system.")
+response = chat(
+    "Create a new project called 'Personal Task Manager Development' with a due date of end of next month. This is for building our task management system."
+)
 
 # COMMAND ----------
 
 # Example: Add tasks
-response = chat("Add the following tasks to the Personal Task Manager Development project: 1) Implement Motion API client (8 hours), 2) Create sync logic (6 hours), 3) Build reporting dashboard (10 hours)")
+response = chat(
+    "Add the following tasks to the Personal Task Manager Development project: 1) Implement Motion API client (8 hours), 2) Create sync logic (6 hours), 3) Build reporting dashboard (10 hours)"
+)
 
 # COMMAND ----------
 
@@ -105,9 +117,11 @@ response = chat("Show me all projects and their current status")
 # COMMAND ----------
 
 # Example: Use a specific provider
-response = chat("Analyze the complexity of integrating with Motion's API and suggest an implementation approach", 
-                task_type="complex_reasoning",
-                preferred_provider="anthropic")
+response = chat(
+    "Analyze the complexity of integrating with Motion's API and suggest an implementation approach",
+    task_type="complex_reasoning",
+    preferred_provider="anthropic",
+)
 
 # COMMAND ----------
 

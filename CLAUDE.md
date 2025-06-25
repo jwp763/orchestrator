@@ -26,6 +26,22 @@ This is a Databricks orchestrator project for personal task and project manageme
 - `00_setup.py` - Initialize database and tables
 - `01_agent_interface.py` - Interactive agent chat interface
 
+### Databricks Notebook Path Setup
+All Databricks notebooks that reference other files in the repo must include this path setup code at the top:
+
+```python
+import os
+import sys
+
+# Correct order for workspace path modification if needed, then other imports
+workspace_root = os.path.abspath(os.path.join(os.getcwd(), os.path.join(os.pardir, os.pardir, os.pardir)))
+if workspace_root not in sys.path:
+    print(f"Adding {workspace_root} to sys.path")
+    sys.path.insert(0, workspace_root)
+```
+
+This ensures proper module imports from the src/ directory when running in Databricks workspace.
+
 ## Documentation Structure
 - Main docs located in `/docs/` directory
 - See `docs/DOCUMENTATION_MAINTENANCE.md` for maintenance rules
