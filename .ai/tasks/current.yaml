@@ -1,6 +1,6 @@
 version: "1.0"
 project: "databricks-orchestrator"
-updated: "2025-07-08"
+updated: "2025-01-08"
 
 tasks:
   - id: "MVP-001"
@@ -52,46 +52,156 @@ tasks:
       - type: "integration"
         description: "Test that if one part of a patch fails, the entire transaction is rolled back and the database state remains unchanged."
 
-  - id: "MVP-003"
-    title: "Phase 2: Implement the Conversational Diff Agent"
+  - id: "MVP-003a"
+    title: "Phase 2: Implement AgentBase Class"
     status: "pending"
     priority: "high"
-    description: "Create the DiffAgent class that interacts with an LLM. This includes the logic for selecting prompts and parsing the JSON response into a Patch object."
+    description: "Create the abstract base class for all agents that handles common functionality like LLM communication, JSON parsing, validation, and retry logic."
     dependencies:
       - "MVP-001"
-    estimated_hours: 2
+    estimated_hours: 1
     deliverables:
-      - path: "src/agent/diff_agent.py"
+      - path: "src/agent/base.py"
         type: "file"
     acceptance_criteria:
-      - "DiffAgent class is created with a get_diff method."
-      - "The method correctly selects the prompt based on the 'mode' (Project/Task)."
-      - "The agent successfully calls the LLM, parses the JSON, and validates it against the Pydantic schema."
-      - "A retry mechanism for JSON parsing is implemented."
+      - "AgentBase abstract class is created with abstract method get_diff()."
+      - "Base class implements retry mechanism for JSON parsing (configurable retries, default 2)."
+      - "Base class handles Pydantic validation of patches."
+      - "Base class provides common LLM client initialization."
     tests:
       - type: "unit"
-        description: "Mock the LLM client and test that get_diff calls the LLM with the correctly formatted prompt for both 'Project' and 'Task' modes."
+        description: "Test retry mechanism with mocked LLM returning invalid JSON first, then valid JSON."
       - type: "unit"
-        description: "Test the JSON parsing and Pydantic validation logic, including the retry mechanism when the LLM returns invalid JSON."
+        description: "Test that validation errors are properly caught and retried with helpful error messages."
+      - type: "unit"
+        description: "Test that after max retries, appropriate exception is raised."
+
+  - id: "MVP-003b"
+    title: "Phase 2: Implement PlannerAgent"
+    status: "pending"
+    priority: "high"
+    description: "Create the PlannerAgent that takes high-level project ideas and returns ProjectPatch objects to create/update project metadata."
+    dependencies:
+      - "MVP-003a"
+    estimated_hours: 1
+    deliverables:
+      - path: "src/agent/planner_agent.py"
+        type: "file"
+    acceptance_criteria:
+      - "PlannerAgent extends AgentBase."
+      - "Agent takes raw project idea and returns ProjectPatch with project name, description, goals, and estimated total effort."
+      - "Agent uses 'replace' operations for updating project fields."
+      - "Agent can optionally add high-level milestones as initial tasks."
+    tests:
+      - type: "unit"
+        description: "Mock LLM and verify PlannerAgent builds correct prompt with project idea."
+      - type: "unit"
+        description: "Test that returned patch validates as ProjectPatch and contains expected operations."
+      - type: "integration"
+        description: "Test with sample project ideas and verify reasonable project structures are generated."
+
+  - id: "MVP-003c"
+    title: "Phase 2: Implement DecomposerAgent"
+    status: "pending"
+    priority: "high"
+    description: "Create the DecomposerAgent that splits projects or tasks into n approximately equal subtasks."
+    dependencies:
+      - "MVP-003a"
+    estimated_hours: 1
+    deliverables:
+      - path: "src/agent/decomposer_agent.py"
+        type: "file"
+    acceptance_criteria:
+      - "DecomposerAgent extends AgentBase."
+      - "Agent takes a Project/Task node and target number n (default 6)."
+      - "Agent returns patch with 'add' operations creating n children with balanced estimated_hours."
+      - "Agent preserves total effort by dividing parent's estimated_hours by n."
+      - "Works recursively - can decompose tasks into subtasks."
+    tests:
+      - type: "unit"
+        description: "Test decomposition of project with 60 hours into 6 tasks of ~10 hours each."
+      - type: "unit"
+        description: "Test decomposition of task into subtasks maintains effort balance."
+      - type: "unit"
+        description: "Verify patch contains only 'add' operations with correct paths."
+
+  - id: "MVP-003d"
+    title: "Phase 2: Implement EditorAgent"
+    status: "pending"
+    priority: "high"
+    description: "Create the EditorAgent that modifies existing projects or tasks based on user feedback and additional context."
+    dependencies:
+      - "MVP-003a"
+    estimated_hours: 1
+    deliverables:
+      - path: "src/agent/editor_agent.py"
+        type: "file"
+    acceptance_criteria:
+      - "EditorAgent extends AgentBase."
+      - "Agent takes current Project/Task state plus user instructions for modifications."
+      - "Agent returns minimal patch with 'replace', 'remove', or 'add' operations."
+      - "Agent preserves unrelated fields (only changes what user requests)."
+      - "Handles various edit types: update descriptions, change estimates, rename, reorder, etc."
+    tests:
+      - type: "unit"
+        description: "Test editing task description returns patch with single 'replace' operation."
+      - type: "unit"
+        description: "Test removing a field returns patch with 'remove' operation."
+      - type: "unit"
+        description: "Verify unmentioned fields are not included in patch."
+
+  - id: "MVP-003e"
+    title: "Phase 2: Implement AgentFactory"
+    status: "pending"
+    priority: "high"
+    description: "Create the factory class that instantiates the correct agent based on conversation intent."
+    dependencies:
+      - "MVP-003b"
+      - "MVP-003c"
+      - "MVP-003d"
+    estimated_hours: 0.5
+    deliverables:
+      - path: "src/agent/factory.py"
+        type: "file"
+    acceptance_criteria:
+      - "AgentFactory has get_agent(intent: Literal['plan', 'split', 'edit']) method."
+      - "Factory returns correct agent instance based on intent."
+      - "Factory handles LLM client injection for all agents."
+      - "Clear error handling for unknown intents."
+    tests:
+      - type: "unit"
+        description: "Test factory returns PlannerAgent for 'plan' intent."
+      - type: "unit"
+        description: "Test factory returns DecomposerAgent for 'split' intent."
+      - type: "unit"
+        description: "Test factory returns EditorAgent for 'edit' intent."
+      - type: "unit"
+        description: "Test factory raises ValueError for unknown intent."
 
   - id: "MVP-004"
     title: "Phase 2: Develop Agent Prompt Templates"
     status: "pending"
     priority: "high"
-    description: "Develop and refine the prompt templates for both 'Project Mode' and 'Task Mode'. These prompts are critical for guiding the LLM to produce the correct output."
+    description: "Develop and refine the prompt templates for all three agent types (Planner, Decomposer, Editor). These prompts are critical for guiding the LLM to produce the correct output."
     dependencies:
-      - "MVP-003"
+      - "MVP-003e"
     estimated_hours: 2
     deliverables:
       - path: "src/agent/prompts.py"
         type: "file"
     acceptance_criteria:
-      - "Project Mode prompt is created and instructs the AI on high-level planning."
-      - "Task Mode prompt is created and instructs the AI on detailed task decomposition."
-      - "Prompts are stored in a structured way (e.g., a dedicated prompts module)."
+      - "Planner prompt instructs AI on high-level project structuring and metadata generation."
+      - "Decomposer prompt instructs AI on balanced task splitting with effort preservation."
+      - "Editor prompt instructs AI on minimal, targeted modifications."
+      - "All prompts share common system instructions (JSON patch output only, RFC 6902 compliance)."
+      - "Prompts use Jinja2 templating for variable injection."
     tests:
       - type: "unit"
-        description: "Test that the prompt formatting function correctly injects context (e.g., project state, user message) into the template string."
+        description: "Test that the prompt formatting function correctly injects context (e.g., project state, user message) into each template."
+      - type: "unit"
+        description: "Verify all prompts include JSON schema examples and constraints."
+      - type: "unit"
+        description: "Test prompt size stays within reasonable token limits for various input sizes."
 
   - id: "MVP-005"
     title: "Phase 3: Build Backend API and Orchestration Logic"
@@ -100,7 +210,7 @@ tasks:
     description: "Set up the FastAPI application, define the API endpoints, and create the orchestration service that connects the agent and storage layers."
     dependencies:
       - "MVP-002"
-      - "MVP-003"
+      - "MVP-003e"
     estimated_hours: 3
     deliverables:
       - path: "src/main.py"
