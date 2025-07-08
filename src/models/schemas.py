@@ -1,245 +1,172 @@
-"""Delta Table Schemas for Databricks"""
+"""Core Pydantic schemas for the Orchestrator application."""
 
-USERS_SCHEMA = """
-CREATE TABLE IF NOT EXISTS users (
-    id STRING NOT NULL,
-    name STRING NOT NULL,
-    email STRING,
+from datetime import datetime, date
+from enum import Enum
+from typing import List, Optional, Dict, Any
+try:
+    from typing import Self  # Python 3.11+
+except ImportError:
+    from typing_extensions import Self  # Python < 3.11
+from pydantic import BaseModel, Field, model_validator
+from uuid import uuid4
 
-    -- Integration user IDs
-    motion_user_id STRING,
-    linear_user_id STRING,
-    notion_user_id STRING,
-    gitlab_user_id STRING,
 
-    -- Metadata
-    created_at TIMESTAMP NOT NULL,
-    updated_at TIMESTAMP NOT NULL,
-    is_active BOOLEAN DEFAULT TRUE,
+class TaskStatus(str, Enum):
+    """Task status enumeration."""
+    PENDING = "pending"
+    IN_PROGRESS = "in_progress"
+    COMPLETED = "completed"
+    CANCELLED = "cancelled"
 
-    PRIMARY KEY (id)
-)
-USING DELTA
-TBLPROPERTIES (
-    'delta.autoOptimize.optimizeWrite' = 'true',
-    'delta.autoOptimize.autoCompact' = 'true'
-)
-"""
 
-PROJECTS_SCHEMA = """
-CREATE TABLE IF NOT EXISTS projects (
-    id STRING NOT NULL,
-    name STRING NOT NULL,
-    description STRING,
-    status STRING NOT NULL,
-    priority INT NOT NULL,
-    tags ARRAY<STRING>,
+class ProjectStatus(str, Enum):
+    """Project status enumeration."""
+    ACTIVE = "active"
+    COMPLETED = "completed"
+    CANCELLED = "cancelled"
+    ON_HOLD = "on_hold"
 
-    -- Scheduling
-    due_date DATE,
-    start_date DATE,
 
-    -- Integration IDs
-    motion_project_id STRING,
-    linear_project_id STRING,
-    notion_page_id STRING,
-    gitlab_project_id STRING,
+class Priority(str, Enum):
+    """Priority enumeration."""
+    LOW = "low"
+    MEDIUM = "medium"
+    HIGH = "high"
+    URGENT = "urgent"
 
-    -- Metadata
-    created_at TIMESTAMP NOT NULL,
-    updated_at TIMESTAMP NOT NULL,
-    created_by STRING NOT NULL,
 
-    -- Computed fields
-    task_count INT DEFAULT 0,
-    completed_task_count INT DEFAULT 0,
+class Op(str, Enum):
+    """Operation type for patches."""
+    CREATE = "create"
+    UPDATE = "update"
+    DELETE = "delete"
 
-    PRIMARY KEY (id),
-    FOREIGN KEY (created_by) REFERENCES users(id)
-)
-USING DELTA
-TBLPROPERTIES (
-    'delta.autoOptimize.optimizeWrite' = 'true',
-    'delta.autoOptimize.autoCompact' = 'true'
-)
-"""
 
-TASKS_SCHEMA = """
-CREATE TABLE IF NOT EXISTS tasks (
-    id STRING NOT NULL,
-    project_id STRING NOT NULL,
-    title STRING NOT NULL,
-    description STRING,
-    status STRING NOT NULL,
-    priority STRING NOT NULL,
-    
-    -- Scheduling
-    due_date DATE,
-    estimated_hours DOUBLE,
-    actual_hours DOUBLE,
-    
-    -- Assignment
-    assignee STRING,
-    tags ARRAY<STRING>,
-    labels ARRAY<STRING>,
-    
-    -- Integration IDs
-    motion_task_id STRING,
-    linear_issue_id STRING,
-    notion_task_id STRING,
-    gitlab_issue_id STRING,
-    
-    -- Dependencies
-    depends_on ARRAY<STRING>,
-    blocks ARRAY<STRING>,
-    
-    -- Metadata
-    metadata MAP<STRING, STRING>,
-    created_at TIMESTAMP NOT NULL,
-    updated_at TIMESTAMP NOT NULL,
-    completed_at TIMESTAMP,
-    created_by STRING NOT NULL,
-    
-    -- Computed fields
-    is_overdue BOOLEAN DEFAULT FALSE,
-    days_until_due INT,
-    
-    PRIMARY KEY (id),
-    FOREIGN KEY (project_id) REFERENCES projects(id),
-    FOREIGN KEY (assignee) REFERENCES users(id),
-    FOREIGN KEY (created_by) REFERENCES users(id)
-)
-USING DELTA
-TBLPROPERTIES (
-    'delta.autoOptimize.optimizeWrite' = 'true',
-    'delta.autoOptimize.autoCompact' = 'true'
-)
-"""
+class Task(BaseModel):
+    """Task model."""
+    id: str = Field(default_factory=lambda: str(uuid4()))
+    project_id: str
+    title: str
+    description: Optional[str] = None
+    status: TaskStatus = TaskStatus.PENDING
+    priority: Priority = Priority.MEDIUM
+    due_date: Optional[date] = None
+    estimated_hours: Optional[float] = None
+    actual_hours: Optional[float] = None
+    assignee: Optional[str] = None
+    tags: List[str] = Field(default_factory=list)
+    labels: List[str] = Field(default_factory=list)
+    depends_on: List[str] = Field(default_factory=list)
+    blocks: List[str] = Field(default_factory=list)
+    metadata: Dict[str, Any] = Field(default_factory=dict)
+    created_at: datetime = Field(default_factory=datetime.now)
+    updated_at: datetime = Field(default_factory=datetime.now)
+    completed_at: Optional[datetime] = None
+    created_by: str
 
-INTEGRATIONS_SCHEMA = """
-CREATE TABLE IF NOT EXISTS integrations (
-    id STRING NOT NULL,
-    type STRING NOT NULL,
-    name STRING NOT NULL,
-    enabled BOOLEAN DEFAULT TRUE,
-    
-    -- Configuration (stored as encrypted JSON)
-    config_encrypted STRING NOT NULL,
-    
-    -- Sync settings
-    sync_enabled BOOLEAN DEFAULT TRUE,
-    sync_interval_minutes INT DEFAULT 60,
-    last_sync_at TIMESTAMP,
-    last_sync_status STRING,
-    
-    -- Metadata
-    created_at TIMESTAMP NOT NULL,
-    updated_at TIMESTAMP NOT NULL,
-    created_by STRING NOT NULL,
-    
-    PRIMARY KEY (id)
-)
-USING DELTA
-TBLPROPERTIES (
-    'delta.autoOptimize.optimizeWrite' = 'true',
-    'delta.autoOptimize.autoCompact' = 'true'
-)
-"""
+    @model_validator(mode='before')
+    @classmethod
+    def set_timestamps(cls, values: Dict[str, Any]) -> Dict[str, Any]:
+        # Always update the updated_at timestamp
+        values['updated_at'] = datetime.now()
+        
+        # Handle completed_at based on status
+        if isinstance(values, dict):
+            status = values.get('status')
+            if (status == TaskStatus.COMPLETED and 
+                not values.get('completed_at')):
+                values['completed_at'] = datetime.now()
+            elif status != TaskStatus.COMPLETED:
+                values['completed_at'] = None
+        return values
 
-AGENT_CONTEXTS_SCHEMA = """
-CREATE TABLE IF NOT EXISTS agent_contexts (
-    conversation_id STRING NOT NULL,
-    user_id STRING NOT NULL,
 
-    -- Conversation data (stored as JSON)
-    messages STRING NOT NULL,
+class Project(BaseModel):
+    """Project model."""
+    id: str = Field(default_factory=lambda: str(uuid4()))
+    name: str
+    description: Optional[str] = None
+    status: ProjectStatus = ProjectStatus.ACTIVE
+    priority: int = Field(default=3, ge=1, le=5)
+    tags: List[str] = Field(default_factory=list)
+    due_date: Optional[date] = None
+    start_date: Optional[date] = None
+    created_at: datetime = Field(default_factory=datetime.now)
+    updated_at: datetime = Field(default_factory=datetime.now)
+    created_by: str
+    tasks: List[Task] = Field(default_factory=list)
 
-    -- Current context
-    active_project_id STRING,
-    active_task_ids ARRAY<STRING>,
+    @model_validator(mode='before')
+    @classmethod
+    def set_updated_at(cls, values: Dict[str, Any]) -> Dict[str, Any]:
+        if isinstance(values, dict):
+            values['updated_at'] = datetime.now()
+        return values
 
-    -- Preferences
-    default_provider STRING,
-    default_integration STRING,
+    @property
+    def task_count(self) -> int:
+        return len(self.tasks)
 
-    -- Metadata
-    created_at TIMESTAMP NOT NULL,
-    updated_at TIMESTAMP NOT NULL,
-    total_tokens_used BIGINT DEFAULT 0,
+    @property
+    def completed_task_count(self) -> int:
+        return len([task for task in self.tasks 
+                   if task.status == TaskStatus.COMPLETED])
 
-    PRIMARY KEY (conversation_id),
-    FOREIGN KEY (user_id) REFERENCES users(id)
-)
-USING DELTA
-TBLPROPERTIES (
-    'delta.autoOptimize.optimizeWrite' = 'true',
-    'delta.autoOptimize.autoCompact' = 'true'
-)
-"""
 
-AGENT_LOGS_SCHEMA = """
-CREATE TABLE IF NOT EXISTS agent_logs (
-    id STRING NOT NULL,
-    conversation_id STRING NOT NULL,
-    timestamp TIMESTAMP NOT NULL,
-    
-    -- Request/Response
-    request STRING NOT NULL,
-    response STRING NOT NULL,
-    
-    -- Model info
-    provider_used STRING NOT NULL,
-    model_used STRING NOT NULL,
-    tokens_used INT,
-    response_time_ms INT,
-    
-    -- Execution
-    actions_executed ARRAY<STRING>,
-    errors ARRAY<STRING>,
-    
-    PRIMARY KEY (id),
-    FOREIGN KEY (conversation_id) REFERENCES agent_contexts(conversation_id)
-)
-USING DELTA
-PARTITIONED BY (DATE(timestamp))
-TBLPROPERTIES (
-    'delta.autoOptimize.optimizeWrite' = 'true',
-    'delta.autoOptimize.autoCompact' = 'true'
-)
-"""
+class TaskPatch(BaseModel):
+    """Task patch model for updates."""
+    op: Op
+    task_id: Optional[str] = None
+    project_id: Optional[str] = None
+    title: Optional[str] = None
+    description: Optional[str] = None
+    status: Optional[TaskStatus] = None
+    priority: Optional[Priority] = None
+    due_date: Optional[date] = None
+    estimated_hours: Optional[float] = None
+    actual_hours: Optional[float] = None
+    assignee: Optional[str] = None
+    tags: Optional[List[str]] = None
+    labels: Optional[List[str]] = None
+    depends_on: Optional[List[str]] = None
+    blocks: Optional[List[str]] = None
+    metadata: Optional[Dict[str, Any]] = None
 
-SYNC_LOGS_SCHEMA = """
-CREATE TABLE IF NOT EXISTS sync_logs (
-    id STRING NOT NULL,
-    integration_id STRING NOT NULL,
-    sync_type STRING NOT NULL,
-    started_at TIMESTAMP NOT NULL,
-    completed_at TIMESTAMP,
-    
-    -- Results
-    status STRING NOT NULL,
-    items_synced INT DEFAULT 0,
-    errors_count INT DEFAULT 0,
-    error_details ARRAY<STRING>,
-    
-    PRIMARY KEY (id),
-    FOREIGN KEY (integration_id) REFERENCES integrations(id)
-)
-USING DELTA
-PARTITIONED BY (DATE(started_at))
-TBLPROPERTIES (
-    'delta.autoOptimize.optimizeWrite' = 'true',
-    'delta.autoOptimize.autoCompact' = 'true'
-)
-"""
+    @model_validator(mode='after')
+    def validate_task_id_for_operation(self) -> Self:
+        if (self.op in [Op.UPDATE, Op.DELETE] and not self.task_id):
+            raise ValueError(f"task_id is required for {self.op} operation")
+        return self
 
-# All schemas for easy iteration
-ALL_SCHEMAS = {
-    "users": USERS_SCHEMA,
-    "projects": PROJECTS_SCHEMA,
-    "tasks": TASKS_SCHEMA,
-    "integrations": INTEGRATIONS_SCHEMA,
-    "agent_contexts": AGENT_CONTEXTS_SCHEMA,
-    "agent_logs": AGENT_LOGS_SCHEMA,
-    "sync_logs": SYNC_LOGS_SCHEMA
-}
+
+class ProjectPatch(BaseModel):
+    """Project patch model for updates."""
+    op: Op
+    project_id: Optional[str] = None
+    name: Optional[str] = None
+    description: Optional[str] = None
+    status: Optional[ProjectStatus] = None
+    priority: Optional[int] = Field(None, ge=1, le=5)
+    tags: Optional[List[str]] = None
+    due_date: Optional[date] = None
+    start_date: Optional[date] = None
+    tasks: Optional[List[TaskPatch]] = None
+
+    @model_validator(mode='after')
+    def validate_project_id_for_operation(self) -> Self:
+        if (self.op in [Op.UPDATE, Op.DELETE] and not self.project_id):
+            raise ValueError(f"project_id is required for {self.op} operation")
+        return self
+
+
+class Patch(BaseModel):
+    """Combined patch model for both projects and tasks."""
+    project_patches: List[ProjectPatch] = Field(default_factory=list)
+    task_patches: List[TaskPatch] = Field(default_factory=list)
+
+    @model_validator(mode='after')
+    def validate_patches_not_empty(self) -> Self:
+        # At least one patch must be provided
+        if not self.project_patches and not self.task_patches:
+            raise ValueError("At least one patch must be provided")
+        return self

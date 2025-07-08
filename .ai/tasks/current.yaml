@@ -1,0 +1,191 @@
+version: "1.0"
+project: "databricks-orchestrator"
+updated: "2025-07-08"
+
+tasks:
+  - id: "MVP-001"
+    title: "Phase 1: Define Core Pydantic Schemas"
+    status: "completed"
+    priority: "high"
+    description: "Define the core Pydantic schemas for Project, Task, and Patch objects. These are the foundational data structures for the entire application."
+    estimated_hours: 2
+    deliverables:
+      - path: "src/models/schemas.py"
+        type: "file"
+    acceptance_criteria:
+      - "Project and Task schemas are defined with all required fields."
+      - "Patch schemas (ProjectPatch, TaskPatch) and the Op enum are defined."
+      - "Pydantic models include validation for key fields (e.g., IDs, status enums)."
+    tests:
+      - type: "unit"
+        description: "Test successful creation of Project, Task, and Patch objects with valid data."
+      - type: "unit"
+        description: "Test Pydantic validation errors for each schema with invalid data (e.g., missing required fields, wrong data types)."
+      - type: "unit"
+        description: "Test serialization (.model_dump_json()) and deserialization (.model_validate_json()) for each schema."
+
+  - id: "MVP-002"
+    title: "Phase 1: Design and Implement Storage Interface"
+    status: "completed"
+    priority: "high"
+    description: "Design the abstract base class for the storage repository and implement it for SQL. This decouples the application from the database."
+    dependencies:
+      - "MVP-001"
+    estimated_hours: 3
+    deliverables:
+      - path: "src/storage/interface.py"
+        type: "file"
+      - path: "src/storage/sql_implementation.py"
+        type: "file"
+    acceptance_criteria:
+      - "StorageInterface defines all necessary CRUD and patch methods."
+      - "SQLStorage class implements all methods from the interface."
+      - "SQLAlchemy models for Project and Task are created with correct relationships."
+      - "Transactional logic is correctly handled in the apply_patch methods."
+    tests:
+      - type: "unit"
+        description: "Mock the SQLAlchemy session and test that each method in SQLStorage calls the correct session methods."
+      - type: "unit"
+        description: "Test the internal logic of apply_project_patch and apply_task_patch to ensure it correctly handles create, update, and delete operations."
+      - type: "integration"
+        description: "Using an in-memory SQLite database, test the full lifecycle: create project, add task, update task, delete task, and verify the state at each step."
+      - type: "integration"
+        description: "Test that if one part of a patch fails, the entire transaction is rolled back and the database state remains unchanged."
+
+  - id: "MVP-003"
+    title: "Phase 2: Implement the Conversational Diff Agent"
+    status: "pending"
+    priority: "high"
+    description: "Create the DiffAgent class that interacts with an LLM. This includes the logic for selecting prompts and parsing the JSON response into a Patch object."
+    dependencies:
+      - "MVP-001"
+    estimated_hours: 2
+    deliverables:
+      - path: "src/agent/diff_agent.py"
+        type: "file"
+    acceptance_criteria:
+      - "DiffAgent class is created with a get_diff method."
+      - "The method correctly selects the prompt based on the 'mode' (Project/Task)."
+      - "The agent successfully calls the LLM, parses the JSON, and validates it against the Pydantic schema."
+      - "A retry mechanism for JSON parsing is implemented."
+    tests:
+      - type: "unit"
+        description: "Mock the LLM client and test that get_diff calls the LLM with the correctly formatted prompt for both 'Project' and 'Task' modes."
+      - type: "unit"
+        description: "Test the JSON parsing and Pydantic validation logic, including the retry mechanism when the LLM returns invalid JSON."
+
+  - id: "MVP-004"
+    title: "Phase 2: Develop Agent Prompt Templates"
+    status: "pending"
+    priority: "high"
+    description: "Develop and refine the prompt templates for both 'Project Mode' and 'Task Mode'. These prompts are critical for guiding the LLM to produce the correct output."
+    dependencies:
+      - "MVP-003"
+    estimated_hours: 2
+    deliverables:
+      - path: "src/agent/prompts.py"
+        type: "file"
+    acceptance_criteria:
+      - "Project Mode prompt is created and instructs the AI on high-level planning."
+      - "Task Mode prompt is created and instructs the AI on detailed task decomposition."
+      - "Prompts are stored in a structured way (e.g., a dedicated prompts module)."
+    tests:
+      - type: "unit"
+        description: "Test that the prompt formatting function correctly injects context (e.g., project state, user message) into the template string."
+
+  - id: "MVP-005"
+    title: "Phase 3: Build Backend API and Orchestration Logic"
+    status: "pending"
+    priority: "medium"
+    description: "Set up the FastAPI application, define the API endpoints, and create the orchestration service that connects the agent and storage layers."
+    dependencies:
+      - "MVP-002"
+      - "MVP-003"
+    estimated_hours: 3
+    deliverables:
+      - path: "src/main.py"
+        type: "file"
+      - path: "src/orchestration/api.py"
+        type: "file"
+      - path: "src/orchestration/chat_service.py"
+        type: "file"
+    acceptance_criteria:
+      - "FastAPI app is initialized in src/main.py."
+      - "API endpoints for projects, tasks, and patches are defined in src/orchestration/api.py."
+      - "Chat service in src/orchestration/chat_service.py correctly handles the logic of calling the agent and storage layer."
+    tests:
+      - type: "unit"
+        description: "With a mocked DiffAgent and StorageInterface, test that the chat_service correctly calls the agent and then the storage layer's apply_patch method."
+      - type: "integration"
+        description: "Using FastAPI's TestClient, test the POST /projects endpoint and verify a project is created in the test database."
+      - type: "integration"
+        description: "Test the POST /projects/{project_id}/chat endpoint, mocking the DiffAgent to return a predictable patch, and verify the patch is applied to the database."
+      - type: "integration"
+        description: "Test API error handling for invalid requests or when underlying services (agent, storage) fail."
+
+  - id: "MVP-006"
+    title: "Phase 4: Create Front-End HTML and JS Structure"
+    status: "pending"
+    priority: "medium"
+    description: "Create the basic file structure for the front-end, including the main HTML file and separate JavaScript files for UI, API, and main logic."
+    estimated_hours: 1
+    deliverables:
+      - path: "frontend/index.html"
+        type: "file"
+      - path: "frontend/ui.js"
+        type: "file"
+      - path: "frontend/api.js"
+        type: "file"
+      - path: "frontend/main.js"
+        type: "file"
+    acceptance_criteria:
+      - "The frontend/ directory is created."
+      - "index.html contains the core divs for project view, chat, and diff view."
+      - "Empty JavaScript files for ui.js, api.js, and main.js are created."
+    tests:
+      - type: "static"
+        description: "Run a linter (e.g., ESLint, Prettier) to check for valid HTML and JavaScript syntax."
+
+  - id: "MVP-007"
+    title: "Phase 4: Implement Front-End Rendering and API Logic"
+    status: "pending"
+    priority: "medium"
+    description: "Implement the JavaScript logic for rendering the project hierarchy, displaying diffs, and communicating with the backend API."
+    dependencies:
+      - "MVP-006"
+    estimated_hours: 2
+    deliverables:
+      - path: "frontend/ui.js"
+        type: "file"
+      - path: "frontend/api.js"
+        type: "file"
+    acceptance_criteria:
+      - "renderProject function correctly builds the nested list view."
+      - "renderDiff function pretty-prints the JSON patch."
+      - "API functions for all backend endpoints are implemented using fetch."
+    tests:
+      - type: "unit"
+        description: "Using Jest and jsdom, test that renderProject generates the correct HTML structure from sample project JSON."
+      - type: "unit"
+        description: "Using a mock fetch, test that the api.js functions call the correct backend URLs with the right method and body."
+
+  - id: "MVP-008"
+    title: "Phase 4: Wire Up Front-End User Interaction"
+    status: "pending"
+    priority: "medium"
+    description: "Implement the main event handling logic for the front-end, including chat submission and patch approval."
+    dependencies:
+      - "MVP-007"
+    estimated_hours: 2
+    deliverables:
+      - path: "frontend/main.js"
+        type: "file"
+    acceptance_criteria:
+      - "Chat submission correctly calls the API and renders the returned diff."
+      - "Accepting a diff calls the apply-patch endpoint and refreshes the project view."
+      - "The application correctly handles the initial state (creating a new project)."
+    tests:
+      - type: "e2e"
+        description: "Using Playwright or Selenium, run a full user flow: start the backend, open the UI, create a project via chat, accept the diff, and verify the UI updates."
+      - type: "e2e"
+        description: "Verify that after the UI updates, the data is correctly persisted by checking the state of the test database."

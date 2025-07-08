@@ -1,4 +1,4 @@
-from .delta_manager import DeltaManager
-from .state_manager import StateManager
+from .interface import StorageInterface
+from .sql_implementation import SQLStorage
 
-__all__ = ["DeltaManager", "StateManager"]
+__all__ = ["StorageInterface", "SQLStorage"]

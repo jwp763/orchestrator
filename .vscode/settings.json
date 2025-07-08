@@ -13,5 +13,9 @@
         "source.organizeImports": "explicit"
     },
     "python.defaultInterpreterPath": "./venv/bin/python",
-    "python.terminal.activateEnvironment": true
+    "python.terminal.activateEnvironment": true,
+    "python.linting.flake8Args": ["--max-line-length=120"],
+    "python.linting.mypyArgs": ["--config-file=pyproject.toml"],
+    "editor.wordWrap": "wordWrapColumn",
+    "editor.wordWrapColumn": 120
 }
