@@ -1,7 +1,7 @@
 from datetime import datetime, date
 from typing import Optional, List, Dict, Any
 from enum import Enum
-from pydantic import BaseModel, Field, validator
+from pydantic import BaseModel, Field, field_validator, ConfigDict
 
 
 class TaskStatus(str, Enum):
@@ -83,7 +83,8 @@ class TaskBase(BaseModel):
     # Metadata
     metadata: Dict[str, Any] = Field(default_factory=dict, description="Additional metadata")
     
-    @validator('estimated_minutes')
+    @field_validator('estimated_minutes')
+    @classmethod
     def validate_estimated_minutes(cls, v):
         """
         Validate that estimated_minutes is positive when provided.
@@ -101,7 +102,8 @@ class TaskBase(BaseModel):
             raise ValueError('estimated_minutes must be positive')
         return v
     
-    @validator('actual_minutes')
+    @field_validator('actual_minutes')
+    @classmethod
     def validate_actual_minutes(cls, v):
         """
         Validate that actual_minutes is non-negative when provided.
@@ -119,7 +121,8 @@ class TaskBase(BaseModel):
             raise ValueError('actual_minutes cannot be negative')
         return v
     
-    @validator('depth')
+    @field_validator('depth')
+    @classmethod
     def validate_depth(cls, v):
         """
         Validate that task depth is within allowed range (0-5).
@@ -139,7 +142,8 @@ class TaskBase(BaseModel):
             raise ValueError('depth cannot exceed 5 levels')
         return v
     
-    @validator('dependencies')
+    @field_validator('dependencies')
+    @classmethod
     def validate_dependencies(cls, v):
         """
         Validate that dependency IDs are valid non-empty strings.
@@ -241,19 +245,22 @@ class TaskUpdate(BaseModel):
     gitlab_issue_id: Optional[str] = None
     metadata: Optional[Dict[str, Any]] = None
     
-    @validator('estimated_minutes')
+    @field_validator('estimated_minutes')
+    @classmethod
     def validate_estimated_minutes(cls, v):
         if v is not None and v <= 0:
             raise ValueError('estimated_minutes must be positive')
         return v
     
-    @validator('actual_minutes')
+    @field_validator('actual_minutes')
+    @classmethod
     def validate_actual_minutes(cls, v):
         if v is not None and v < 0:
             raise ValueError('actual_minutes cannot be negative')
         return v
     
-    @validator('depth')
+    @field_validator('depth')
+    @classmethod
     def validate_depth(cls, v):
         if v is not None and (v < 0 or v > 5):
             raise ValueError('depth must be between 0 and 5')
@@ -371,5 +378,4 @@ class Task(TaskBase):
         # This is a placeholder - actual implementation would require recursive database query
         return self.estimated_minutes
     
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)

@@ -2,7 +2,7 @@ import os
 from typing import Dict, Any, Optional, List
 from functools import lru_cache
 import yaml
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, ConfigDict
 from pydantic_settings import BaseSettings
 
 
@@ -97,16 +97,16 @@ class Settings(BaseSettings):
     providers_config_path: str = Field("configs/providers.yaml", description="Path to providers config")
     
     # Integration settings
-    motion_api_key: Optional[str] = Field(None, env="MOTION_API_KEY")
-    linear_api_key: Optional[str] = Field(None, env="LINEAR_API_KEY")
-    gitlab_token: Optional[str] = Field(None, env="GITLAB_TOKEN")
-    notion_token: Optional[str] = Field(None, env="NOTION_TOKEN")
+    motion_api_key: Optional[str] = Field(None, description="Motion API key")
+    linear_api_key: Optional[str] = Field(None, description="Linear API key")
+    gitlab_token: Optional[str] = Field(None, description="GitLab token")
+    notion_token: Optional[str] = Field(None, description="Notion token")
     
     # LLM API keys
-    anthropic_api_key: Optional[str] = Field(None, env="ANTHROPIC_API_KEY")
-    openai_api_key: Optional[str] = Field(None, env="OPENAI_API_KEY")
-    xai_api_key: Optional[str] = Field(None, env="XAI_API_KEY")
-    google_api_key: Optional[str] = Field(None, env="GOOGLE_API_KEY")
+    anthropic_api_key: Optional[str] = Field(None, description="Anthropic API key")
+    openai_api_key: Optional[str] = Field(None, description="OpenAI API key")
+    xai_api_key: Optional[str] = Field(None, description="XAI API key")
+    google_api_key: Optional[str] = Field(None, description="Google API key")
     
     # Agent settings
     max_conversation_history: int = Field(20, description="Max messages to keep in context")
@@ -118,11 +118,12 @@ class Settings(BaseSettings):
     sync_interval_minutes: int = Field(30, description="Default sync interval")
     
     # Security
-    encryption_key: Optional[str] = Field(None, env="ORCHESTRATOR_ENCRYPTION_KEY")
+    encryption_key: Optional[str] = Field(None, description="Encryption key for sensitive data")
     
-    class Config:
-        env_file = ".env"
-        env_file_encoding = "utf-8"
+    model_config = ConfigDict(
+        env_file=".env",
+        env_file_encoding="utf-8"
+    )
     
     @property
     def providers(self) -> ProvidersConfig:

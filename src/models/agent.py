@@ -1,6 +1,6 @@
 from datetime import datetime
 from typing import Optional, List, Dict, Any, Literal
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, ConfigDict
 
 
 class AgentRequest(BaseModel):
@@ -58,5 +58,4 @@ class AgentContext(BaseModel):
     updated_at: datetime = Field(..., description="Last update time")
     total_tokens_used: int = Field(0, description="Total tokens used in conversation")
     
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)

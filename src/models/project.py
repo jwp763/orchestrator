@@ -1,7 +1,7 @@
 from datetime import datetime, date
 from typing import Optional, List
 from enum import Enum
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, ConfigDict
 
 
 class ProjectStatus(str, Enum):
@@ -90,5 +90,4 @@ class Project(ProjectBase):
     task_count: int = Field(0, description="Number of tasks in project")
     completed_task_count: int = Field(0, description="Number of completed tasks")
     
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)

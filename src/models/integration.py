@@ -1,7 +1,7 @@
 from datetime import datetime
 from typing import Optional, Dict, Any
 from enum import Enum
-from pydantic import BaseModel, Field, SecretStr
+from pydantic import BaseModel, Field, ConfigDict, SecretStr
 
 
 class IntegrationType(str, Enum):
@@ -39,5 +39,4 @@ class Integration(BaseModel):
     updated_at: datetime = Field(..., description="Last update timestamp")
     created_by: str = Field(..., description="Creator ID or name")
     
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
