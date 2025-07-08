@@ -2,7 +2,8 @@ from sqlalchemy import create_engine, Column, String, Integer, DateTime, Foreign
 from sqlalchemy.orm import relationship, sessionmaker, declarative_base
 from datetime import datetime
 
-from src.models.schemas import ProjectStatus, TaskStatus, Priority
+from src.models.project import ProjectStatus, ProjectPriority
+from src.models.task import TaskStatus, TaskPriority
 
 Base = declarative_base()
 
@@ -12,8 +13,8 @@ class Project(Base):
     id = Column(String, primary_key=True)
     name = Column(String, nullable=False)
     description = Column(Text)
-    status = Column(Enum(ProjectStatus), default=ProjectStatus.ACTIVE)
-    priority = Column(Integer, default=3)
+    status = Column(Enum(ProjectStatus), default=ProjectStatus.PLANNING)
+    priority = Column(Enum(ProjectPriority), default=ProjectPriority.MEDIUM)
     tags = Column(JSON, default=list)
     due_date = Column(Date)
     start_date = Column(Date)
@@ -30,20 +31,41 @@ class Task(Base):
     project_id = Column(String, ForeignKey('projects.id'), nullable=False)
     title = Column(String, nullable=False)
     description = Column(Text)
-    status = Column(Enum(TaskStatus), default=TaskStatus.PENDING)
-    priority = Column(Enum(Priority), default=Priority.MEDIUM)
+    status = Column(Enum(TaskStatus), default=TaskStatus.TODO)
+    priority = Column(Enum(TaskPriority), default=TaskPriority.MEDIUM)
+    
+    # Hierarchical fields
+    parent_id = Column(String, ForeignKey('tasks.id'))
+    estimated_minutes = Column(Integer)
+    actual_minutes = Column(Integer)
+    depth = Column(Integer, default=0)
+    dependencies = Column(JSON, default=list)
+    
+    # Scheduling
     due_date = Column(Date)
-    estimated_hours = Column(Float)
-    actual_hours = Column(Float)
+    
+    # Assignment
     assignee = Column(String)
     tags = Column(JSON, default=list)
     labels = Column(JSON, default=list)
-    depends_on = Column(JSON, default=list)
-    blocks = Column(JSON, default=list)
+    
+    # Integration references
+    motion_task_id = Column(String)
+    linear_issue_id = Column(String)
+    notion_task_id = Column(String)
+    gitlab_issue_id = Column(String)
+    
+    # Metadata
     task_metadata = Column(JSON, default=dict)
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     completed_at = Column(DateTime)
     created_by = Column(String, nullable=False)
+    
+    # Computed fields (these would be calculated dynamically, not stored)
+    # is_overdue = Column(Boolean, default=False)
+    # days_until_due = Column(Integer)
 
     project = relationship("Project", back_populates="tasks")
+    parent = relationship("Task", remote_side=[id])
+    children = relationship("Task")

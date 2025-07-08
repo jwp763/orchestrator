@@ -9,10 +9,11 @@ from sqlalchemy.exc import SQLAlchemyError
 
 from src.storage.interface import StorageInterface
 from src.storage.sql_models import Base, Project as SQLProject, Task as SQLTask
-from src.models.schemas import (
-    Project, Task, Patch, ProjectPatch, TaskPatch, Op,
-    ProjectStatus, TaskStatus, Priority
+from src.models import (
+    Project, Task, ProjectStatus, TaskStatus, ProjectPriority
 )
+from src.models.task import TaskPriority
+from src.models.patches import Patch, ProjectPatch, TaskPatch, Op
 
 
 class SQLStorage(StorageInterface):
@@ -62,14 +63,19 @@ class SQLStorage(StorageInterface):
             description=sql_task.description,
             status=sql_task.status,
             priority=sql_task.priority,
+            parent_id=sql_task.parent_id,
+            estimated_minutes=sql_task.estimated_minutes,
+            actual_minutes=sql_task.actual_minutes,
+            depth=sql_task.depth or 0,
+            dependencies=sql_task.dependencies or [],
             due_date=sql_task.due_date,
-            estimated_hours=sql_task.estimated_hours,
-            actual_hours=sql_task.actual_hours,
             assignee=sql_task.assignee,
             tags=sql_task.tags or [],
             labels=sql_task.labels or [],
-            depends_on=sql_task.depends_on or [],
-            blocks=sql_task.blocks or [],
+            motion_task_id=sql_task.motion_task_id,
+            linear_issue_id=sql_task.linear_issue_id,
+            notion_task_id=sql_task.notion_task_id,
+            gitlab_issue_id=sql_task.gitlab_issue_id,
             metadata=sql_task.task_metadata or {},
             created_at=sql_task.created_at,
             updated_at=sql_task.updated_at,
@@ -102,14 +108,19 @@ class SQLStorage(StorageInterface):
             description=task.description,
             status=task.status,
             priority=task.priority,
+            parent_id=task.parent_id,
+            estimated_minutes=task.estimated_minutes,
+            actual_minutes=task.actual_minutes,
+            depth=task.depth,
+            dependencies=task.dependencies,
             due_date=task.due_date,
-            estimated_hours=task.estimated_hours,
-            actual_hours=task.actual_hours,
             assignee=task.assignee,
             tags=task.tags,
             labels=task.labels,
-            depends_on=task.depends_on,
-            blocks=task.blocks,
+            motion_task_id=task.motion_task_id,
+            linear_issue_id=task.linear_issue_id,
+            notion_task_id=task.notion_task_id,
+            gitlab_issue_id=task.gitlab_issue_id,
             task_metadata=task.metadata,
             created_at=task.created_at,
             updated_at=task.updated_at,
@@ -214,14 +225,19 @@ class SQLStorage(StorageInterface):
             sql_task.description = task.description
             sql_task.status = task.status
             sql_task.priority = task.priority
+            sql_task.parent_id = task.parent_id
+            sql_task.estimated_minutes = task.estimated_minutes
+            sql_task.actual_minutes = task.actual_minutes
+            sql_task.depth = task.depth
+            sql_task.dependencies = task.dependencies
             sql_task.due_date = task.due_date
-            sql_task.estimated_hours = task.estimated_hours
-            sql_task.actual_hours = task.actual_hours
             sql_task.assignee = task.assignee
             sql_task.tags = task.tags
             sql_task.labels = task.labels
-            sql_task.depends_on = task.depends_on
-            sql_task.blocks = task.blocks
+            sql_task.motion_task_id = task.motion_task_id
+            sql_task.linear_issue_id = task.linear_issue_id
+            sql_task.notion_task_id = task.notion_task_id
+            sql_task.gitlab_issue_id = task.gitlab_issue_id
             sql_task.task_metadata = task.metadata
             sql_task.updated_at = datetime.now()
             sql_task.completed_at = task.completed_at
@@ -291,7 +307,7 @@ class SQLStorage(StorageInterface):
                     name=patch.name,
                     description=patch.description,
                     status=patch.status or ProjectStatus.ACTIVE,
-                    priority=patch.priority or 3,
+                    priority=patch.priority or ProjectPriority.MEDIUM,
                     tags=patch.tags or [],
                     due_date=patch.due_date,
                     start_date=patch.start_date,
@@ -350,16 +366,15 @@ class SQLStorage(StorageInterface):
                     project_id=patch.project_id,
                     title=patch.title,
                     description=patch.description,
-                    status=patch.status or TaskStatus.PENDING,
-                    priority=patch.priority or Priority.MEDIUM,
+                    status=patch.status or TaskStatus.TODO,
+                    priority=patch.priority or TaskPriority.MEDIUM,
                     due_date=patch.due_date,
-                    estimated_hours=patch.estimated_hours,
-                    actual_hours=patch.actual_hours,
+                    estimated_minutes=patch.estimated_minutes,
+                    actual_minutes=patch.actual_minutes,
                     assignee=patch.assignee,
                     tags=patch.tags or [],
                     labels=patch.labels or [],
-                    depends_on=patch.depends_on or [],
-                    blocks=patch.blocks or [],
+                    dependencies=patch.dependencies or [],
                     metadata=patch.metadata or {},
                     created_by="system"  # TODO: Get from context
                 )
@@ -386,20 +401,18 @@ class SQLStorage(StorageInterface):
                     existing.priority = patch.priority
                 if patch.due_date is not None:
                     existing.due_date = patch.due_date
-                if patch.estimated_hours is not None:
-                    existing.estimated_hours = patch.estimated_hours
-                if patch.actual_hours is not None:
-                    existing.actual_hours = patch.actual_hours
+                if patch.estimated_minutes is not None:
+                    existing.estimated_minutes = patch.estimated_minutes
+                if patch.actual_minutes is not None:
+                    existing.actual_minutes = patch.actual_minutes
                 if patch.assignee is not None:
                     existing.assignee = patch.assignee
                 if patch.tags is not None:
                     existing.tags = patch.tags
                 if patch.labels is not None:
                     existing.labels = patch.labels
-                if patch.depends_on is not None:
-                    existing.depends_on = patch.depends_on
-                if patch.blocks is not None:
-                    existing.blocks = patch.blocks
+                if patch.dependencies is not None:
+                    existing.dependencies = patch.dependencies
                 if patch.metadata is not None:
                     existing.metadata = patch.metadata
                 

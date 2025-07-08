@@ -1,3 +1,6 @@
 
 .databricks
 venv
+.env
+.coverage
+.vscode/

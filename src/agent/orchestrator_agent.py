@@ -7,18 +7,16 @@ import logging
 
 from pydantic import BaseModel, Field
 from pydantic_ai import Agent
-from pydantic_ai.models import (
-    AnthropicModel,
-    OpenAIModel,
-    GeminiModel,
-    GroqModel,
-    Model
-)
+from pydantic_ai.models import Model
+from pydantic_ai.models.anthropic import AnthropicModel
+from pydantic_ai.models.openai import OpenAIModel
+from pydantic_ai.models.gemini import GeminiModel
+from pydantic_ai.models.groq import GroqModel
 
 from ..models import AgentRequest, AgentResponse, AgentAction
 from ..config import get_settings
-from .prompts import SYSTEM_PROMPT, get_task_prompt
-from .tools import AgentTools
+# from .prompts import SYSTEM_PROMPT, get_task_prompt
+# from .tools import AgentTools
 
 
 logger = logging.getLogger(__name__)
@@ -161,8 +159,8 @@ class OrchestratorAgent:
             # Create agent with structured output
             self._agents[cache_key] = Agent(
                 model=model,
-                result_type=AgentOutput,
-                system_prompt=SYSTEM_PROMPT,
+                output_type=AgentOutput,
+                system_prompt="You are a helpful AI assistant for project management.",
                 deps_type=None
             )
         
@@ -218,10 +216,8 @@ class OrchestratorAgent:
         agent = self._get_agent(provider, model)
         
         # Build prompt
-        if request.task_type:
-            prompt = get_task_prompt(request.task_type, request.message)
-        else:
-            prompt = request.message
+        # For now, just use the message directly
+        prompt = request.message
         
         # Add context if provided
         if request.context:
@@ -239,7 +235,7 @@ class OrchestratorAgent:
             
             # Convert tool calls to actions
             actions = []
-            for tool_call in result.data.tool_calls:
+            for tool_call in result.output.tool_calls:
                 actions.append(AgentAction(
                     action_type=tool_call.tool,
                     parameters=tool_call.parameters,
@@ -248,9 +244,9 @@ class OrchestratorAgent:
             
             # Build response
             return AgentResponse(
-                message=result.data.message,
+                message=result.output.message,
                 actions=actions,
-                confidence=result.data.confidence,
+                confidence=result.output.confidence,
                 provider_used=provider,
                 model_used=model,
                 tokens_used=getattr(result, "tokens_used", None),

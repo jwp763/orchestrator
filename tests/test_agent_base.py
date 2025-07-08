@@ -7,7 +7,7 @@ from unittest.mock import Mock, AsyncMock, patch
 from datetime import datetime
 
 from src.agent.base import AgentBase, AgentError, JSONParsingError, ValidationError
-from src.models.schemas import Patch, ProjectPatch, TaskPatch, Op
+from src.models.patches import Patch, ProjectPatch, TaskPatch, Op
 
 
 class TestAgentBase:

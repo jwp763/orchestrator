@@ -3,7 +3,8 @@
 from abc import ABC, abstractmethod
 from typing import List, Optional
 
-from src.models.schemas import Project, Task, Patch, ProjectPatch, TaskPatch
+from src.models import Project, Task
+from src.models.patches import Patch, ProjectPatch, TaskPatch
 
 
 class StorageInterface(ABC):
