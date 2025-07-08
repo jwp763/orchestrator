@@ -3,10 +3,10 @@
 import json
 from typing import Any, Dict, List, Optional, Union
 
+from ..models.patch import Op, Patch, ProjectPatch, TaskPatch
+from ..models.project import ProjectPriority, ProjectStatus
+from ..models.task import TaskPriority, TaskStatus
 from .base import AgentBase
-from ..models.patch import Patch, ProjectPatch, TaskPatch, Op
-from ..models.project import ProjectStatus, ProjectPriority
-from ..models.task import TaskStatus, TaskPriority
 
 
 class PlannerAgent(AgentBase):
@@ -70,7 +70,7 @@ You must return a JSON object with this exact structure:
       "status": "planning",
       "priority": "medium",
       "tags": ["relevant", "tags"],
-      "estimated_total_hours": 40
+      "estimated_total_minutes": 40
     }
   ],
   "task_patches": [
@@ -86,7 +86,7 @@ VALID VALUES:
 
 EFFORT ESTIMATION GUIDELINES:
 - Small projects: 8-40 hours
-- Medium projects: 40-200 hours  
+- Medium projects: 40-200 hours
 - Large projects: 200-1000+ hours
 - Always provide realistic estimates based on project complexity"""
 

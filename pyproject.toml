@@ -1,6 +1,6 @@
 [build-system]
-requires = ["setuptools>=61.0", "wheel"]
-build-backend = "setuptools.build_meta"
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
 
 [project]
 name = "databricks-orchestrator"
@@ -8,7 +8,7 @@ version = "0.1.0"
 description = "Databricks Orchestrator with Agent Interface"
 authors = [{ name = "Your Name", email = "your.email@example.com" }]
 readme = "README.md"
-requires-python = ">=3.8"
+requires-python = ">=3.9"
 dependencies = [
     "pydantic>=2.0.0",
     "databricks-sdk>=0.8.0",
@@ -21,8 +21,8 @@ dev = [
     "black>=23.0.0",
     "flake8>=6.0.0",
     "isort>=5.12.0",
-    "mypy>=1.0.0",
-    "pytest>=7.0.0",
+    "mypy>=1.10.0",
+    "pytest>=8.2.2",
     "pytest-cov>=4.0.0",
 ]
 
@@ -98,21 +98,12 @@ exclude = [
     ".tox",
 ]
 
-
 [tool.mypy]
-python_version = "3.8"
-warn_return_any = true
-warn_unused_configs = true
-disallow_untyped_defs = true
-disallow_incomplete_defs = true
-check_untyped_defs = true
-disallow_untyped_decorators = true
-no_implicit_optional = true
+plugins = ["pydantic.mypy"]
+follow_imports = "silent"
+ignore_missing_imports = true
 warn_redundant_casts = true
 warn_unused_ignores = true
-warn_no_return = true
-warn_unreachable = true
-strict_equality = true
 
 [[tool.mypy.overrides]]
 module = ["databricks.*", "pyspark.*"]
@@ -130,3 +121,8 @@ addopts = [
     "--cov-report=term-missing",
     "--cov-report=html",
 ]
+
+[tool.pydantic-mypy]
+init_forbid_extra = true
+init_typed = true
+warn_untyped_fields = true

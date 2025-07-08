@@ -63,6 +63,7 @@ class ProjectPatch(BaseModel):
     tags: Optional[List[str]] = None
     due_date: Optional[date] = None
     start_date: Optional[date] = None
+    estimated_total_minutes: Optional[int] = None
 
     # Integration references
     motion_project_id: Optional[str] = None

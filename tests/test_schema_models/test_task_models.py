@@ -1,10 +1,11 @@
 """Comprehensive tests for task models."""
 
-import pytest
 from datetime import date, datetime
 from uuid import uuid4
 
-from src.models.task import Task, TaskBase, TaskCreate, TaskUpdate, TaskStatus, TaskPriority
+import pytest
+
+from src.models.task import Task, TaskBase, TaskCreate, TaskPriority, TaskStatus, TaskUpdate
 
 
 class TestTaskStatus:
@@ -204,7 +205,7 @@ class TestTaskBase:
 
         # Non-string dependency should raise error (Pydantic type validation)
         with pytest.raises(ValueError, match="Input should be a valid string"):
-            TaskBase(title="Test", project_id=project_id, dependencies=[123])  # type: ignore
+            TaskBase(title="Test", project_id=project_id, dependencies=[123])
 
     def test_task_base_estimated_hours_property(self):
         """Test estimated_hours computed property."""
@@ -250,13 +251,13 @@ class TestTaskBase:
         """Test invalid status value."""
         project_id = str(uuid4())
         with pytest.raises(ValueError):
-            TaskBase(title="Test", project_id=project_id, status="invalid_status")  # type: ignore
+            TaskBase(title="Test", project_id=project_id, status="invalid_status")
 
     def test_task_base_invalid_priority(self):
         """Test invalid priority value."""
         project_id = str(uuid4())
         with pytest.raises(ValueError):
-            TaskBase(title="Test", project_id=project_id, priority="invalid_priority")  # type: ignore
+            TaskBase(title="Test", project_id=project_id, priority="invalid_priority")
 
     def test_task_base_serialization(self):
         """Test JSON serialization of TaskBase."""
@@ -544,13 +545,13 @@ class TestTask:
         project_id = str(uuid4())
 
         with pytest.raises(ValueError, match="created_by"):
-            Task(title="Test Task", project_id=project_id)  # type: ignore
+            Task(title="Test Task", project_id=project_id)
 
         with pytest.raises(ValueError, match="title"):
-            Task(project_id=project_id, created_by="user")  # type: ignore
+            Task(project_id=project_id, created_by="user")
 
         with pytest.raises(ValueError, match="project_id"):
-            Task(title="Test Task", created_by="user")  # type: ignore
+            Task(title="Test Task", created_by="user")
 
     def test_task_serialization_complete(self):
         """Test complete Task serialization."""

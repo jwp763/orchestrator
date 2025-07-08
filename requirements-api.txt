@@ -1,0 +1,20 @@
+# FastAPI and related dependencies
+fastapi==0.104.1
+uvicorn[standard]==0.24.0
+python-multipart==0.0.6
+
+# Additional dependencies for API functionality
+pydantic==2.5.0
+pydantic-settings==2.1.0
+
+# CORS middleware (included in FastAPI but listed for clarity)
+# starlette (included with FastAPI)
+
+# Optional: For better JSON serialization
+orjson==3.9.10
+
+# Optional: For API documentation
+# (FastAPI includes OpenAPI/Swagger support by default)
+
+# Note: Core dependencies (pydantic-ai, etc.) should already be 
+# installed from the main requirements or pyproject.toml

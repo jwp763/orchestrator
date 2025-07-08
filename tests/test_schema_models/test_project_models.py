@@ -1,23 +1,24 @@
 """Comprehensive tests for project models."""
 
-import pytest
 from datetime import date, datetime
 from uuid import uuid4
 
-from src.models.project import Project, ProjectBase, ProjectCreate, ProjectUpdate, ProjectStatus, ProjectPriority
-from src.models.task import Task, TaskStatus, TaskPriority
+import pytest
+
+from src.models.project import Project, ProjectBase, ProjectCreate, ProjectPriority, ProjectStatus, ProjectUpdate
+from src.models.task import Task, TaskPriority, TaskStatus
 
 
 class TestProjectStatus:
     """Test ProjectStatus enum."""
 
-    def test_all_status_values(self):
+    def test_all_status_values(self) -> None:
         """Test all project status enum values."""
         expected_values = ["planning", "active", "on_hold", "completed", "archived"]
         actual_values = [status.value for status in ProjectStatus]
         assert actual_values == expected_values
 
-    def test_status_string_representation(self):
+    def test_status_string_representation(self) -> None:
         """Test string representation of status values."""
         assert ProjectStatus.PLANNING.value == "planning"
         assert ProjectStatus.ACTIVE.value == "active"
@@ -29,13 +30,13 @@ class TestProjectStatus:
 class TestProjectPriority:
     """Test ProjectPriority enum."""
 
-    def test_all_priority_values(self):
+    def test_all_priority_values(self) -> None:
         """Test all project priority enum values."""
         expected_values = ["critical", "high", "medium", "low", "backlog"]
         actual_values = [priority.value for priority in ProjectPriority]
         assert actual_values == expected_values
 
-    def test_priority_string_representation(self):
+    def test_priority_string_representation(self) -> None:
         """Test string representation of priority values."""
         assert ProjectPriority.CRITICAL.value == "critical"
         assert ProjectPriority.HIGH.value == "high"
@@ -47,7 +48,7 @@ class TestProjectPriority:
 class TestProjectBase:
     """Test ProjectBase model."""
 
-    def test_minimal_project_base(self):
+    def test_minimal_project_base(self) -> None:
         """Test ProjectBase with minimal required data."""
         project = ProjectBase(name="Test Project")
 
@@ -65,7 +66,7 @@ class TestProjectBase:
         assert project.notion_page_id is None
         assert project.gitlab_project_id is None
 
-    def test_project_base_with_all_fields(self):
+    def test_project_base_with_all_fields(self) -> None:
         """Test ProjectBase with all fields populated."""
         today = date.today()
 
@@ -95,22 +96,22 @@ class TestProjectBase:
         assert project.notion_page_id == "notion_789"
         assert project.gitlab_project_id == "gitlab_101"
 
-    def test_project_base_validation_missing_name(self):
+    def test_project_base_validation_missing_name(self) -> None:
         """Test that missing name raises validation error."""
         with pytest.raises(ValueError, match="Field required"):
             ProjectBase()  # type: ignore
 
-    def test_project_base_invalid_status(self):
+    def test_project_base_invalid_status(self) -> None:
         """Test invalid status value."""
         with pytest.raises(ValueError):
             ProjectBase(name="Test", status="invalid_status")  # type: ignore
 
-    def test_project_base_invalid_priority(self):
+    def test_project_base_invalid_priority(self) -> None:
         """Test invalid priority value."""
         with pytest.raises(ValueError):
             ProjectBase(name="Test", priority="invalid_priority")  # type: ignore
 
-    def test_project_base_serialization(self):
+    def test_project_base_serialization(self) -> None:
         """Test JSON serialization of ProjectBase."""
         project = ProjectBase(
             name="Test Project",
@@ -126,7 +127,7 @@ class TestProjectBase:
         assert "high" in json_data
         assert "test" in json_data
 
-    def test_project_base_deserialization(self):
+    def test_project_base_deserialization(self) -> None:
         """Test JSON deserialization of ProjectBase."""
         project_data = {
             "name": "Deserialized Project",
@@ -146,7 +147,7 @@ class TestProjectBase:
 class TestProjectCreate:
     """Test ProjectCreate model."""
 
-    def test_project_create_inherits_from_base(self):
+    def test_project_create_inherits_from_base(self) -> None:
         """Test that ProjectCreate inherits all ProjectBase functionality."""
         project = ProjectCreate(
             name="New Project",
@@ -160,7 +161,7 @@ class TestProjectCreate:
         assert project.status == ProjectStatus.PLANNING
         assert project.priority == ProjectPriority.MEDIUM
 
-    def test_project_create_minimal(self):
+    def test_project_create_minimal(self) -> None:
         """Test ProjectCreate with minimal data."""
         project = ProjectCreate(name="Minimal Create")
 
@@ -172,7 +173,7 @@ class TestProjectCreate:
 class TestProjectUpdate:
     """Test ProjectUpdate model."""
 
-    def test_project_update_all_fields_optional(self):
+    def test_project_update_all_fields_optional(self) -> None:
         """Test that all ProjectUpdate fields are optional."""
         update = ProjectUpdate()
 
@@ -188,7 +189,7 @@ class TestProjectUpdate:
         assert update.notion_page_id is None
         assert update.gitlab_project_id is None
 
-    def test_project_update_partial_fields(self):
+    def test_project_update_partial_fields(self) -> None:
         """Test ProjectUpdate with partial field updates."""
         today = date.today()
 
@@ -201,7 +202,7 @@ class TestProjectUpdate:
         assert update.description is None
         assert update.priority is None
 
-    def test_project_update_serialization(self):
+    def test_project_update_serialization(self) -> None:
         """Test ProjectUpdate JSON serialization."""
         update = ProjectUpdate(name="Updated Project", priority=ProjectPriority.CRITICAL)
 
@@ -213,7 +214,7 @@ class TestProjectUpdate:
 class TestProject:
     """Test full Project model."""
 
-    def test_project_creation_with_required_fields(self):
+    def test_project_creation_with_required_fields(self) -> None:
         """Test Project creation with required fields."""
         project = Project(name="Full Project", created_by="test_user")
 
@@ -225,7 +226,7 @@ class TestProject:
         assert project.updated_at is not None
         assert project.tasks == []
 
-    def test_project_with_all_fields(self):
+    def test_project_with_all_fields(self) -> None:
         """Test Project with all fields populated."""
         today = date.today()
         project_id = str(uuid4())
@@ -257,7 +258,7 @@ class TestProject:
         assert project.created_by == "test_user"
         assert project.motion_project_id == "motion_123"
 
-    def test_project_timestamp_auto_generation(self):
+    def test_project_timestamp_auto_generation(self) -> None:
         """Test that timestamps are automatically generated."""
         before = datetime.now()
         project = Project(name="Timestamp Test", created_by="test_user")
@@ -266,7 +267,7 @@ class TestProject:
         assert before <= project.created_at <= after
         assert before <= project.updated_at <= after
 
-    def test_project_model_validator_sets_updated_at(self):
+    def test_project_model_validator_sets_updated_at(self) -> None:
         """Test that model validator updates the updated_at field."""
         # Create project first
         project = Project(name="Test", created_by="user")
@@ -278,7 +279,7 @@ class TestProject:
         # updated_at should be refreshed
         assert updated_project.updated_at > original_updated_at
 
-    def test_project_task_count_property(self):
+    def test_project_task_count_property(self) -> None:
         """Test task_count property."""
         project = Project(name="Task Count Test", created_by="test_user")
 
@@ -292,7 +293,7 @@ class TestProject:
         project.tasks = [task1, task2]
         assert project.task_count == 2
 
-    def test_project_completed_task_count_property(self):
+    def test_project_completed_task_count_property(self) -> None:
         """Test completed_task_count property."""
         project = Project(name="Completion Test", created_by="test_user")
 
@@ -308,7 +309,7 @@ class TestProject:
         assert project.task_count == 3
         assert project.completed_task_count == 2
 
-    def test_project_validation_missing_required_fields(self):
+    def test_project_validation_missing_required_fields(self) -> None:
         """Test validation errors for missing required fields."""
         with pytest.raises(ValueError, match="created_by"):
             Project(name="Test Project")  # type: ignore
@@ -316,7 +317,7 @@ class TestProject:
         with pytest.raises(ValueError, match="name"):
             Project(created_by="test_user")  # type: ignore
 
-    def test_project_serialization_with_tasks(self):
+    def test_project_serialization_with_tasks(self) -> None:
         """Test Project serialization including tasks."""
         project = Project(name="Serialization Test", created_by="test_user")
 
@@ -328,7 +329,7 @@ class TestProject:
         assert "Test Task" in json_data
         assert "tasks" in json_data
 
-    def test_project_deserialization_from_dict(self):
+    def test_project_deserialization_from_dict(self) -> None:
         """Test Project deserialization from dictionary."""
         project_data = {
             "name": "Dict Project",
@@ -347,13 +348,13 @@ class TestProject:
         assert project.created_by == "test_user"
         assert project.tags == ["dict", "test"]
 
-    def test_project_from_attributes_config(self):
+    def test_project_from_attributes_config(self) -> None:
         """Test that ConfigDict allows creation from SQLAlchemy models."""
         # This tests the from_attributes=True configuration
 
         # Mock SQLAlchemy-like object
         class MockSQLProject:
-            def __init__(self):
+            def __init__(self) -> None:
                 self.id = str(uuid4())
                 self.name = "SQL Project"
                 self.description = "From SQL"
@@ -363,7 +364,7 @@ class TestProject:
                 self.created_at = datetime.now()
                 self.updated_at = datetime.now()
                 self.tags = ["sql", "test"]
-                self.tasks = []
+                self.tasks: list = []
 
         sql_project = MockSQLProject()
         project = Project.model_validate(sql_project)
@@ -374,7 +375,7 @@ class TestProject:
         assert project.priority == ProjectPriority.HIGH
         assert project.created_by == "sql_user"
 
-    def test_project_edge_cases(self):
+    def test_project_edge_cases(self) -> None:
         """Test edge cases and boundary conditions."""
         # Empty tags list
         project = Project(name="Edge Test", created_by="user", tags=[])
@@ -390,7 +391,7 @@ class TestProject:
         project = Project(name=special_name, created_by="user")
         assert project.name == special_name
 
-    def test_project_date_handling(self):
+    def test_project_date_handling(self) -> None:
         """Test date field handling."""
         today = date.today()
 
@@ -409,7 +410,7 @@ class TestProject:
 class TestProjectTaskIntegration:
     """Test integration between Project and Task models."""
 
-    def test_project_with_multiple_task_statuses(self):
+    def test_project_with_multiple_task_statuses(self) -> None:
         """Test project behavior with tasks in different statuses."""
         project = Project(name="Multi-Status Project", created_by="test_user")
 
@@ -427,7 +428,7 @@ class TestProjectTaskIntegration:
         assert project.task_count == 4
         assert project.completed_task_count == 1  # Only one COMPLETED task
 
-    def test_project_task_lifecycle(self):
+    def test_project_task_lifecycle(self) -> None:
         """Test complete lifecycle of project with tasks."""
         # Create project in planning phase
         project = Project(name="Lifecycle Project", status=ProjectStatus.PLANNING, created_by="test_user")
@@ -455,7 +456,7 @@ class TestProjectTaskIntegration:
         assert project.completed_task_count == 2
         assert project.task_count == 2
 
-    def test_project_serialization_with_full_tasks(self):
+    def test_project_serialization_with_full_tasks(self) -> None:
         """Test project serialization with complex task data."""
         today = date.today()
 
@@ -515,7 +516,7 @@ class TestProjectTaskIntegration:
 class TestProjectAdvancedFeatures:
     """Test advanced project features and edge cases."""
 
-    def test_project_with_hierarchical_tasks(self):
+    def test_project_with_hierarchical_tasks(self) -> None:
         """Test project with parent-child task relationships."""
         project = Project(name="Hierarchical Project", created_by="test_user")
 
@@ -557,7 +558,7 @@ class TestProjectAdvancedFeatures:
         assert child_task1.estimated_hours == 4.0
         assert child_task2.estimated_hours == 4.0
 
-    def test_project_integration_fields(self):
+    def test_project_integration_fields(self) -> None:
         """Test project integration with external systems."""
         project = Project(
             name="Integration Project",

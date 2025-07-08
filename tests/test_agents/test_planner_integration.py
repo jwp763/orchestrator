@@ -1,12 +1,13 @@
 """Integration tests for PlannerAgent with realistic project scenarios."""
 
+from unittest.mock import AsyncMock, MagicMock, patch
+
 import pytest
-from unittest.mock import patch, AsyncMock, MagicMock
 
 from src.agent.planner_agent import PlannerAgent
-from src.models.patch import Patch, Op
-from src.models.project import ProjectStatus, ProjectPriority
-from src.models.task import TaskStatus, TaskPriority
+from src.models.patch import Op, Patch
+from src.models.project import ProjectPriority, ProjectStatus
+from src.models.task import TaskPriority, TaskStatus
 
 
 @pytest.fixture
@@ -45,7 +46,7 @@ class TestPlannerAgentRealisticScenarios:
                     "status": "planning",
                     "priority": "high",
                     "tags": ["mobile", "fitness", "react-native", "app"],
-                    "estimated_total_hours": 160,
+                    "estimated_total_minutes": 9600,
                 }
             ],
             "task_patches": [
@@ -95,8 +96,8 @@ class TestPlannerAgentRealisticScenarios:
         with patch.object(agent, "_call_llm_with_retry", new_callable=AsyncMock) as mock_llm:
             mock_llm.return_value = Patch.model_validate(expected_response)
 
-            user_input = """I want to build a fitness tracking mobile app that helps people track their workouts, 
-            nutrition, and progress. It should have social features so users can share achievements and motivate 
+            user_input = """I want to build a fitness tracking mobile app that helps people track their workouts,
+            nutrition, and progress. It should have social features so users can share achievements and motivate
             each other. I want it to work on both iOS and Android."""
 
             result = await agent.get_diff(user_input)
@@ -134,7 +135,7 @@ class TestPlannerAgentRealisticScenarios:
                     "status": "planning",
                     "priority": "critical",
                     "tags": ["ecommerce", "marketplace", "fullstack", "payment"],
-                    "estimated_total_hours": 320,
+                    "estimated_total_minutes": 19200,
                 }
             ],
             "task_patches": [
@@ -192,8 +193,8 @@ class TestPlannerAgentRealisticScenarios:
         with patch.object(agent, "_call_llm_with_retry", new_callable=AsyncMock) as mock_llm:
             mock_llm.return_value = Patch.model_validate(expected_response)
 
-            user_input = """Create an e-commerce marketplace where artisans can sell their handmade products. 
-            It needs user accounts, product listings, shopping cart, secure payments, and a dashboard for 
+            user_input = """Create an e-commerce marketplace where artisans can sell their handmade products.
+            It needs user accounts, product listings, shopping cart, secure payments, and a dashboard for
             sellers to manage their inventory and view sales analytics."""
 
             result = await agent.get_diff(user_input)
@@ -229,7 +230,7 @@ class TestPlannerAgentRealisticScenarios:
                     "status": "planning",
                     "priority": "medium",
                     "tags": ["data-science", "analytics", "dashboard", "python"],
-                    "estimated_total_hours": 80,
+                    "estimated_total_minutes": 4800,
                 }
             ],
             "task_patches": [
@@ -271,8 +272,8 @@ class TestPlannerAgentRealisticScenarios:
         with patch.object(agent, "_call_llm_with_retry", new_callable=AsyncMock) as mock_llm:
             mock_llm.return_value = Patch.model_validate(expected_response)
 
-            user_input = """I need to analyze our customer data to understand buying patterns and create 
-            visualizations. The goal is to build a dashboard that shows key metrics and insights to help 
+            user_input = """I need to analyze our customer data to understand buying patterns and create
+            visualizations. The goal is to build a dashboard that shows key metrics and insights to help
             with business decisions."""
 
             result = await agent.get_diff(user_input)
@@ -342,7 +343,7 @@ class TestPlannerAgentRealisticScenarios:
                     "status": "planning",
                     "priority": "critical",
                     "tags": ["machine-learning", "fraud-detection", "research", "security"],
-                    "estimated_total_hours": 120,
+                    "estimated_total_minutes": 7200,
                 }
             ],
             "task_patches": [
@@ -417,7 +418,7 @@ class TestPlannerAgentRealisticScenarios:
                     "status": "planning",
                     "priority": "critical",
                     "tags": ["enterprise", "erp", "fullstack", "database", "integration"],
-                    "estimated_total_hours": 2000,
+                    "estimated_total_minutes": 120000,
                 }
             ],
             "task_patches": [
@@ -467,8 +468,8 @@ class TestPlannerAgentRealisticScenarios:
         with patch.object(agent, "_call_llm_with_retry", new_callable=AsyncMock) as mock_llm:
             mock_llm.return_value = Patch.model_validate(expected_response)
 
-            user_input = """Build a comprehensive ERP system for our company that integrates HR management, 
-            financial accounting, inventory tracking, and operations management. It needs to handle multiple 
+            user_input = """Build a comprehensive ERP system for our company that integrates HR management,
+            financial accounting, inventory tracking, and operations management. It needs to handle multiple
             departments and provide real-time reporting."""
 
             result = await agent.get_diff(user_input)

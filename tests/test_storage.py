@@ -8,9 +8,9 @@ from uuid import uuid4
 
 import pytest
 
-from src.models import Project, ProjectStatus, Task, TaskStatus, TaskPriority
-from src.models.project import ProjectPriority
+from src.models import Project, ProjectStatus, Task, TaskPriority, TaskStatus
 from src.models.patch import Op, Patch, ProjectPatch, TaskPatch
+from src.models.project import ProjectPriority
 from src.storage.interface import StorageInterface
 from src.storage.sql_implementation import SQLStorage
 
