@@ -4,8 +4,8 @@
 
 ### Phase 0: Foundation Hardening ⏳
 - [ ] Task 0.1: Extend Task Model with Hierarchical Fields (1 day)
-  - [ ] Add hierarchical fields to Task model (90 min)
-  - [ ] Create Delta table migration (60 min)
+  - [x] Add hierarchical fields to Task model (90 min)
+  - [x] ~~Create Delta table migration (60 min)~~ *Skipped - no existing data*
   - [ ] Extend DeltaManager CRUD operations (75 min)
   - [ ] Update configuration for defaults (45 min)
 - [ ] Task 0.2: Create Task Relationship Table (0.5 days)
@@ -86,6 +86,12 @@
 - [x] Update architecture documentation with hierarchical model
 - [x] Create data model documentation with migration strategy
 - [x] Define clear task/subtask specifications with acceptance criteria
+
+### Phase 0: Foundation Hardening
+- [x] Subtask 0.1.1: Add hierarchical fields to Task model (90 min)
+  - Added parent_id, estimated_minutes, actual_minutes, depth, dependencies
+  - Added validation for positive minutes, depth limits, circular dependencies
+  - Created comprehensive tests - all passing ✅
 
 ## Key Milestones 🎯
 

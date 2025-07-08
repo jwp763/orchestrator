@@ -9,7 +9,7 @@ description = "Databricks Orchestrator with Agent Interface"
 authors = [{ name = "Your Name", email = "your.email@example.com" }]
 readme = "README.md"
 requires-python = ">=3.8"
-dependencies = ["pydantic>=2.0.0", "databricks-sdk>=0.8.0", "pyyaml>=6.0"]
+dependencies = ["pydantic>=2.0.0", "databricks-sdk>=0.8.0", "pyyaml>=6.0", "sqlalchemy>=2.0.0"]
 
 [project.optional-dependencies]
 dev = [

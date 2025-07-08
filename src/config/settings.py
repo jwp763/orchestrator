@@ -7,35 +7,88 @@ from pydantic_settings import BaseSettings
 
 
 class ProviderConfig(BaseModel):
+    """
+    Configuration for a single AI provider.
+    
+    Defines available models, default model selection, and environment
+    variable for API key retrieval.
+    """
     models: List[str]
     default: str
     api_key_env: str
     
 
 class SelectionRule(BaseModel):
+    """
+    Rules for automatic provider and model selection.
+    
+    Defines preferences for different task types to optimize
+    performance, cost, and capabilities.
+    """
     preferred: List[str]
     model_preference: List[str]
 
 
 class ProvidersConfig(BaseModel):
+    """
+    Complete provider configuration loaded from YAML.
+    
+    Contains all provider definitions and task-specific selection
+    rules for intelligent model routing.
+    """
     providers: Dict[str, ProviderConfig]
     selection_rules: Dict[str, SelectionRule]
     
     @classmethod
     def from_yaml(cls, path: str) -> "ProvidersConfig":
+        """
+        Load provider configuration from YAML file.
+        
+        Args:
+            path (str): Path to providers.yaml configuration file
+            
+        Returns:
+            ProvidersConfig: Parsed configuration instance
+            
+        Raises:
+            FileNotFoundError: If config file doesn't exist
+            yaml.YAMLError: If YAML parsing fails
+        """
         with open(path, 'r') as f:
             data = yaml.safe_load(f)
         return cls(**data)
 
 
 class Settings(BaseSettings):
+    """
+    Application configuration settings loaded from environment variables.
+    
+    Centralizes all configuration including database settings, AI provider
+    credentials, and integration API keys. Uses Pydantic BaseSettings for
+    automatic environment variable loading and validation.
+    
+    Features:
+    - Automatic environment variable binding
+    - Type validation and conversion
+    - Default value specification
+    - Nested configuration loading from YAML
+    """
     # Database settings
     catalog_name: str = Field("jwp763", description="Delta catalog name")
     schema_name: str = Field("orchestrator", description="Delta schema name")
     
     @property
     def database_name(self) -> str:
-        """Full database name (catalog.schema)"""
+        """
+        Get the full database name in catalog.schema format.
+        
+        Returns:
+            str: Fully qualified database name for Delta operations
+            
+        Example:
+            >>> settings.database_name
+            'jwp763.orchestrator'
+        """
         return f"{self.catalog_name}.{self.schema_name}"
     
     # Provider settings
@@ -73,11 +126,34 @@ class Settings(BaseSettings):
     
     @property
     def providers(self) -> ProvidersConfig:
-        """Load providers configuration"""
+        """
+        Load and cache providers configuration from YAML file.
+        
+        Returns:
+            ProvidersConfig: Provider definitions and selection rules
+            
+        Raises:
+            FileNotFoundError: If providers config file is missing
+        """
         return ProvidersConfig.from_yaml(self.providers_config_path)
     
     def get_api_key(self, provider: str) -> Optional[str]:
-        """Get API key for a provider"""
+        """
+        Get API key for the specified AI provider.
+        
+        Retrieves API keys from environment variables using the provider-specific
+        environment variable names.
+        
+        Args:
+            provider (str): Provider name (anthropic, openai, xai, google)
+            
+        Returns:
+            Optional[str]: API key if configured, None otherwise
+            
+        Example:
+            >>> settings.get_api_key("anthropic")
+            'sk-ant-...'
+        """
         key_mapping = {
             "anthropic": self.anthropic_api_key,
             "openai": self.openai_api_key,
@@ -87,7 +163,23 @@ class Settings(BaseSettings):
         return key_mapping.get(provider)
     
     def get_model_for_task(self, task_type: str) -> tuple[str, str]:
-        """Get best provider and model for a task type"""
+        """
+        Get the optimal provider and model for a specific task type.
+        
+        Uses configured selection rules to choose the best AI provider
+        and model based on task requirements, availability, and preferences.
+        
+        Args:
+            task_type (str): Type of task (complex_reasoning, quick_tasks, etc.)
+            
+        Returns:
+            tuple[str, str]: (provider_name, model_name) pair
+            
+        Example:
+            >>> provider, model = settings.get_model_for_task("complex_reasoning")
+            >>> provider, model
+            ('anthropic', 'claude-3-opus-20240229')
+        """
         selection_rule = self.providers.selection_rules.get(task_type)
         if not selection_rule:
             return self.default_provider, self.default_model or self.providers.providers[self.default_provider].default
@@ -109,5 +201,18 @@ class Settings(BaseSettings):
 
 @lru_cache()
 def get_settings() -> Settings:
-    """Get cached settings instance"""
+    """
+    Get a cached singleton instance of application settings.
+    
+    Uses LRU cache to ensure settings are loaded only once and reused
+    across the application, improving performance and consistency.
+    
+    Returns:
+        Settings: Singleton settings instance with all configuration loaded
+        
+    Example:
+        >>> settings = get_settings()
+        >>> settings.database_name
+        'jwp763.orchestrator'
+    """
     return Settings()

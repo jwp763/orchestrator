@@ -5,6 +5,12 @@ from pydantic import BaseModel, Field
 
 
 class ProjectStatus(str, Enum):
+    """
+    Enumeration of possible project status values.
+    
+    Represents the lifecycle stages of a project from initial planning
+    through completion and archival.
+    """
     PLANNING = "planning"
     ACTIVE = "active"
     ON_HOLD = "on_hold"
@@ -13,6 +19,13 @@ class ProjectStatus(str, Enum):
 
 
 class ProjectBase(BaseModel):
+    """
+    Base model for project data with core fields and validation.
+    
+    Provides the foundation for project management including status tracking,
+    priority management, scheduling, and integration with external systems.
+    Supports tagging and metadata for flexible organization.
+    """
     name: str = Field(..., description="Project name")
     description: Optional[str] = Field(None, description="Project description")
     status: ProjectStatus = Field(ProjectStatus.PLANNING, description="Current project status")
@@ -31,10 +44,22 @@ class ProjectBase(BaseModel):
 
 
 class ProjectCreate(ProjectBase):
+    """
+    Model for creating new projects.
+    
+    Inherits all fields from ProjectBase without requiring ID or timestamps,
+    which are generated automatically by the storage layer.
+    """
     pass
 
 
 class ProjectUpdate(BaseModel):
+    """
+    Model for updating existing projects.
+    
+    All fields are optional to allow partial updates. Maintains the same
+    validation rules as ProjectBase for fields that are provided.
+    """
     name: Optional[str] = None
     description: Optional[str] = None
     status: Optional[ProjectStatus] = None
@@ -49,6 +74,13 @@ class ProjectUpdate(BaseModel):
 
 
 class Project(ProjectBase):
+    """
+    Complete project model with database fields and metadata.
+    
+    Extends ProjectBase with database-specific fields like ID, timestamps,
+    and creator information. Used for project instances retrieved from
+    or stored in the database.
+    """
     id: str = Field(..., description="Unique project ID")
     created_at: datetime = Field(..., description="Creation timestamp")
     updated_at: datetime = Field(..., description="Last update timestamp")
