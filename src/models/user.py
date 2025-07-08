@@ -6,7 +6,7 @@ from pydantic import BaseModel, Field, ConfigDict
 class UserBase(BaseModel):
     name: str = Field(..., description="User name")
     email: Optional[str] = Field(None, description="User email")
-    
+
     # Integration user IDs
     motion_user_id: Optional[str] = Field(None, description="Motion user ID")
     linear_user_id: Optional[str] = Field(None, description="Linear user ID")
@@ -32,5 +32,5 @@ class User(UserBase):
     is_active: bool = Field(True, description="Whether user is active")
     created_at: datetime = Field(..., description="Creation timestamp")
     updated_at: datetime = Field(..., description="Last update timestamp")
-    
+
     model_config = ConfigDict(from_attributes=True)

@@ -111,7 +111,9 @@ class TestSQLStorageUnit:
 
     def test_apply_project_patch_create_operation(self, storage: SQLStorage) -> None:
         """Test apply_project_patch handles create operation correctly."""
-        patch = ProjectPatch(op=Op.CREATE, name="New Project", description="Test description", priority=ProjectPriority.MEDIUM)
+        patch = ProjectPatch(
+            op=Op.CREATE, name="New Project", description="Test description", priority=ProjectPriority.MEDIUM
+        )
 
         with mock_patch.object(storage, "create_project") as mock_create:
             expected_project = Project(name="New Project", created_by="system")
@@ -125,7 +127,9 @@ class TestSQLStorageUnit:
     def test_apply_project_patch_update_operation(self, storage: SQLStorage) -> None:
         """Test apply_project_patch handles update operation correctly."""
         project_id = str(uuid4())
-        patch = ProjectPatch(op=Op.UPDATE, project_id=project_id, name="Updated Project", priority=ProjectPriority.MEDIUM)
+        patch = ProjectPatch(
+            op=Op.UPDATE, project_id=project_id, name="Updated Project", priority=ProjectPriority.MEDIUM
+        )
 
         existing_project = Project(id=project_id, name="Old Project", created_by="test_user")
 
