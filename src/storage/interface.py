@@ -63,7 +63,7 @@ class StorageInterface(ABC):
     @abstractmethod
     def apply_patch(self, patch: Patch) -> bool:
         """Apply a patch containing project and/or task operations.
-        
+
         Returns True if successful, False otherwise.
         All operations in the patch should be applied atomically.
         """
@@ -72,7 +72,7 @@ class StorageInterface(ABC):
     @abstractmethod
     def apply_project_patch(self, patch: ProjectPatch) -> Optional[Project]:
         """Apply a single project patch operation.
-        
+
         Returns the affected project or None if operation failed.
         """
         pass
@@ -80,7 +80,7 @@ class StorageInterface(ABC):
     @abstractmethod
     def apply_task_patch(self, patch: TaskPatch) -> Optional[Task]:
         """Apply a single task patch operation.
-        
+
         Returns the affected task or None if operation failed.
         """
         pass

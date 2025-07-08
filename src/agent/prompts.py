@@ -43,18 +43,18 @@ Provide a concise response that addresses the core need.""",
 def get_task_prompt(task_type: str, request: str) -> str:
     """
     Get the appropriate prompt template for a specific task type.
-    
+
     Selects and formats the optimal prompt based on the task type to
     improve agent performance for different categories of requests.
-    
+
     Args:
-        task_type (str): Type of task (complex_reasoning, quick_tasks, 
+        task_type (str): Type of task (complex_reasoning, quick_tasks,
                         code_generation, cost_optimized)
         request (str): User's original request text
-        
+
     Returns:
         str: Formatted prompt string ready for the AI agent
-        
+
     Example:
         >>> prompt = get_task_prompt("complex_reasoning", "Plan a website redesign")
         >>> "Analyze this request deeply" in prompt

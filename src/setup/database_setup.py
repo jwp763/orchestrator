@@ -4,29 +4,39 @@ import uuid
 from datetime import datetime
 from typing import Dict, Any, List
 from pyspark.sql import SparkSession
-from pyspark.sql.types import StructType, StructField, StringType, BooleanType, IntegerType, TimestampType, MapType, ArrayType, DateType
+from pyspark.sql.types import (
+    StructType,
+    StructField,
+    StringType,
+    BooleanType,
+    IntegerType,
+    TimestampType,
+    MapType,
+    ArrayType,
+    DateType,
+)
 
 
 class DatabaseSetup:
     """Handles database initialization and sample data creation"""
-    
+
     def __init__(self, spark: SparkSession, catalog: str, schema: str):
         self.spark = spark
         self.catalog = catalog
         self.schema = schema
         self.full_schema = f"{catalog}.{schema}"
-    
+
     def create_schema(self) -> None:
         """Create the catalog schema"""
         print(f"Setting up catalog: {self.catalog}, schema: {self.schema}")
         self.spark.sql(f"CREATE SCHEMA IF NOT EXISTS {self.full_schema}")
         self.spark.sql(f"USE {self.full_schema}")
         print(f"Using schema: {self.full_schema}")
-    
+
     def drop_all_tables(self) -> None:
         """Drop all tables in the schema (for testing)"""
         print(f"Dropping all tables in {self.full_schema}")
-        
+
         # Get all tables
         try:
             tables_df = self.spark.sql(f"SHOW TABLES IN {self.full_schema}")
@@ -34,19 +44,29 @@ class DatabaseSetup:
         except:
             # Schema might not exist yet
             tables = []
-        
+
         # Drop in reverse dependency order
-        drop_order = ["sync_logs", "agent_logs", "agent_contexts", "planning_metrics", 
-                     "task_links", "tasks", "integrations", "projects", "users"]
-        
+        drop_order = [
+            "sync_logs",
+            "agent_logs",
+            "agent_contexts",
+            "planning_metrics",
+            "task_links",
+            "tasks",
+            "integrations",
+            "projects",
+            "users",
+        ]
+
         for table in drop_order:
             if table in tables:
                 self.spark.sql(f"DROP TABLE IF EXISTS {self.full_schema}.{table}")
                 print(f"✓ Dropped {table}")
-    
+
     def create_users_table(self) -> None:
         """Create users table"""
-        self.spark.sql(f"""
+        self.spark.sql(
+            f"""
         CREATE TABLE IF NOT EXISTS {self.full_schema}.users (
             id STRING,
             name STRING,
@@ -60,12 +80,14 @@ class DatabaseSetup:
             'delta.autoOptimize.optimizeWrite' = 'true',
             'delta.autoOptimize.autoCompact' = 'true'
         )
-        """)
+        """
+        )
         print("✓ Users table created")
-    
+
     def create_projects_table(self) -> None:
         """Create projects table"""
-        self.spark.sql(f"""
+        self.spark.sql(
+            f"""
         CREATE TABLE IF NOT EXISTS {self.full_schema}.projects (
             id STRING,
             user_id STRING,
@@ -87,12 +109,14 @@ class DatabaseSetup:
             'delta.autoOptimize.optimizeWrite' = 'true',
             'delta.autoOptimize.autoCompact' = 'true'
         )
-        """)
+        """
+        )
         print("✓ Projects table created")
-    
+
     def create_tasks_table(self) -> None:
         """Create hierarchical tasks table"""
-        self.spark.sql(f"""
+        self.spark.sql(
+            f"""
         CREATE TABLE IF NOT EXISTS {self.full_schema}.tasks (
             -- Core fields
             id STRING,
@@ -133,12 +157,14 @@ class DatabaseSetup:
             'delta.autoOptimize.optimizeWrite' = 'true',
             'delta.autoOptimize.autoCompact' = 'true'
         )
-        """)
+        """
+        )
         print("✓ Tasks table created with hierarchical support")
-    
+
     def create_task_links_table(self) -> None:
         """Create task links table for dependencies"""
-        self.spark.sql(f"""
+        self.spark.sql(
+            f"""
         CREATE TABLE IF NOT EXISTS {self.full_schema}.task_links (
             id STRING,
             from_task_id STRING,
@@ -151,12 +177,14 @@ class DatabaseSetup:
             'delta.autoOptimize.optimizeWrite' = 'true',
             'delta.autoOptimize.autoCompact' = 'true'
         )
-        """)
+        """
+        )
         print("✓ Task links table created")
-    
+
     def create_planning_metrics_table(self) -> None:
         """Create planning metrics table"""
-        self.spark.sql(f"""
+        self.spark.sql(
+            f"""
         CREATE TABLE IF NOT EXISTS {self.full_schema}.planning_metrics (
             id STRING,
             project_id STRING,
@@ -173,12 +201,14 @@ class DatabaseSetup:
             'delta.autoOptimize.optimizeWrite' = 'true',
             'delta.autoOptimize.autoCompact' = 'true'
         )
-        """)
+        """
+        )
         print("✓ Planning metrics table created")
-    
+
     def create_integrations_table(self) -> None:
         """Create integrations table"""
-        self.spark.sql(f"""
+        self.spark.sql(
+            f"""
         CREATE TABLE IF NOT EXISTS {self.full_schema}.integrations (
             id STRING,
             user_id STRING,
@@ -198,12 +228,14 @@ class DatabaseSetup:
             'delta.autoOptimize.optimizeWrite' = 'true',
             'delta.autoOptimize.autoCompact' = 'true'
         )
-        """)
+        """
+        )
         print("✓ Integrations table created")
-    
+
     def create_agent_contexts_table(self) -> None:
         """Create agent contexts table"""
-        self.spark.sql(f"""
+        self.spark.sql(
+            f"""
         CREATE TABLE IF NOT EXISTS {self.full_schema}.agent_contexts (
             conversation_id STRING,
             user_id STRING,
@@ -219,12 +251,14 @@ class DatabaseSetup:
             'delta.autoOptimize.optimizeWrite' = 'true',
             'delta.autoOptimize.autoCompact' = 'true'
         )
-        """)
+        """
+        )
         print("✓ Agent contexts table created")
-    
+
     def create_agent_logs_table(self) -> None:
         """Create agent logs table"""
-        self.spark.sql(f"""
+        self.spark.sql(
+            f"""
         CREATE TABLE IF NOT EXISTS {self.full_schema}.agent_logs (
             id STRING,
             conversation_id STRING,
@@ -241,12 +275,14 @@ class DatabaseSetup:
             'delta.autoOptimize.optimizeWrite' = 'true',
             'delta.autoOptimize.autoCompact' = 'true'
         )
-        """)
+        """
+        )
         print("✓ Agent logs table created")
-    
+
     def create_sync_logs_table(self) -> None:
         """Create sync logs table"""
-        self.spark.sql(f"""
+        self.spark.sql(
+            f"""
         CREATE TABLE IF NOT EXISTS {self.full_schema}.sync_logs (
             id STRING,
             integration_id STRING,
@@ -265,19 +301,20 @@ class DatabaseSetup:
             'delta.autoOptimize.optimizeWrite' = 'true',
             'delta.autoOptimize.autoCompact' = 'true'
         )
-        """)
+        """
+        )
         print("✓ Sync logs table created")
-    
+
     def optimize_tables(self) -> None:
         """Optimize tables for performance"""
         # Optimize tasks table (most frequently queried)
         self.spark.sql(f"OPTIMIZE {self.full_schema}.tasks ZORDER BY (project_id, parent_id, status)")
         print("✓ Tasks table optimized")
-        
+
         # Optimize task_links for dependency queries
         self.spark.sql(f"OPTIMIZE {self.full_schema}.task_links ZORDER BY (from_task_id, to_task_id)")
         print("✓ Task links table optimized")
-    
+
     def create_all_tables(self) -> None:
         """Create all tables in dependency order"""
         print("Creating all tables...")
@@ -292,7 +329,7 @@ class DatabaseSetup:
         self.create_sync_logs_table()
         self.optimize_tables()
         print("✅ All tables created successfully")
-    
+
     def create_sample_user(self) -> str:
         """Create and return sample user ID"""
         user_id = str(uuid.uuid4())
@@ -303,25 +340,27 @@ class DatabaseSetup:
             "preferences": {"theme": "light", "notifications": "true"},
             "is_active": True,
             "created_at": datetime.now(),
-            "updated_at": datetime.now()
+            "updated_at": datetime.now(),
         }
-        
+
         # Define explicit schema for users
-        users_schema = StructType([
-            StructField("id", StringType(), True),
-            StructField("name", StringType(), True),
-            StructField("email", StringType(), True),
-            StructField("preferences", MapType(StringType(), StringType()), True),
-            StructField("is_active", BooleanType(), True),
-            StructField("created_at", TimestampType(), True),
-            StructField("updated_at", TimestampType(), True)
-        ])
-        
+        users_schema = StructType(
+            [
+                StructField("id", StringType(), True),
+                StructField("name", StringType(), True),
+                StructField("email", StringType(), True),
+                StructField("preferences", MapType(StringType(), StringType()), True),
+                StructField("is_active", BooleanType(), True),
+                StructField("created_at", TimestampType(), True),
+                StructField("updated_at", TimestampType(), True),
+            ]
+        )
+
         user_df = self.spark.createDataFrame([user_data], users_schema)
         user_df.write.mode("append").saveAsTable(f"{self.full_schema}.users")
         print(f"✓ Created default user: {user_id}")
         return user_id
-    
+
     def create_sample_integrations(self, user_id: str) -> List[str]:
         """Create sample integrations and return IDs"""
         integrations_data = [
@@ -337,7 +376,7 @@ class DatabaseSetup:
                 "sync_status": "pending",
                 "created_by": user_id,
                 "created_at": datetime.now(),
-                "updated_at": datetime.now()
+                "updated_at": datetime.now(),
             },
             {
                 "id": str(uuid.uuid4()),
@@ -351,7 +390,7 @@ class DatabaseSetup:
                 "sync_status": "pending",
                 "created_by": user_id,
                 "created_at": datetime.now(),
-                "updated_at": datetime.now()
+                "updated_at": datetime.now(),
             },
             {
                 "id": str(uuid.uuid4()),
@@ -365,7 +404,7 @@ class DatabaseSetup:
                 "sync_status": "pending",
                 "created_by": user_id,
                 "created_at": datetime.now(),
-                "updated_at": datetime.now()
+                "updated_at": datetime.now(),
             },
             {
                 "id": str(uuid.uuid4()),
@@ -379,31 +418,33 @@ class DatabaseSetup:
                 "sync_status": "pending",
                 "created_by": user_id,
                 "created_at": datetime.now(),
-                "updated_at": datetime.now()
-            }
+                "updated_at": datetime.now(),
+            },
         ]
-        
+
         # Define explicit schema to avoid type inference issues
-        integrations_schema = StructType([
-            StructField("id", StringType(), True),
-            StructField("user_id", StringType(), True),
-            StructField("type", StringType(), True),
-            StructField("name", StringType(), True),
-            StructField("enabled", BooleanType(), True),
-            StructField("config_encrypted", StringType(), True),
-            StructField("sync_enabled", BooleanType(), True),
-            StructField("sync_interval_minutes", IntegerType(), True),
-            StructField("sync_status", StringType(), True),
-            StructField("created_by", StringType(), True),
-            StructField("created_at", TimestampType(), True),
-            StructField("updated_at", TimestampType(), True)
-        ])
-        
+        integrations_schema = StructType(
+            [
+                StructField("id", StringType(), True),
+                StructField("user_id", StringType(), True),
+                StructField("type", StringType(), True),
+                StructField("name", StringType(), True),
+                StructField("enabled", BooleanType(), True),
+                StructField("config_encrypted", StringType(), True),
+                StructField("sync_enabled", BooleanType(), True),
+                StructField("sync_interval_minutes", IntegerType(), True),
+                StructField("sync_status", StringType(), True),
+                StructField("created_by", StringType(), True),
+                StructField("created_at", TimestampType(), True),
+                StructField("updated_at", TimestampType(), True),
+            ]
+        )
+
         integrations_df = self.spark.createDataFrame(integrations_data, integrations_schema)
         integrations_df.write.mode("append").saveAsTable(f"{self.full_schema}.integrations")
         print(f"✓ Created {len(integrations_data)} sample integrations")
         return [integration["id"] for integration in integrations_data]
-    
+
     def create_sample_project_and_tasks(self, user_id: str) -> Dict[str, Any]:
         """Create sample hierarchical project and tasks"""
         # Create project
@@ -421,35 +462,37 @@ class DatabaseSetup:
             "integration_project_ids": {},
             "created_by": user_id,
             "created_at": datetime.now(),
-            "updated_at": datetime.now()
+            "updated_at": datetime.now(),
         }
-        
+
         # Define explicit schema for projects
-        projects_schema = StructType([
-            StructField("id", StringType(), True),
-            StructField("user_id", StringType(), True),
-            StructField("name", StringType(), True),
-            StructField("description", StringType(), True),
-            StructField("status", StringType(), True),
-            StructField("priority", StringType(), True),
-            StructField("task_count", IntegerType(), True),
-            StructField("completed_task_count", IntegerType(), True),
-            StructField("metadata", MapType(StringType(), StringType()), True),
-            StructField("integration_project_ids", MapType(StringType(), StringType()), True),
-            StructField("created_by", StringType(), True),
-            StructField("created_at", TimestampType(), True),
-            StructField("updated_at", TimestampType(), True)
-        ])
-        
+        projects_schema = StructType(
+            [
+                StructField("id", StringType(), True),
+                StructField("user_id", StringType(), True),
+                StructField("name", StringType(), True),
+                StructField("description", StringType(), True),
+                StructField("status", StringType(), True),
+                StructField("priority", StringType(), True),
+                StructField("task_count", IntegerType(), True),
+                StructField("completed_task_count", IntegerType(), True),
+                StructField("metadata", MapType(StringType(), StringType()), True),
+                StructField("integration_project_ids", MapType(StringType(), StringType()), True),
+                StructField("created_by", StringType(), True),
+                StructField("created_at", TimestampType(), True),
+                StructField("updated_at", TimestampType(), True),
+            ]
+        )
+
         project_df = self.spark.createDataFrame([project_data], projects_schema)
         project_df.write.mode("append").saveAsTable(f"{self.full_schema}.projects")
         print(f"✓ Created sample project: {project_id}")
-        
+
         # Create hierarchical tasks
         root_task_id = str(uuid.uuid4())
         foundation_task_id = str(uuid.uuid4())
         planner_task_id = str(uuid.uuid4())
-        
+
         sample_tasks = [
             # Root task
             {
@@ -468,7 +511,7 @@ class DatabaseSetup:
                 "integration_task_ids": {},
                 "created_by": user_id,
                 "created_at": datetime.now(),
-                "updated_at": datetime.now()
+                "updated_at": datetime.now(),
             },
             # Child tasks
             {
@@ -487,7 +530,7 @@ class DatabaseSetup:
                 "integration_task_ids": {},
                 "created_by": user_id,
                 "created_at": datetime.now(),
-                "updated_at": datetime.now()
+                "updated_at": datetime.now(),
             },
             {
                 "id": planner_task_id,
@@ -505,92 +548,92 @@ class DatabaseSetup:
                 "integration_task_ids": {},
                 "created_by": user_id,
                 "created_at": datetime.now(),
-                "updated_at": datetime.now()
-            }
+                "updated_at": datetime.now(),
+            },
         ]
-        
+
         # Define explicit schema for tasks
-        tasks_schema = StructType([
-            StructField("id", StringType(), True),
-            StructField("project_id", StringType(), True),
-            StructField("parent_id", StringType(), True),
-            StructField("title", StringType(), True),
-            StructField("description", StringType(), True),
-            StructField("status", StringType(), True),
-            StructField("priority", StringType(), True),
-            StructField("estimated_minutes", IntegerType(), True),
-            StructField("actual_minutes", IntegerType(), True),
-            StructField("depth", IntegerType(), True),
-            StructField("dependencies", ArrayType(StringType()), True),
-            StructField("labels", ArrayType(StringType()), True),
-            StructField("integration_task_ids", MapType(StringType(), StringType()), True),
-            StructField("created_by", StringType(), True),
-            StructField("created_at", TimestampType(), True),
-            StructField("updated_at", TimestampType(), True)
-        ])
-        
+        tasks_schema = StructType(
+            [
+                StructField("id", StringType(), True),
+                StructField("project_id", StringType(), True),
+                StructField("parent_id", StringType(), True),
+                StructField("title", StringType(), True),
+                StructField("description", StringType(), True),
+                StructField("status", StringType(), True),
+                StructField("priority", StringType(), True),
+                StructField("estimated_minutes", IntegerType(), True),
+                StructField("actual_minutes", IntegerType(), True),
+                StructField("depth", IntegerType(), True),
+                StructField("dependencies", ArrayType(StringType()), True),
+                StructField("labels", ArrayType(StringType()), True),
+                StructField("integration_task_ids", MapType(StringType(), StringType()), True),
+                StructField("created_by", StringType(), True),
+                StructField("created_at", TimestampType(), True),
+                StructField("updated_at", TimestampType(), True),
+            ]
+        )
+
         tasks_df = self.spark.createDataFrame(sample_tasks, tasks_schema)
         tasks_df.write.mode("append").saveAsTable(f"{self.full_schema}.tasks")
         print(f"✓ Created {len(sample_tasks)} sample hierarchical tasks")
-        
+
         # Create task dependency link
         task_link_data = {
             "id": str(uuid.uuid4()),
             "from_task_id": foundation_task_id,  # Foundation
-            "to_task_id": planner_task_id,       # Planner
+            "to_task_id": planner_task_id,  # Planner
             "link_type": "blocks",
             "metadata": {"reason": "Planner requires foundation to be complete"},
-            "created_at": datetime.now()
+            "created_at": datetime.now(),
         }
-        
+
         # Define explicit schema for task links
-        task_links_schema = StructType([
-            StructField("id", StringType(), True),
-            StructField("from_task_id", StringType(), True),
-            StructField("to_task_id", StringType(), True),
-            StructField("link_type", StringType(), True),
-            StructField("metadata", MapType(StringType(), StringType()), True),
-            StructField("created_at", TimestampType(), True)
-        ])
-        
+        task_links_schema = StructType(
+            [
+                StructField("id", StringType(), True),
+                StructField("from_task_id", StringType(), True),
+                StructField("to_task_id", StringType(), True),
+                StructField("link_type", StringType(), True),
+                StructField("metadata", MapType(StringType(), StringType()), True),
+                StructField("created_at", TimestampType(), True),
+            ]
+        )
+
         link_df = self.spark.createDataFrame([task_link_data], task_links_schema)
         link_df.write.mode("append").saveAsTable(f"{self.full_schema}.task_links")
         print("✓ Created sample task dependency link")
-        
+
         return {
             "project_id": project_id,
             "task_ids": [root_task_id, foundation_task_id, planner_task_id],
-            "link_id": task_link_data["id"]
+            "link_id": task_link_data["id"],
         }
-    
+
     def create_sample_data(self) -> Dict[str, Any]:
         """Create all sample data and return references"""
         print("Creating sample data...")
         user_id = self.create_sample_user()
         integration_ids = self.create_sample_integrations(user_id)
         project_data = self.create_sample_project_and_tasks(user_id)
-        
-        return {
-            "user_id": user_id,
-            "integration_ids": integration_ids,
-            **project_data
-        }
-    
+
+        return {"user_id": user_id, "integration_ids": integration_ids, **project_data}
+
     def setup_database(self, include_sample_data: bool = True) -> Dict[str, Any]:
         """Complete database setup"""
         print(f"🚀 Starting database setup for {self.full_schema}")
-        
+
         self.create_schema()
         self.create_all_tables()
-        
+
         sample_data = {}
         if include_sample_data:
             sample_data = self.create_sample_data()
-        
+
         print(f"\n✅ Database setup completed successfully!")
         print(f"Database: {self.full_schema}")
         print("Ready for hierarchical task planning and AI agent interactions.")
-        
+
         return sample_data
 
 
@@ -614,7 +657,7 @@ def get_validation_queries(schema: str) -> List[Dict[str, str]]:
             UNION ALL
             SELECT 'agent_contexts', COUNT(*) FROM {schema}.agent_contexts
             ORDER BY table_name
-            """
+            """,
         },
         {
             "name": "Hierarchical Task Structure",
@@ -628,7 +671,7 @@ def get_validation_queries(schema: str) -> List[Dict[str, str]]:
               CASE WHEN t.parent_id IS NULL THEN 'Root Task' ELSE 'Child Task' END as task_type
             FROM {schema}.tasks t
             ORDER BY t.depth, t.created_at
-            """
+            """,
         },
         {
             "name": "Task Dependencies",
@@ -641,6 +684,6 @@ def get_validation_queries(schema: str) -> List[Dict[str, str]]:
             FROM {schema}.task_links tl
             JOIN {schema}.tasks t1 ON tl.to_task_id = t1.id
             JOIN {schema}.tasks t2 ON tl.from_task_id = t2.id
-            """
-        }
+            """,
+        },
     ]

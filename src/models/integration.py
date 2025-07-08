@@ -27,16 +27,16 @@ class Integration(BaseModel):
     name: str = Field(..., description="Integration name")
     enabled: bool = Field(True, description="Whether integration is enabled")
     config: IntegrationConfig = Field(..., description="Integration configuration")
-    
+
     # Sync settings
     sync_enabled: bool = Field(True, description="Whether sync is enabled")
     sync_interval_minutes: int = Field(60, description="Sync interval in minutes")
     last_sync_at: Optional[datetime] = Field(None, description="Last sync timestamp")
     last_sync_status: Optional[str] = Field(None, description="Last sync status")
-    
+
     # Metadata
     created_at: datetime = Field(..., description="Creation timestamp")
     updated_at: datetime = Field(..., description="Last update timestamp")
     created_by: str = Field(..., description="Creator ID or name")
-    
+
     model_config = ConfigDict(from_attributes=True)

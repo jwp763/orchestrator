@@ -132,6 +132,7 @@ class Project(ProjectBase):
         """Get the number of completed tasks in this project."""
         # Import here to avoid circular imports
         from .task import TaskStatus
+
         return len([task for task in self.tasks if task.status == TaskStatus.COMPLETED])
 
     model_config = ConfigDict(from_attributes=True)

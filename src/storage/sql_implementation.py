@@ -9,9 +9,7 @@ from sqlalchemy.exc import SQLAlchemyError
 
 from src.storage.interface import StorageInterface
 from src.storage.sql_models import Base, Project as SQLProject, Task as SQLTask
-from src.models import (
-    Project, Task, ProjectStatus, TaskStatus, ProjectPriority
-)
+from src.models import Project, Task, ProjectStatus, TaskStatus, ProjectPriority
 from src.models.task import TaskPriority
 from src.models.patch import Patch, ProjectPatch, TaskPatch, Op
 
@@ -24,7 +22,7 @@ class SQLStorage(StorageInterface):
         self.engine = create_engine(database_url, echo=False)
         self.SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=self.engine)
         self._session: Optional[Session] = None
-        
+
         # Create tables
         Base.metadata.create_all(bind=self.engine)
 
@@ -38,7 +36,7 @@ class SQLStorage(StorageInterface):
     def _convert_sql_project_to_pydantic(self, sql_project: SQLProject) -> Project:
         """Convert SQLAlchemy Project to Pydantic Project."""
         tasks = [self._convert_sql_task_to_pydantic(task) for task in sql_project.tasks]
-        
+
         return Project(
             id=sql_project.id,
             name=sql_project.name,
@@ -51,7 +49,7 @@ class SQLStorage(StorageInterface):
             created_at=sql_project.created_at,
             updated_at=sql_project.updated_at,
             created_by=sql_project.created_by,
-            tasks=tasks
+            tasks=tasks,
         )
 
     def _convert_sql_task_to_pydantic(self, sql_task: SQLTask) -> Task:
@@ -80,7 +78,7 @@ class SQLStorage(StorageInterface):
             created_at=sql_task.created_at,
             updated_at=sql_task.updated_at,
             completed_at=sql_task.completed_at,
-            created_by=sql_task.created_by
+            created_by=sql_task.created_by,
         )
 
     def _convert_pydantic_project_to_sql(self, project: Project) -> SQLProject:
@@ -96,7 +94,7 @@ class SQLStorage(StorageInterface):
             start_date=project.start_date,
             created_at=project.created_at,
             updated_at=project.updated_at,
-            created_by=project.created_by
+            created_by=project.created_by,
         )
 
     def _convert_pydantic_task_to_sql(self, task: Task) -> SQLTask:
@@ -125,7 +123,7 @@ class SQLStorage(StorageInterface):
             created_at=task.created_at,
             updated_at=task.updated_at,
             completed_at=task.completed_at,
-            created_by=task.created_by
+            created_by=task.created_by,
         )
 
     def get_project(self, project_id: str) -> Optional[Project]:
@@ -159,7 +157,7 @@ class SQLStorage(StorageInterface):
             sql_project = self.session.query(SQLProject).filter(SQLProject.id == project_id).first()
             if not sql_project:
                 return None
-            
+
             # Update fields
             sql_project.name = project.name
             sql_project.description = project.description
@@ -169,7 +167,7 @@ class SQLStorage(StorageInterface):
             sql_project.due_date = project.due_date
             sql_project.start_date = project.start_date
             sql_project.updated_at = datetime.now()
-            
+
             self.session.flush()
             return self._convert_sql_project_to_pydantic(sql_project)
         except SQLAlchemyError:
@@ -218,7 +216,7 @@ class SQLStorage(StorageInterface):
             sql_task = self.session.query(SQLTask).filter(SQLTask.id == task_id).first()
             if not sql_task:
                 return None
-            
+
             # Update fields
             sql_task.project_id = task.project_id
             sql_task.title = task.title
@@ -241,7 +239,7 @@ class SQLStorage(StorageInterface):
             sql_task.task_metadata = task.metadata
             sql_task.updated_at = datetime.now()
             sql_task.completed_at = task.completed_at
-            
+
             self.session.flush()
             return self._convert_sql_task_to_pydantic(sql_task)
         except SQLAlchemyError:
@@ -266,7 +264,7 @@ class SQLStorage(StorageInterface):
         try:
             # Start a fresh transaction
             self.begin_transaction()
-            
+
             # Apply project patches
             for project_patch in patch.project_patches:
                 result = self.apply_project_patch(project_patch)
@@ -274,7 +272,7 @@ class SQLStorage(StorageInterface):
                     # Operation failed and it wasn't a delete (which returns None on success)
                     self.rollback_transaction()
                     return False
-            
+
             # Apply task patches
             for task_patch in patch.task_patches:
                 result = self.apply_task_patch(task_patch)
@@ -282,10 +280,10 @@ class SQLStorage(StorageInterface):
                     # Operation failed and it wasn't a delete (which returns None on success)
                     self.rollback_transaction()
                     return False
-            
+
             self.commit_transaction()
             return True
-            
+
         except Exception:
             self.rollback_transaction()
             return False
@@ -301,7 +299,7 @@ class SQLStorage(StorageInterface):
                 # Validate required fields for project creation
                 if not patch.name:
                     raise ValueError("name is required for project creation")
-                    
+
                 # Create new project
                 project = Project(
                     name=patch.name,
@@ -311,18 +309,18 @@ class SQLStorage(StorageInterface):
                     tags=patch.tags or [],
                     due_date=patch.due_date,
                     start_date=patch.start_date,
-                    created_by="system"  # TODO: Get from context
+                    created_by="system",  # TODO: Get from context
                 )
                 return self.create_project(project)
-                
+
             elif patch.op == Op.UPDATE:
                 if not patch.project_id:
                     return None
-                    
+
                 existing = self.get_project(patch.project_id)
                 if not existing:
                     return None
-                
+
                 # Update fields that are provided
                 if patch.name is not None:
                     existing.name = patch.name
@@ -338,16 +336,16 @@ class SQLStorage(StorageInterface):
                     existing.due_date = patch.due_date
                 if patch.start_date is not None:
                     existing.start_date = patch.start_date
-                
+
                 return self.update_project(patch.project_id, existing)
-                
+
             elif patch.op == Op.DELETE:
                 if not patch.project_id:
                     return None
-                    
+
                 success = self.delete_project(patch.project_id)
                 return Project(id=patch.project_id, name="", created_by="") if success else None
-                
+
         except Exception:
             return None
 
@@ -360,7 +358,7 @@ class SQLStorage(StorageInterface):
                     raise ValueError("project_id is required for task creation")
                 if not patch.title:
                     raise ValueError("title is required for task creation")
-                    
+
                 # Create new task
                 task = Task(
                     project_id=patch.project_id,
@@ -376,18 +374,18 @@ class SQLStorage(StorageInterface):
                     labels=patch.labels or [],
                     dependencies=patch.dependencies or [],
                     metadata=patch.metadata or {},
-                    created_by="system"  # TODO: Get from context
+                    created_by="system",  # TODO: Get from context
                 )
                 return self.create_task(task)
-                
+
             elif patch.op == Op.UPDATE:
                 if not patch.task_id:
                     return None
-                    
+
                 existing = self.get_task(patch.task_id)
                 if not existing:
                     return None
-                
+
                 # Update fields that are provided
                 if patch.project_id is not None:
                     existing.project_id = patch.project_id
@@ -415,16 +413,16 @@ class SQLStorage(StorageInterface):
                     existing.dependencies = patch.dependencies
                 if patch.metadata is not None:
                     existing.metadata = patch.metadata
-                
+
                 return self.update_task(patch.task_id, existing)
-                
+
             elif patch.op == Op.DELETE:
                 if not patch.task_id:
                     return None
-                    
+
                 success = self.delete_task(patch.task_id)
                 return Task(id=patch.task_id, project_id="", title="", created_by="") if success else None
-                
+
         except Exception:
             return None
 

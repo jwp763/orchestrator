@@ -1,4 +1,17 @@
-from sqlalchemy import create_engine, Column, String, Integer, DateTime, ForeignKey, Text, Enum, JSON, Date, Float, Boolean
+from sqlalchemy import (
+    create_engine,
+    Column,
+    String,
+    Integer,
+    DateTime,
+    ForeignKey,
+    Text,
+    Enum,
+    JSON,
+    Date,
+    Float,
+    Boolean,
+)
 from sqlalchemy.orm import relationship, sessionmaker, declarative_base
 from datetime import datetime
 
@@ -7,8 +20,9 @@ from src.models.task import TaskStatus, TaskPriority
 
 Base = declarative_base()
 
+
 class Project(Base):
-    __tablename__ = 'projects'
+    __tablename__ = "projects"
 
     id = Column(String, primary_key=True)
     name = Column(String, nullable=False)
@@ -24,44 +38,45 @@ class Project(Base):
 
     tasks = relationship("Task", back_populates="project", cascade="all, delete-orphan")
 
+
 class Task(Base):
-    __tablename__ = 'tasks'
+    __tablename__ = "tasks"
 
     id = Column(String, primary_key=True)
-    project_id = Column(String, ForeignKey('projects.id'), nullable=False)
+    project_id = Column(String, ForeignKey("projects.id"), nullable=False)
     title = Column(String, nullable=False)
     description = Column(Text)
     status = Column(Enum(TaskStatus), default=TaskStatus.TODO)
     priority = Column(Enum(TaskPriority), default=TaskPriority.MEDIUM)
-    
+
     # Hierarchical fields
-    parent_id = Column(String, ForeignKey('tasks.id'))
+    parent_id = Column(String, ForeignKey("tasks.id"))
     estimated_minutes = Column(Integer)
     actual_minutes = Column(Integer)
     depth = Column(Integer, default=0)
     dependencies = Column(JSON, default=list)
-    
+
     # Scheduling
     due_date = Column(Date)
-    
+
     # Assignment
     assignee = Column(String)
     tags = Column(JSON, default=list)
     labels = Column(JSON, default=list)
-    
+
     # Integration references
     motion_task_id = Column(String)
     linear_issue_id = Column(String)
     notion_task_id = Column(String)
     gitlab_issue_id = Column(String)
-    
+
     # Metadata
     task_metadata = Column(JSON, default=dict)
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     completed_at = Column(DateTime)
     created_by = Column(String, nullable=False)
-    
+
     # Computed fields (these would be calculated dynamically, not stored)
     # is_overdue = Column(Boolean, default=False)
     # days_until_due = Column(Integer)
