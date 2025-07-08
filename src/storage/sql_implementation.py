@@ -13,7 +13,7 @@ from src.models import (
     Project, Task, ProjectStatus, TaskStatus, ProjectPriority
 )
 from src.models.task import TaskPriority
-from src.models.patches import Patch, ProjectPatch, TaskPatch, Op
+from src.models.patch import Patch, ProjectPatch, TaskPatch, Op
 
 
 class SQLStorage(StorageInterface):
