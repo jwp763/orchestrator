@@ -1,24 +1,25 @@
 """Comprehensive tests for patch models."""
 
-import pytest
 from datetime import date
 from uuid import uuid4
 
-from src.models.patch import Op, TaskPatch, ProjectPatch, Patch
-from src.models.project import ProjectStatus, ProjectPriority
-from src.models.task import TaskStatus, TaskPriority
+import pytest
+
+from src.models.patch import Op, Patch, ProjectPatch, TaskPatch
+from src.models.project import ProjectPriority, ProjectStatus
+from src.models.task import TaskPriority, TaskStatus
 
 
 class TestOp:
     """Test Op enum."""
 
-    def test_all_op_values(self):
+    def test_all_op_values(self) -> None:
         """Test all operation enum values."""
         expected_values = ["create", "update", "delete"]
         actual_values = [op.value for op in Op]
         assert actual_values == expected_values
 
-    def test_op_string_representation(self):
+    def test_op_string_representation(self) -> None:
         """Test string representation of operation values."""
         assert Op.CREATE.value == "create"
         assert Op.UPDATE.value == "update"
@@ -28,7 +29,7 @@ class TestOp:
 class TestTaskPatch:
     """Test TaskPatch model."""
 
-    def test_task_patch_create_operation_minimal(self):
+    def test_task_patch_create_operation_minimal(self) -> None:
         """Test TaskPatch for create operation with minimal fields."""
         patch = TaskPatch(op=Op.CREATE)
 
@@ -151,12 +152,12 @@ class TestTaskPatch:
     def test_task_patch_invalid_status(self):
         """Test TaskPatch with invalid status."""
         with pytest.raises(ValueError):
-            TaskPatch(op=Op.CREATE, status="invalid_status")  # type: ignore
+            TaskPatch(op=Op.CREATE, status="invalid_status")
 
     def test_task_patch_invalid_priority(self):
         """Test TaskPatch with invalid priority."""
         with pytest.raises(ValueError):
-            TaskPatch(op=Op.CREATE, priority="invalid_priority")  # type: ignore
+            TaskPatch(op=Op.CREATE, priority="invalid_priority")
 
     def test_task_patch_serialization(self):
         """Test TaskPatch JSON serialization."""
@@ -346,12 +347,12 @@ class TestProjectPatch:
     def test_project_patch_invalid_status(self):
         """Test ProjectPatch with invalid status."""
         with pytest.raises(ValueError):
-            ProjectPatch(op=Op.CREATE, status="invalid_status")  # type: ignore
+            ProjectPatch(op=Op.CREATE, status="invalid_status")
 
     def test_project_patch_invalid_priority(self):
         """Test ProjectPatch with invalid priority."""
         with pytest.raises(ValueError):
-            ProjectPatch(op=Op.CREATE, priority="invalid_priority")  # type: ignore
+            ProjectPatch(op=Op.CREATE, priority="invalid_priority")
 
     def test_project_patch_serialization(self):
         """Test ProjectPatch JSON serialization."""

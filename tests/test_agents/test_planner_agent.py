@@ -1,15 +1,16 @@
 """Comprehensive tests for PlannerAgent."""
 
 import json
-import pytest
-from unittest.mock import Mock, AsyncMock, patch, MagicMock
+from unittest.mock import AsyncMock, MagicMock, Mock, patch
 from uuid import uuid4
 
-from src.agent.planner_agent import PlannerAgent, create_planner_agent
+import pytest
+
 from src.agent.base import AgentError, JSONParsingError, ValidationError
-from src.models.patch import Patch, ProjectPatch, TaskPatch, Op
-from src.models.project import ProjectStatus, ProjectPriority
-from src.models.task import TaskStatus, TaskPriority
+from src.agent.planner_agent import PlannerAgent, create_planner_agent
+from src.models.patch import Op, Patch, ProjectPatch, TaskPatch
+from src.models.project import ProjectPriority, ProjectStatus
+from src.models.task import TaskPriority, TaskStatus
 
 
 @pytest.fixture
@@ -545,7 +546,7 @@ class TestPlannerAgentIntegration:
                     "status": "planning",
                     "priority": "medium",
                     "tags": ["web", "portfolio", "frontend"],
-                    "estimated_total_hours": 40,
+                    "estimated_total_minutes": 2400,
                 }
             ],
             "task_patches": [

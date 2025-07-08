@@ -1,18 +1,19 @@
 """Integration tests between different model types."""
 
-import pytest
 from datetime import date, datetime
 from uuid import uuid4
 
-from src.models.project import Project, ProjectStatus, ProjectPriority
-from src.models.task import Task, TaskStatus, TaskPriority
+import pytest
+
 from src.models.patch import Op, Patch, ProjectPatch, TaskPatch
+from src.models.project import Project, ProjectPriority, ProjectStatus
+from src.models.task import Task, TaskPriority, TaskStatus
 
 
 class TestModelIntegration:
     """Test integration between Project, Task, and Patch models."""
 
-    def test_complete_project_workflow(self):
+    def test_complete_project_workflow(self) -> None:
         """Test a complete project workflow using all models."""
         # Create project
         project = Project(
@@ -93,7 +94,7 @@ class TestModelIntegration:
         assert project.completed_task_count == 3
         assert project.status == ProjectStatus.COMPLETED
 
-    def test_patch_operations_on_complex_models(self):
+    def test_patch_operations_on_complex_models(self) -> None:
         """Test patch operations on models with complex data."""
         # Create project with full data
         project = Project(
@@ -160,9 +161,10 @@ class TestModelIntegration:
         assert len(deserialized_patch.project_patches) == 1
         assert len(deserialized_patch.task_patches) == 1
         assert deserialized_patch.project_patches[0].notion_page_id == "notion_updated"
+        assert deserialized_patch.task_patches[0].metadata is not None
         assert deserialized_patch.task_patches[0].metadata["completed"] is True
 
-    def test_model_validation_across_types(self):
+    def test_model_validation_across_types(self) -> None:
         """Test validation that spans multiple model types."""
         project = Project(name="Validation Test", created_by="test_user")
 
@@ -195,7 +197,7 @@ class TestModelIntegration:
         project.tasks = [valid_task, task1, task2, task3]
         assert project.task_count == 4
 
-    def test_serialization_consistency_across_models(self):
+    def test_serialization_consistency_across_models(self) -> None:
         """Test that serialization is consistent across all model types."""
         # Create interconnected models
         project = Project(
@@ -243,7 +245,7 @@ class TestModelIntegration:
         assert patch_restored.project_patches[0].name == "Updated"
         assert patch_restored.task_patches[0].status == TaskStatus.COMPLETED
 
-    def test_model_relationships_and_references(self):
+    def test_model_relationships_and_references(self) -> None:
         """Test relationships and references between models."""
         # Create project
         project = Project(name="Reference Test", created_by="test_user")
@@ -288,7 +290,7 @@ class TestModelIntegration:
 class TestModelEdgeCases:
     """Test edge cases and boundary conditions across models."""
 
-    def test_empty_and_minimal_models(self):
+    def test_empty_and_minimal_models(self) -> None:
         """Test models with minimal or empty data."""
         # Minimal project
         project = Project(name="Minimal", created_by="user")
@@ -305,7 +307,7 @@ class TestModelEdgeCases:
         empty_patch = Patch(project_patches=[ProjectPatch(op=Op.CREATE, name="Empty")])
         assert len(empty_patch.task_patches) == 0
 
-    def test_large_scale_models(self):
+    def test_large_scale_models(self) -> None:
         """Test models with large amounts of data."""
         # Project with many tasks
         project = Project(name="Large Scale", created_by="user")

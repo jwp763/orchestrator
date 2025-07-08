@@ -65,15 +65,17 @@ result = await agent.get_diff("Simple blog website", context=context)
 The PlannerAgent returns a `Patch` object containing:
 
 ### Project Patches
+
 - **op**: Always `Op.CREATE` for new projects
 - **name**: Generated project name
 - **description**: Detailed project description
 - **priority**: Project priority (`ProjectPriority.MEDIUM` by default)
 - **status**: Project status (`ProjectStatus.PLANNING` by default)
 - **tags**: Relevant project tags (e.g., ["web", "frontend", "backend"])
-- **estimated_total_hours**: Optional time estimate
+- **estimated_total_minutes**: Optional time estimate
 
 ### Task Patches (when milestones enabled)
+
 - **op**: Always `Op.CREATE` for new tasks
 - **title**: Milestone task title
 - **description**: Task description
@@ -86,7 +88,9 @@ The PlannerAgent returns a `Patch` object containing:
 ### Core Methods
 
 #### `get_diff(user_input, context=None)`
+
 Main method that processes project ideas:
+
 - Analyzes user input and context
 - Builds appropriate system prompt
 - Calls LLM with retry logic
@@ -94,14 +98,18 @@ Main method that processes project ideas:
 - Returns structured Patch object
 
 #### `_build_system_prompt(include_milestones=True)`
+
 Constructs the system prompt:
+
 - Defines agent role and capabilities
 - Includes JSON schema for response format
 - Adds milestone creation instructions if enabled
 - Ensures proper validation requirements
 
 #### `_validate_and_enhance_result(result)`
+
 Post-processes LLM results:
+
 - Validates project and task data
 - Sets default values for missing fields
 - Ensures data consistency
@@ -110,6 +118,7 @@ Post-processes LLM results:
 ### Error Handling
 
 The agent includes robust error handling:
+
 - **JSONParsingError**: Invalid JSON responses from LLM
 - **ValidationError**: Data that fails Pydantic validation
 - **AgentError**: General agent failures
@@ -120,17 +129,20 @@ The agent includes robust error handling:
 The PlannerAgent includes comprehensive test coverage:
 
 ### Unit Tests (`tests/test_planner_agent_simple.py`)
+
 - Basic functionality tests
 - Configuration validation
 - Error handling scenarios
 - Mock-based testing for isolation
 
 ### Integration Tests (`tests/test_planner_integration.py`)
+
 - Real-world project scenarios
 - Context-aware behavior
 - End-to-end functionality
 
 ### Test Coverage
+
 - **98% code coverage** on PlannerAgent implementation
 - All major code paths tested
 - Edge cases and error scenarios covered
@@ -138,12 +150,14 @@ The PlannerAgent includes comprehensive test coverage:
 ## Best Practices
 
 ### 1. Provider Configuration
+
 ```python
 # Ensure API keys are properly configured
 agent = create_planner_agent(provider="openai")  # Requires OPENAI_API_KEY
 ```
 
 ### 2. Context Usage
+
 ```python
 # Provide relevant context for better results
 context = {
@@ -155,6 +169,7 @@ context = {
 ```
 
 ### 3. Error Handling
+
 ```python
 try:
     result = await agent.get_diff(project_idea, context=context)
@@ -167,6 +182,7 @@ except ValidationError as e:
 ```
 
 ### 4. Milestone Management
+
 ```python
 # For simple projects, disable milestones
 agent = create_planner_agent(create_milestones=False)
@@ -209,6 +225,7 @@ agent = create_planner_agent(max_milestones=8)
 ### Debug Mode
 
 Enable debug logging to troubleshoot issues:
+
 ```python
 import logging
 logging.basicConfig(level=logging.DEBUG)
