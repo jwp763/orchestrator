@@ -4,7 +4,7 @@ from abc import ABC, abstractmethod
 from typing import List, Optional
 
 from src.models import Project, Task
-from src.models.patches import Patch, ProjectPatch, TaskPatch
+from src.models.patch import Patch, ProjectPatch, TaskPatch
 
 
 class StorageInterface(ABC):

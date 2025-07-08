@@ -17,7 +17,7 @@ from pydantic_ai.models.gemini import GeminiModel
 from pydantic_ai.models.groq import GroqModel
 
 from ..config import get_settings
-from ..models.patches import Patch, ProjectPatch, TaskPatch
+from ..models.patch import Patch, ProjectPatch, TaskPatch
 
 
 T = TypeVar('T', bound=BaseModel)

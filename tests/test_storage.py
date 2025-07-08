@@ -10,7 +10,7 @@ import pytest
 
 from src.models import Project, ProjectStatus, Task, TaskStatus, TaskPriority
 from src.models.project import ProjectPriority
-from src.models.patches import Op, Patch, ProjectPatch, TaskPatch
+from src.models.patch import Op, Patch, ProjectPatch, TaskPatch
 from src.storage.interface import StorageInterface
 from src.storage.sql_implementation import SQLStorage
 

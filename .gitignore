@@ -1,6 +1,9 @@
-
 .databricks
 venv
 .env
 .coverage
 .vscode/
+__pycache__/
+*.pyc
+__pycache__/
+.coverage
