@@ -1,7 +1,7 @@
 /**
  * Task-specific API operations
  */
-import { apiClient, type ApiResponse } from './api';
+import { ApiClient, type ApiResponse } from './api';
 import type {
   TaskResponse,
   TaskWithSubtasksResponse,
@@ -11,226 +11,204 @@ import type {
 } from '../types/api';
 
 export class TaskService {
+  private apiClient: ApiClient;
+
+  constructor(apiClient?: ApiClient) {
+    this.apiClient = apiClient || new ApiClient();
+  }
+
   /**
    * Get all tasks with optional filtering
    */
   async getTasks(params?: {
-    page?: number;
-    per_page?: number;
+    skip?: number;
+    limit?: number;
     project_id?: string;
+    parent_id?: string;
     status?: string;
     priority?: string;
     assignee?: string;
-    parent_id?: string;
-    tags?: string[];
   }): Promise<ApiResponse<TaskListResponse>> {
-    const queryParams = { ...params };
-    if (params?.tags) {
-      // Convert array to comma-separated string for query params
-      (queryParams as any).tags = params.tags.join(',');
-    }
-    return apiClient.get<TaskListResponse>('/api/tasks', queryParams);
+    const queryParams = new URLSearchParams();
+    if (params?.skip !== undefined) queryParams.append('skip', params.skip.toString());
+    if (params?.limit !== undefined) queryParams.append('limit', params.limit.toString());
+    if (params?.project_id) queryParams.append('project_id', params.project_id);
+    if (params?.parent_id) queryParams.append('parent_id', params.parent_id);
+    if (params?.status) queryParams.append('status', params.status);
+    if (params?.priority) queryParams.append('priority', params.priority);
+    if (params?.assignee) queryParams.append('assignee', params.assignee);
+
+    const endpoint = `/api/tasks${queryParams.toString() ? '?' + queryParams.toString() : ''}`;
+    return this.apiClient.get<TaskListResponse>(endpoint);
   }
 
   /**
-   * Get a specific task by ID
+   * Get a specific task by ID with its subtasks
    */
-  async getTask(id: string): Promise<ApiResponse<TaskResponse>> {
-    return apiClient.get<TaskResponse>(`/api/tasks/${id}`);
-  }
-
-  /**
-   * Get a task with all its subtasks
-   */
-  async getTaskWithSubtasks(id: string): Promise<ApiResponse<TaskWithSubtasksResponse>> {
-    return apiClient.get<TaskWithSubtasksResponse>(`/api/tasks/${id}/subtasks`);
+  async getTask(id: string): Promise<ApiResponse<TaskWithSubtasksResponse>> {
+    return this.apiClient.get<TaskWithSubtasksResponse>(`/api/tasks/${id}`);
   }
 
   /**
    * Create a new task
    */
   async createTask(task: TaskCreateRequest): Promise<ApiResponse<TaskResponse>> {
-    return apiClient.post<TaskResponse>('/api/tasks', task);
+    // Ensure required fields have defaults
+    const taskData: TaskCreateRequest = {
+      status: 'todo',
+      priority: 'medium',
+      tags: [],
+      dependencies: [],
+      metadata: {},
+      ...task
+    };
+    return this.apiClient.post<TaskResponse>('/api/tasks', taskData);
   }
 
   /**
    * Update an existing task
    */
   async updateTask(id: string, updates: TaskUpdateRequest): Promise<ApiResponse<TaskResponse>> {
-    return apiClient.put<TaskResponse>(`/api/tasks/${id}`, updates);
+    return this.apiClient.put<TaskResponse>(`/api/tasks/${id}`, updates);
   }
 
   /**
    * Delete a task
    */
   async deleteTask(id: string): Promise<ApiResponse<void>> {
-    return apiClient.delete<void>(`/api/tasks/${id}`);
+    return this.apiClient.delete<void>(`/api/tasks/${id}`);
   }
 
   /**
    * Get all subtasks for a specific task
    */
-  async getSubtasks(
-    parentId: string,
-    params?: {
-      page?: number;
-      per_page?: number;
-      status?: string;
-      priority?: string;
-    }
-  ): Promise<ApiResponse<TaskListResponse>> {
-    return apiClient.get<TaskListResponse>(`/api/tasks/${parentId}/subtasks`, params);
+  async getSubtasks(parentId: string): Promise<ApiResponse<TaskListResponse>> {
+    return this.getTasks({ parent_id: parentId });
   }
 
   /**
    * Update task status
    */
-  async updateTaskStatus(
-    id: string,
-    status: 'todo' | 'in_progress' | 'blocked' | 'in_review' | 'completed' | 'cancelled'
-  ): Promise<ApiResponse<TaskResponse>> {
-    return apiClient.put<TaskResponse>(`/api/tasks/${id}/status`, { status });
+  async updateTaskStatus(id: string, status: TaskUpdateRequest['status']): Promise<ApiResponse<TaskResponse>> {
+    return this.updateTask(id, { status });
   }
 
   /**
-   * Update task completion percentage
+   * Update task priority
    */
-  async updateTaskProgress(id: string, completion_percentage: number): Promise<ApiResponse<TaskResponse>> {
-    return apiClient.put<TaskResponse>(`/api/tasks/${id}/progress`, { completion_percentage });
+  async updateTaskPriority(id: string, priority: TaskUpdateRequest['priority']): Promise<ApiResponse<TaskResponse>> {
+    return this.updateTask(id, { priority });
   }
 
   /**
-   * Batch update task status
+   * Get tasks by project ID
    */
-  async updateTasksStatus(
-    taskIds: string[],
-    status: 'todo' | 'in_progress' | 'blocked' | 'in_review' | 'completed' | 'cancelled'
-  ): Promise<ApiResponse<TaskResponse[]>> {
-    return apiClient.put<TaskResponse[]>('/api/tasks/batch-status', {
-      task_ids: taskIds,
-      status,
-    });
+  async getTasksByProject(projectId: string): Promise<ApiResponse<TaskListResponse>> {
+    return this.getTasks({ project_id: projectId });
   }
 
   /**
-   * Reorder tasks within a project or parent task
+   * Get tasks by status
    */
-  async reorderTasks(
-    tasks: Array<{ id: string; sort_order: number }>
-  ): Promise<ApiResponse<TaskResponse[]>> {
-    return apiClient.put<TaskResponse[]>('/api/tasks/reorder', { tasks });
+  async getTasksByStatus(status: TaskResponse['status']): Promise<ApiResponse<TaskListResponse>> {
+    return this.getTasks({ status });
   }
 
   /**
-   * Move task to different project or parent
+   * Get tasks by priority
    */
-  async moveTask(
-    id: string,
-    destination: {
-      project_id?: string;
-      parent_id?: string | null;
-      sort_order?: number;
-    }
-  ): Promise<ApiResponse<TaskResponse>> {
-    return apiClient.put<TaskResponse>(`/api/tasks/${id}/move`, destination);
+  async getTasksByPriority(priority: TaskResponse['priority']): Promise<ApiResponse<TaskListResponse>> {
+    return this.getTasks({ priority });
   }
 
   /**
-   * Copy task to different location
+   * Get tasks by assignee
    */
-  async copyTask(
-    id: string,
-    destination: {
-      project_id?: string;
-      parent_id?: string | null;
-      include_subtasks?: boolean;
-    }
-  ): Promise<ApiResponse<TaskResponse>> {
-    return apiClient.post<TaskResponse>(`/api/tasks/${id}/copy`, destination);
+  async getTasksByAssignee(assignee: string): Promise<ApiResponse<TaskListResponse>> {
+    return this.getTasks({ assignee });
   }
 
   /**
-   * Get task dependencies
+   * Move task to different parent or project
    */
-  async getTaskDependencies(id: string): Promise<ApiResponse<{
-    dependencies: TaskResponse[];
-    dependents: TaskResponse[];
-  }>> {
-    return apiClient.get<any>(`/api/tasks/${id}/dependencies`);
+  async moveTask(id: string, destination: {
+    project_id?: string;
+    parent_id?: string | null;
+  }): Promise<ApiResponse<TaskResponse>> {
+    return this.updateTask(id, destination);
+  }
+
+  /**
+   * Update task dependencies
+   */
+  async updateTaskDependencies(id: string, dependencies: string[]): Promise<ApiResponse<TaskResponse>> {
+    return this.updateTask(id, { dependencies });
   }
 
   /**
    * Add task dependency
    */
   async addTaskDependency(id: string, dependsOnId: string): Promise<ApiResponse<TaskResponse>> {
-    return apiClient.post<TaskResponse>(`/api/tasks/${id}/dependencies`, {
-      depends_on_id: dependsOnId,
-    });
+    const currentTask = await this.getTask(id);
+    if (!currentTask.success || !currentTask.data) {
+      return {
+        success: false,
+        error: 'Failed to get current task data',
+        status: 500
+      };
+    }
+
+    const existingDependencies = currentTask.data.dependencies || [];
+    const updatedDependencies = [...new Set([...existingDependencies, dependsOnId])];
+    
+    return this.updateTask(id, { dependencies: updatedDependencies });
   }
 
   /**
    * Remove task dependency
    */
   async removeTaskDependency(id: string, dependsOnId: string): Promise<ApiResponse<TaskResponse>> {
-    return apiClient.delete<TaskResponse>(`/api/tasks/${id}/dependencies/${dependsOnId}`);
-  }
-
-  /**
-   * Get task time tracking
-   */
-  async getTaskTimeTracking(id: string): Promise<ApiResponse<{
-    estimated_minutes: number | null;
-    actual_minutes: number;
-    time_entries: Array<{
-      id: string;
-      start_time: string;
-      end_time: string | null;
-      duration_minutes: number;
-      description: string | null;
-    }>;
-  }>> {
-    return apiClient.get<any>(`/api/tasks/${id}/time-tracking`);
-  }
-
-  /**
-   * Start time tracking for a task
-   */
-  async startTimeTracking(id: string, description?: string): Promise<ApiResponse<any>> {
-    return apiClient.post<any>(`/api/tasks/${id}/time-tracking/start`, { description });
-  }
-
-  /**
-   * Stop time tracking for a task
-   */
-  async stopTimeTracking(id: string): Promise<ApiResponse<any>> {
-    return apiClient.post<any>(`/api/tasks/${id}/time-tracking/stop`);
-  }
-
-  /**
-   * Decompose task into subtasks using AI
-   */
-  async decomposeTask(
-    id: string,
-    options?: {
-      target_count?: number;
-      include_description?: boolean;
+    const currentTask = await this.getTask(id);
+    if (!currentTask.success || !currentTask.data) {
+      return {
+        success: false,
+        error: 'Failed to get current task data',
+        status: 500
+      };
     }
-  ): Promise<ApiResponse<TaskResponse[]>> {
-    return apiClient.post<TaskResponse[]>(`/api/tasks/${id}/decompose`, options);
+
+    const existingDependencies = currentTask.data.dependencies || [];
+    const updatedDependencies = existingDependencies.filter(dep => dep !== dependsOnId);
+    
+    return this.updateTask(id, { dependencies: updatedDependencies });
   }
 
   /**
-   * Search tasks by text
+   * Search tasks by title or description
    */
-  async searchTasks(query: string, params?: {
-    project_id?: string;
-    status?: string[];
-    priority?: string[];
-  }): Promise<ApiResponse<TaskListResponse>> {
-    return apiClient.get<TaskListResponse>('/api/tasks/search', {
-      q: query,
-      ...params,
-    });
+  async searchTasks(query: string, projectId?: string): Promise<ApiResponse<TaskListResponse>> {
+    // Get all tasks and filter client-side
+    const params = projectId ? { project_id: projectId } : {};
+    const allTasks = await this.getTasks(params);
+    
+    if (!allTasks.success || !allTasks.data) {
+      return allTasks;
+    }
+
+    const filteredTasks = allTasks.data.tasks.filter(task => 
+      task.title.toLowerCase().includes(query.toLowerCase()) ||
+      (task.description && task.description.toLowerCase().includes(query.toLowerCase()))
+    );
+
+    return {
+      success: true,
+      data: {
+        ...allTasks.data,
+        tasks: filteredTasks,
+        total: filteredTasks.length
+      },
+      status: 200
+    };
   }
 }
 
