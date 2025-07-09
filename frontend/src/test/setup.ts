@@ -1,4 +1,5 @@
 import '@testing-library/jest-dom'
+import { beforeEach, vi } from 'vitest'
 
 // Mock localStorage and sessionStorage
 Object.defineProperty(window, 'localStorage', {
@@ -22,7 +23,7 @@ Object.defineProperty(window, 'sessionStorage', {
 })
 
 // Mock fetch
-global.fetch = vi.fn()
+globalThis.fetch = vi.fn()
 
 // Reset mocks before each test
 beforeEach(() => {
