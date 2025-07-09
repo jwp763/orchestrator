@@ -3,6 +3,140 @@ project: "databricks-orchestrator"
 updated: "2025-01-09"
 
 tasks:
+  - id: "TEST-001"
+    title: "Critical Priority: Complete Missing Test Implementation"
+    status: "pending"
+    priority: "critical"
+    description: "Implement all missing tests for completed tasks to ensure comprehensive test coverage across API routes, orchestration services, and frontend integration. This addresses 30 missing tests across 4 completed tasks that are critical for production readiness."
+    dependencies: []
+    estimated_hours: 12
+    deliverables:
+      # API-001 Missing Tests (10 tests)
+      - path: "backend/tests/test_api/test_project_routes.py"
+        type: "file"
+        description: "Unit and integration tests for project CRUD API endpoints"
+      - path: "backend/tests/test_api/test_task_routes.py"
+        type: "file"
+        description: "Unit and integration tests for task CRUD API endpoints"
+      - path: "backend/tests/test_api/test_crud_integration.py"
+        type: "file"
+        description: "Integration tests for complete CRUD lifecycles and cascade operations"
+      - path: "backend/tests/test_api/test_api_performance.py"
+        type: "file"
+        description: "Performance tests for API response times under load"
+      - path: "backend/tests/test_api/test_api_security.py"
+        type: "file"
+        description: "Security tests for input validation and SQL injection prevention"
+      
+      # API-002 Missing Tests (8 tests)
+      - path: "backend/tests/test_orchestration/test_project_service.py"
+        type: "file"
+        description: "Unit tests for ProjectService with mocked dependencies"
+      - path: "backend/tests/test_orchestration/test_task_service.py"
+        type: "file"
+        description: "Unit tests for TaskService including hierarchical operations"
+      - path: "backend/tests/test_orchestration/test_agent_service.py"
+        type: "file"
+        description: "Unit tests for AgentService coordination and error handling"
+      - path: "backend/tests/test_orchestration/test_service_integration.py"
+        type: "file"
+        description: "Integration tests for service layer with real storage and agents"
+      
+      # UI-007 Missing Tests (10 tests)
+      - path: "frontend/src/services/api.test.ts"
+        type: "file"
+        description: "Unit tests for base API client with mocked HTTP responses"
+      - path: "frontend/src/services/projectService.test.ts"
+        type: "file"
+        description: "Unit tests for project-specific API operations"
+      - path: "frontend/src/services/taskService.test.ts"
+        type: "file"
+        description: "Unit tests for task-specific API operations"
+      - path: "frontend/src/hooks/useProjectManagement.integration.test.ts"
+        type: "file"
+        description: "Integration tests for frontend-backend data synchronization"
+      - path: "frontend/tests/e2e/user-workflows.spec.ts"
+        type: "file"
+        description: "E2E tests for complete user workflows with Playwright"
+      
+      # UI-002 Missing Tests (2 tests)
+      - path: "frontend/tests/integration/build.test.ts"
+        type: "file"
+        description: "Integration tests for development server and production build"
+    
+    acceptance_criteria:
+      # API-001 Test Requirements (Project & Task CRUD API Routes)
+      - "Unit tests for all project route handlers with valid and invalid request data"
+      - "Unit tests for all task route handlers with valid and invalid request data"
+      - "Unit tests for request/response model validation and serialization"
+      - "Unit tests for error handling for non-existent resources and validation errors"
+      - "Integration tests for full CRUD lifecycle for projects using TestClient"
+      - "Integration tests for full CRUD lifecycle for tasks using TestClient"
+      - "Integration tests for cascade delete behavior for projects and tasks"
+      - "Integration tests for filtering and pagination for list endpoints"
+      - "Integration tests for database transactions and rollback on failures"
+      - "Performance tests for API response times under load with multiple concurrent requests"
+      - "Security tests for input validation and SQL injection prevention"
+      
+      # API-002 Test Requirements (Orchestration Service Layer)
+      - "Unit tests for ProjectService methods with mocked storage and agent dependencies"
+      - "Unit tests for TaskService methods including hierarchical operations"
+      - "Unit tests for AgentService coordination between agents and storage"
+      - "Unit tests for error handling and validation in all service methods"
+      - "Integration tests for service layer integration with real SQL storage"
+      - "Integration tests for service layer integration with PlannerAgent"
+      - "Integration tests for transaction handling across multiple service operations"
+      - "Integration tests for patch application with complex multi-operation patches"
+      
+      # UI-007 Test Requirements (Frontend-Backend Integration)
+      - "Unit tests for API service methods with mocked HTTP responses"
+      - "Unit tests for TypeScript interfaces matching expected API responses"
+      - "Unit tests for error handling for different HTTP status codes"
+      - "Unit tests for loading state management in hooks"
+      - "Integration tests for full project lifecycle through UI with real backend"
+      - "Integration tests for full task lifecycle through UI with real backend"
+      - "Integration tests for error scenarios and user feedback"
+      - "Integration tests for optimistic updates and rollback on failures"
+      - "Integration tests for data synchronization between frontend and backend"
+      - "E2E tests for complete user workflows with Playwright"
+      
+      # UI-002 Test Requirements (React Application Build)
+      - "Integration tests for development server functionality"
+      - "Integration tests for production build optimization and bundle analysis"
+    
+    tests:
+      - type: "meta"
+        description: "Verify all 30 missing tests are implemented and passing"
+      - type: "coverage"
+        description: "Ensure overall test coverage remains above 85% for backend and 80% for frontend"
+      - type: "integration"
+        description: "Verify all new tests integrate properly with existing test suite"
+      - type: "ci"
+        description: "Confirm all tests pass in CI/CD pipeline without flakiness"
+    
+    notes: |
+      This task addresses the critical gap in test coverage identified during the comprehensive
+      test audit. The missing tests span across:
+      
+      - API-001: 10 missing tests for project/task CRUD endpoints
+      - API-002: 8 missing tests for orchestration service layer
+      - UI-007: 10 missing tests for frontend-backend integration
+      - UI-002: 2 missing tests for build/deployment processes
+      
+      Priority should be given to API route tests and service layer tests as they are
+      foundational for the application's core functionality. Frontend integration tests
+      should follow, with E2E tests implemented last.
+      
+      Each test file should include:
+      - Comprehensive docstrings explaining test purpose
+      - Setup and teardown fixtures
+      - Mock data factories for consistent test data
+      - Error case coverage
+      - Performance benchmarks where applicable
+      
+      Test implementation should follow existing patterns established in the codebase
+      and maintain consistency with current testing standards.
+
   - id: "MVP-001"
     title: "Phase 1: Define Core Pydantic Schemas"
     status: "completed"
@@ -378,6 +512,513 @@ tasks:
         description: "Test data synchronization between frontend and backend"
       - type: "e2e"
         description: "Test complete user workflows with Playwright"
+
+  - id: "DEL-001"
+    title: "Phase 3a: Database Schema Updates for Soft Delete"
+    status: "completed"
+    completion_date: "2025-01-09"
+    actual_hours: 2
+    priority: "high"
+    description: "Add soft delete fields to database models and create migration script to enable reversible deletion functionality."
+    dependencies:
+      - "UI-007"  # Frontend-backend integration
+    estimated_hours: 2
+    deliverables:
+      - path: "backend/src/storage/sql_models.py"
+        type: "file"
+        description: "Add deleted_at and deleted_by fields to Project and Task models"
+      - path: "backend/migrations/add_soft_delete_fields.py"
+        type: "file"
+        description: "Database migration script with indexes for performance"
+    acceptance_criteria:
+      - "Project model has deleted_at (DateTime, nullable) and deleted_by (String, nullable) fields"
+      - "Task model has deleted_at (DateTime, nullable) and deleted_by (String, nullable) fields"
+      - "Remove cascade='all, delete-orphan' from Project-Task relationship"
+      - "Migration script adds columns with proper indexes"
+      - "Migration is backwards compatible with existing data"
+      - "Database indexes created on deleted_at fields for query performance"
+    tests:
+      - type: "unit"
+        description: "Test model field definitions and validation"
+      - type: "integration"
+        description: "Test migration script execution and rollback"
+      - type: "integration"
+        description: "Test database performance with deleted_at indexes"
+
+  - id: "DEL-002"
+    title: "Phase 3b: Storage Layer Soft Delete Implementation with Cascading"
+    status: "pending"
+    priority: "high"
+    description: "Update storage layer to implement comprehensive soft delete operations with hierarchical cascading, deletion context tracking, and smart restoration capabilities."
+    dependencies:
+      - "DEL-001"
+    estimated_hours: 5
+    deliverables:
+      - path: "backend/src/storage/sql_implementation.py"
+        type: "file"
+        description: "Update storage layer with cascading soft delete operations and filters"
+      - path: "backend/src/storage/sql_models.py"
+        type: "file"
+        description: "Add deletion_context_id field to support hierarchical restoration"
+      - path: "backend/migrations/add_deletion_context.py"
+        type: "file"
+        description: "Migration to add deletion_context_id field with index"
+    acceptance_criteria:
+      # Core Soft Delete Functionality
+      - "All get methods filter out deleted records (WHERE deleted_at IS NULL)"
+      - "Replace delete_project() with soft_delete_project() method"
+      - "Replace delete_task() with soft_delete_task() method"
+      - "Add restore_project() and restore_task() methods"
+      - "Add get_deleted_projects() and get_deleted_tasks() methods for trash"
+      - "Add permanent_delete_project() and permanent_delete_task() for admin use"
+      
+      # Cascading Soft Delete Implementation
+      - "Hierarchical cascading: soft_delete_project() cascades to all project tasks"
+      - "Task hierarchy cascading: soft_delete_task() cascades to all subtasks recursively"
+      - "Deletion context tracking: all related deletions share deletion_context_id"
+      - "Atomic operations: cascading deletes happen in single transaction"
+      - "Idempotent operations: cascading handles already-deleted records gracefully"
+      
+      # Smart Restoration Logic
+      - "Context-aware restoration: restore_project() restores all tasks from same deletion context"
+      - "Hierarchical restoration: restore_task() can restore entire subtask hierarchy"
+      - "Selective restoration: support individual task restoration without affecting parent"
+      - "Restoration validation: prevent restoration of orphaned records"
+      
+      # Query Optimization
+      - "Batch operations for performance: bulk soft delete and restore operations"
+      - "Index utilization: queries use deleted_at and deletion_context_id indexes"
+      - "Efficient cascade queries: minimize database round trips during cascading"
+      
+      # Data Integrity
+      - "Referential integrity: soft deleted parents maintain relationship to children"
+      - "Orphan prevention: cannot restore child if parent is deleted (different context)"
+      - "Consistent timestamps: all cascaded deletions use same deleted_at timestamp"
+      - "Audit trail: track who initiated each deletion and restoration"
+      
+      # Error Handling
+      - "Proper error handling for restore operations"
+      - "Validation for circular references in task hierarchies"
+      - "Transaction rollback on cascade failures"
+      - "Clear error messages for invalid operations"
+    
+    implementation_details:
+      cascading_logic: |
+        # Project Cascading Soft Delete
+        def soft_delete_project(self, project_id: str, deleted_by: str) -> bool:
+            deletion_id = str(uuid.uuid4())
+            now = datetime.now()
+            
+            with self.session.begin():
+                # Soft delete project
+                project = self.get_project(project_id)
+                if not project:
+                    return False
+                    
+                project.deleted_at = now
+                project.deleted_by = deleted_by
+                project.deletion_context_id = deletion_id
+                
+                # Cascade to all tasks
+                self._cascade_soft_delete_project_tasks(project_id, deleted_by, now, deletion_id)
+                return True
+        
+        # Task Hierarchy Cascading
+        def soft_delete_task(self, task_id: str, deleted_by: str) -> bool:
+            deletion_id = str(uuid.uuid4())
+            now = datetime.now()
+            
+            with self.session.begin():
+                task = self.get_task(task_id)
+                if not task:
+                    return False
+                    
+                # Soft delete task
+                task.deleted_at = now
+                task.deleted_by = deleted_by
+                task.deletion_context_id = deletion_id
+                
+                # Cascade to all subtasks recursively
+                self._cascade_soft_delete_task_hierarchy(task_id, deleted_by, now, deletion_id)
+                return True
+        
+        # Smart Restoration
+        def restore_project(self, project_id: str) -> bool:
+            with self.session.begin():
+                project = self.session.query(Project).filter_by(id=project_id).first()
+                if not project or project.deleted_at is None:
+                    return False
+                    
+                deletion_context_id = project.deletion_context_id
+                
+                # Restore project
+                project.deleted_at = None
+                project.deleted_by = None
+                project.deletion_context_id = None
+                
+                # Restore all tasks from same deletion context
+                if deletion_context_id:
+                    self._restore_deletion_context(deletion_context_id)
+                    
+                return True
+      
+      performance_optimizations: |
+        # Batch Operations
+        def soft_delete_projects_batch(self, project_ids: List[str], deleted_by: str) -> Dict[str, bool]:
+            results = {}
+            with self.session.begin():
+                for project_id in project_ids:
+                    results[project_id] = self._soft_delete_project_internal(project_id, deleted_by)
+            return results
+        
+        # Efficient Cascade Queries
+        def _cascade_soft_delete_project_tasks(self, project_id: str, deleted_by: str, 
+                                             deleted_at: datetime, deletion_id: str):
+            # Single query to get all active tasks
+            tasks = self.session.query(Task).filter(
+                Task.project_id == project_id,
+                Task.deleted_at.is_(None)
+            ).all()
+            
+            # Bulk update
+            for task in tasks:
+                task.deleted_at = deleted_at
+                task.deleted_by = deleted_by
+                task.deletion_context_id = deletion_id
+      
+      query_patterns: |
+        # Active Records Only
+        def get_active_projects(self) -> List[Project]:
+            return self.session.query(Project).filter(Project.deleted_at.is_(None)).all()
+        
+        # Deleted Records (Trash)
+        def get_deleted_projects(self) -> List[Project]:
+            return self.session.query(Project).filter(Project.deleted_at.is_not(None)).all()
+        
+        # Deletion Context Queries
+        def get_deletion_context_items(self, deletion_context_id: str) -> Dict[str, List]:
+            projects = self.session.query(Project).filter_by(deletion_context_id=deletion_context_id).all()
+            tasks = self.session.query(Task).filter_by(deletion_context_id=deletion_context_id).all()
+            return {"projects": projects, "tasks": tasks}
+    
+    tests:
+      - type: "unit"
+        description: "Test soft delete operations set deleted_at timestamp and deletion_context_id"
+      - type: "unit"
+        description: "Test deleted records filtered from normal queries"
+      - type: "unit"
+        description: "Test restore operations clear deleted_at field and deletion_context_id"
+      - type: "unit"
+        description: "Test project cascading soft delete to all tasks"
+      - type: "unit"
+        description: "Test task hierarchy cascading soft delete to all subtasks"
+      - type: "unit"
+        description: "Test deletion context tracking across cascaded operations"
+      - type: "unit"
+        description: "Test context-aware restoration of project hierarchies"
+      - type: "unit"
+        description: "Test selective task restoration without affecting parent"
+      - type: "unit"
+        description: "Test permanent delete operations remove records completely"
+      - type: "unit"
+        description: "Test batch soft delete operations for performance"
+      - type: "unit"
+        description: "Test error handling for invalid restoration scenarios"
+      - type: "unit"
+        description: "Test circular reference validation in task hierarchies"
+      - type: "integration"
+        description: "Test full soft delete lifecycle with cascading using real database"
+      - type: "integration"
+        description: "Test complex project hierarchy deletion and restoration"
+      - type: "integration"
+        description: "Test performance with large datasets and deep task hierarchies"
+      - type: "integration"
+        description: "Test transaction rollback on cascade failures"
+      - type: "integration"
+        description: "Test deletion context isolation between different operations"
+
+  - id: "DEL-003"
+    title: "Phase 3c: API Routes for Soft Delete and Restore"
+    status: "pending"
+    priority: "high"
+    description: "Add REST API endpoints for soft delete, restore, and trash management operations."
+    dependencies:
+      - "DEL-002"
+    estimated_hours: 2
+    deliverables:
+      - path: "backend/src/api/project_routes.py"
+        type: "file"
+        description: "Add soft delete, restore, and trash endpoints for projects"
+      - path: "backend/src/api/task_routes.py"
+        type: "file"
+        description: "Add soft delete, restore, and trash endpoints for tasks"
+      - path: "backend/src/api/models.py"
+        type: "file"
+        description: "Add soft delete response models and restore request types"
+    acceptance_criteria:
+      # Core Soft Delete Endpoints
+      - "UPDATE existing DELETE endpoints to perform soft delete with cascading"
+      - "ADD POST /api/projects/{id}/restore endpoint with context-aware restoration"
+      - "ADD POST /api/tasks/{id}/restore endpoint with hierarchy restoration"
+      - "ADD GET /api/projects/trash endpoint for deleted projects with context info"
+      - "ADD GET /api/tasks/trash endpoint for deleted tasks with context info"
+      - "ADD DELETE /api/projects/{id}/permanent endpoint (admin only)"
+      - "ADD DELETE /api/tasks/{id}/permanent endpoint (admin only)"
+      
+      # Cascading and Context Features
+      - "DELETE /api/projects/{id} cascades to all project tasks automatically"
+      - "DELETE /api/tasks/{id} cascades to all subtasks recursively"
+      - "Restore endpoints show what will be restored (preview mode)"
+      - "Batch operations: DELETE /api/projects/batch and /api/tasks/batch"
+      - "Deletion context endpoints: GET /api/deletion-contexts/{id}"
+      
+      # Enhanced Response Models
+      - "Response models include deleted_at, deleted_by, and deletion_context_id fields"
+      - "Cascade summary in delete responses (items affected count)"
+      - "Restoration preview in restore responses (items to be restored)"
+      - "Proper HTTP status codes and error responses"
+      - "Request validation and authorization checks"
+    tests:
+      - type: "unit"
+        description: "Test API route handlers with valid requests"
+      - type: "unit"
+        description: "Test request/response model validation"
+      - type: "unit"
+        description: "Test error handling for invalid operations"
+      - type: "unit"
+        description: "Test cascade summary response models"
+      - type: "unit"
+        description: "Test restoration preview response models"
+      - type: "integration"
+        description: "Test soft delete API endpoints with TestClient"
+      - type: "integration"
+        description: "Test restore API endpoints with TestClient"
+      - type: "integration"
+        description: "Test trash listing endpoints with pagination"
+      - type: "integration"
+        description: "Test cascading deletion through API endpoints"
+      - type: "integration"
+        description: "Test context-aware restoration through API endpoints"
+      - type: "integration"
+        description: "Test batch operations with multiple projects/tasks"
+      - type: "integration"
+        description: "Test deletion context endpoints and queries"
+
+  - id: "DEL-004"
+    title: "Phase 3d: Service Layer Soft Delete Business Logic"
+    status: "pending"
+    priority: "high"
+    description: "Update orchestration service layer with soft delete business logic, validation, and cascade operations."
+    dependencies:
+      - "DEL-003"
+    estimated_hours: 2
+    deliverables:
+      - path: "backend/src/orchestration/project_service.py"
+        type: "file"
+        description: "Update service layer with soft delete business logic"
+      - path: "backend/src/orchestration/task_service.py"
+        type: "file"
+        description: "Update service layer with soft delete business logic"
+    acceptance_criteria:
+      - "Service methods use soft delete operations from storage layer"
+      - "Restore functionality with proper validation (check ownership, dependencies)"
+      - "Cascade soft delete logic with transaction management"
+      - "Business rules for trash management (auto-cleanup after 30 days)"
+      - "Audit logging for all delete/restore operations"
+      - "Rate limiting and security checks for delete operations"
+      - "Dependency validation before allowing deletes"
+    tests:
+      - type: "unit"
+        description: "Test service methods with mocked storage dependencies"
+      - type: "unit"
+        description: "Test business validation rules"
+      - type: "unit"
+        description: "Test cascade delete business logic"
+      - type: "unit"
+        description: "Test restore validation and error handling"
+      - type: "integration"
+        description: "Test service layer integration with real storage"
+      - type: "integration"
+        description: "Test transaction handling for cascade operations"
+
+  - id: "DEL-005"
+    title: "Phase 3e: Frontend Types and Services for Soft Delete"
+    status: "pending"
+    priority: "high"
+    description: "Update frontend TypeScript types and API services to support soft delete, restore, and trash operations."
+    dependencies:
+      - "DEL-004"
+    estimated_hours: 2
+    deliverables:
+      - path: "frontend/src/types/api.ts"
+        type: "file"
+        description: "Add soft delete fields and restore/trash API types"
+      - path: "frontend/src/services/projectService.ts"
+        type: "file"
+        description: "Add soft delete, restore, and trash methods"
+      - path: "frontend/src/services/taskService.ts"
+        type: "file"
+        description: "Add soft delete, restore, and trash methods"
+    acceptance_criteria:
+      - "ProjectResponse and TaskResponse include deleted_at and deleted_by fields"
+      - "Add RestoreRequest, RestoreResponse, and TrashListResponse types"
+      - "Add isDeleted computed property helpers"
+      - "Project service has softDelete, restore, getTrash, permanentDelete methods"
+      - "Task service has softDelete, restore, getTrash, permanentDelete methods"
+      - "Services use updated API endpoints with proper error handling"
+      - "TypeScript interfaces match backend Pydantic models exactly"
+    tests:
+      - type: "unit"
+        description: "Test service methods with mocked HTTP responses"
+      - type: "unit"
+        description: "Test TypeScript type definitions and validation"
+      - type: "unit"
+        description: "Test error handling for different HTTP status codes"
+      - type: "unit"
+        description: "Test computed property helpers for deleted items"
+      - type: "integration"
+        description: "Test service integration with real backend APIs"
+
+  - id: "DEL-006"
+    title: "Phase 3f: Delete Confirmation and Trash UI Components"
+    status: "pending"
+    priority: "high"
+    description: "Create user interface components for delete confirmation, trash management, and restore operations."
+    dependencies:
+      - "DEL-005"
+    estimated_hours: 3
+    deliverables:
+      - path: "frontend/src/components/DeleteConfirmDialog/DeleteConfirmDialog.tsx"
+        type: "file"
+        description: "Confirmation dialog for delete operations with soft delete explanation"
+      - path: "frontend/src/components/DeleteConfirmDialog/DeleteConfirmDialog.test.tsx"
+        type: "file"
+      - path: "frontend/src/components/TrashBin/TrashBin.tsx"
+        type: "file"
+        description: "Trash bin component showing deleted items with restore options"
+      - path: "frontend/src/components/TrashBin/TrashBin.test.tsx"
+        type: "file"
+      - path: "frontend/src/components/RestoreConfirmDialog/RestoreConfirmDialog.tsx"
+        type: "file"
+        description: "Confirmation dialog for restore operations"
+      - path: "frontend/src/components/RestoreConfirmDialog/RestoreConfirmDialog.test.tsx"
+        type: "file"
+    acceptance_criteria:
+      - "Delete confirmation dialog explains soft delete functionality"
+      - "Dialog shows what items will be affected (cascade behavior)"
+      - "Trash bin component displays deleted items with timestamps"
+      - "Bulk selection for multiple item operations"
+      - "Restore confirmation with impact explanation"
+      - "Search and filter functionality in trash bin"
+      - "Empty state for trash bin when no deleted items"
+      - "Responsive design for mobile and desktop"
+      - "Accessibility support (ARIA labels, keyboard navigation)"
+    tests:
+      - type: "unit"
+        description: "Test DeleteConfirmDialog component interactions"
+      - type: "unit"
+        description: "Test TrashBin component with various states"
+      - type: "unit"
+        description: "Test RestoreConfirmDialog component interactions"
+      - type: "unit"
+        description: "Test bulk selection and operations"
+      - type: "accessibility"
+        description: "Test dialog accessibility with screen readers"
+      - type: "visual"
+        description: "Test responsive design across screen sizes"
+
+  - id: "DEL-007"
+    title: "Phase 3g: Integrate Delete Functionality into Existing Components"
+    status: "pending"
+    priority: "high"
+    description: "Add delete buttons and functionality to existing project and task components throughout the application."
+    dependencies:
+      - "DEL-006"
+    estimated_hours: 2
+    deliverables:
+      - path: "frontend/src/components/TaskCard/TaskCard.tsx"
+        type: "file"
+        description: "Add delete button with trash icon"
+      - path: "frontend/src/components/ProjectDetails/ProjectDetails.tsx"
+        type: "file"
+        description: "Add delete button to project header"
+      - path: "frontend/src/components/ProjectSidebar/ProjectSidebar.tsx"
+        type: "file"
+        description: "Add context menu with delete option"
+      - path: "frontend/src/components/TaskDetails/TaskDetails.tsx"
+        type: "file"
+        description: "Add delete button to task details modal"
+      - path: "frontend/src/hooks/useProjectManagement.ts"
+        type: "file"
+        description: "Add delete, restore, and trash management functionality"
+      - path: "frontend/src/App.tsx"
+        type: "file"
+        description: "Add trash bin toggle and dialog state management"
+    acceptance_criteria:
+      - "Task cards have delete button with confirmation flow"
+      - "Project details header has delete button"
+      - "Context menus support delete operations"
+      - "Task details modal has delete button"
+      - "Trash bin icon in navigation shows count of deleted items"
+      - "Keyboard shortcuts (Delete key) for selected items"
+      - "Optimistic UI updates with undo functionality"
+      - "Success/error messages for all operations"
+      - "Visual indicators for items pending deletion"
+    tests:
+      - type: "unit"
+        description: "Test delete button integration in all components"
+      - type: "unit"
+        description: "Test useProjectManagement hook with delete operations"
+      - type: "unit"
+        description: "Test keyboard shortcuts and event handling"
+      - type: "unit"
+        description: "Test optimistic UI updates and rollback"
+      - type: "integration"
+        description: "Test complete delete workflow through UI"
+      - type: "integration"
+        description: "Test undo functionality and state management"
+
+  - id: "DEL-008"
+    title: "Phase 3h: End-to-End Testing and Polish"
+    status: "pending"
+    priority: "medium"
+    description: "Comprehensive testing of soft delete system and user experience polish including performance optimization and documentation."
+    dependencies:
+      - "DEL-007"
+    estimated_hours: 2
+    deliverables:
+      - path: "docs/soft_delete_system.md"
+        type: "file"
+        description: "Documentation for soft delete system usage and administration"
+      - path: "backend/tests/test_soft_delete_integration.py"
+        type: "file"
+        description: "Comprehensive integration tests for soft delete system"
+      - path: "frontend/e2e/soft_delete_workflows.spec.ts"
+        type: "file"
+        description: "End-to-end tests for delete/restore user workflows"
+    acceptance_criteria:
+      - "Complete user workflows tested end-to-end"
+      - "Performance testing with large numbers of deleted items"
+      - "Error handling and edge cases covered"
+      - "User experience polish and feedback improvements"
+      - "Documentation for users and administrators"
+      - "Database cleanup and maintenance procedures"
+      - "Monitoring and alerting for delete operations"
+    tests:
+      - type: "e2e"
+        description: "Test complete user delete/restore workflows"
+      - type: "e2e"
+        description: "Test trash bin management and bulk operations"
+      - type: "e2e"
+        description: "Test cascade delete behavior through UI"
+      - type: "performance"
+        description: "Test system performance with many deleted items"
+      - type: "load"
+        description: "Test concurrent delete/restore operations"
+      - type: "security"
+        description: "Test authorization and data protection"
+      - type: "accessibility"
+        description: "Test complete system accessibility compliance"
 
   - id: "UI-008"
     title: "Phase 3: Integrate Natural Language Processing"
