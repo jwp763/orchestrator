@@ -8,6 +8,8 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
 from .planner_routes import router as planner_router
+from .project_routes import router as project_router
+from .task_routes import router as task_router
 from .models import ErrorResponse
 
 # Configure logging
@@ -47,6 +49,8 @@ def create_app() -> FastAPI:
     
     # Include routers
     app.include_router(planner_router, prefix="/api/planner", tags=["planner"])
+    app.include_router(project_router, prefix="/api", tags=["projects"])
+    app.include_router(task_router, prefix="/api", tags=["tasks"])
     
     # Global exception handler
     @app.exception_handler(Exception)

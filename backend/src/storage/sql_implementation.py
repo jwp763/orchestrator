@@ -148,7 +148,7 @@ class SQLStorage(StorageInterface):
         """Create a new project."""
         sql_project = self._convert_pydantic_project_to_sql(project)
         self.session.add(sql_project)
-        self.session.flush()  # Flush to get the ID
+        self.session.commit()  # Commit to persist the changes
         return self._convert_sql_project_to_pydantic(sql_project)
 
     def update_project(self, project_id: str, project: Project) -> Optional[Project]:
@@ -168,7 +168,7 @@ class SQLStorage(StorageInterface):
             sql_project.start_date = project.start_date
             sql_project.updated_at = datetime.now()
 
-            self.session.flush()
+            self.session.commit()
             return self._convert_sql_project_to_pydantic(sql_project)
         except SQLAlchemyError:
             return None
@@ -179,7 +179,7 @@ class SQLStorage(StorageInterface):
             sql_project = self.session.query(SQLProject).filter(SQLProject.id == project_id).first()
             if sql_project:
                 self.session.delete(sql_project)
-                self.session.flush()
+                self.session.commit()
                 return True
             return False
         except SQLAlchemyError:
@@ -207,7 +207,7 @@ class SQLStorage(StorageInterface):
         """Create a new task."""
         sql_task = self._convert_pydantic_task_to_sql(task)
         self.session.add(sql_task)
-        self.session.flush()
+        self.session.commit()
         return self._convert_sql_task_to_pydantic(sql_task)
 
     def update_task(self, task_id: str, task: Task) -> Optional[Task]:
@@ -240,7 +240,7 @@ class SQLStorage(StorageInterface):
             sql_task.updated_at = datetime.now()
             sql_task.completed_at = task.completed_at
 
-            self.session.flush()
+            self.session.commit()
             return self._convert_sql_task_to_pydantic(sql_task)
         except SQLAlchemyError:
             return None
@@ -251,7 +251,7 @@ class SQLStorage(StorageInterface):
             sql_task = self.session.query(SQLTask).filter(SQLTask.id == task_id).first()
             if sql_task:
                 self.session.delete(sql_task)
-                self.session.flush()
+                self.session.commit()
                 return True
             return False
         except SQLAlchemyError:
