@@ -546,39 +546,196 @@ tasks:
         description: "Test database performance with deleted_at indexes"
 
   - id: "DEL-002"
-    title: "Phase 3b: Storage Layer Soft Delete Implementation"
+    title: "Phase 3b: Storage Layer Soft Delete Implementation with Cascading"
     status: "pending"
     priority: "high"
-    description: "Update storage layer to implement soft delete operations and filter deleted records from normal queries."
+    description: "Update storage layer to implement comprehensive soft delete operations with hierarchical cascading, deletion context tracking, and smart restoration capabilities."
     dependencies:
       - "DEL-001"
-    estimated_hours: 3
+    estimated_hours: 5
     deliverables:
       - path: "backend/src/storage/sql_implementation.py"
         type: "file"
-        description: "Update storage layer with soft delete operations and filters"
+        description: "Update storage layer with cascading soft delete operations and filters"
+      - path: "backend/src/storage/sql_models.py"
+        type: "file"
+        description: "Add deletion_context_id field to support hierarchical restoration"
+      - path: "backend/migrations/add_deletion_context.py"
+        type: "file"
+        description: "Migration to add deletion_context_id field with index"
     acceptance_criteria:
+      # Core Soft Delete Functionality
       - "All get methods filter out deleted records (WHERE deleted_at IS NULL)"
       - "Replace delete_project() with soft_delete_project() method"
       - "Replace delete_task() with soft_delete_task() method"
       - "Add restore_project() and restore_task() methods"
       - "Add get_deleted_projects() and get_deleted_tasks() methods for trash"
       - "Add permanent_delete_project() and permanent_delete_task() for admin use"
-      - "Cascade soft delete: deleting project soft-deletes all its tasks"
+      
+      # Cascading Soft Delete Implementation
+      - "Hierarchical cascading: soft_delete_project() cascades to all project tasks"
+      - "Task hierarchy cascading: soft_delete_task() cascades to all subtasks recursively"
+      - "Deletion context tracking: all related deletions share deletion_context_id"
+      - "Atomic operations: cascading deletes happen in single transaction"
+      - "Idempotent operations: cascading handles already-deleted records gracefully"
+      
+      # Smart Restoration Logic
+      - "Context-aware restoration: restore_project() restores all tasks from same deletion context"
+      - "Hierarchical restoration: restore_task() can restore entire subtask hierarchy"
+      - "Selective restoration: support individual task restoration without affecting parent"
+      - "Restoration validation: prevent restoration of orphaned records"
+      
+      # Query Optimization
+      - "Batch operations for performance: bulk soft delete and restore operations"
+      - "Index utilization: queries use deleted_at and deletion_context_id indexes"
+      - "Efficient cascade queries: minimize database round trips during cascading"
+      
+      # Data Integrity
+      - "Referential integrity: soft deleted parents maintain relationship to children"
+      - "Orphan prevention: cannot restore child if parent is deleted (different context)"
+      - "Consistent timestamps: all cascaded deletions use same deleted_at timestamp"
+      - "Audit trail: track who initiated each deletion and restoration"
+      
+      # Error Handling
       - "Proper error handling for restore operations"
+      - "Validation for circular references in task hierarchies"
+      - "Transaction rollback on cascade failures"
+      - "Clear error messages for invalid operations"
+    
+    implementation_details:
+      cascading_logic: |
+        # Project Cascading Soft Delete
+        def soft_delete_project(self, project_id: str, deleted_by: str) -> bool:
+            deletion_id = str(uuid.uuid4())
+            now = datetime.now()
+            
+            with self.session.begin():
+                # Soft delete project
+                project = self.get_project(project_id)
+                if not project:
+                    return False
+                    
+                project.deleted_at = now
+                project.deleted_by = deleted_by
+                project.deletion_context_id = deletion_id
+                
+                # Cascade to all tasks
+                self._cascade_soft_delete_project_tasks(project_id, deleted_by, now, deletion_id)
+                return True
+        
+        # Task Hierarchy Cascading
+        def soft_delete_task(self, task_id: str, deleted_by: str) -> bool:
+            deletion_id = str(uuid.uuid4())
+            now = datetime.now()
+            
+            with self.session.begin():
+                task = self.get_task(task_id)
+                if not task:
+                    return False
+                    
+                # Soft delete task
+                task.deleted_at = now
+                task.deleted_by = deleted_by
+                task.deletion_context_id = deletion_id
+                
+                # Cascade to all subtasks recursively
+                self._cascade_soft_delete_task_hierarchy(task_id, deleted_by, now, deletion_id)
+                return True
+        
+        # Smart Restoration
+        def restore_project(self, project_id: str) -> bool:
+            with self.session.begin():
+                project = self.session.query(Project).filter_by(id=project_id).first()
+                if not project or project.deleted_at is None:
+                    return False
+                    
+                deletion_context_id = project.deletion_context_id
+                
+                # Restore project
+                project.deleted_at = None
+                project.deleted_by = None
+                project.deletion_context_id = None
+                
+                # Restore all tasks from same deletion context
+                if deletion_context_id:
+                    self._restore_deletion_context(deletion_context_id)
+                    
+                return True
+      
+      performance_optimizations: |
+        # Batch Operations
+        def soft_delete_projects_batch(self, project_ids: List[str], deleted_by: str) -> Dict[str, bool]:
+            results = {}
+            with self.session.begin():
+                for project_id in project_ids:
+                    results[project_id] = self._soft_delete_project_internal(project_id, deleted_by)
+            return results
+        
+        # Efficient Cascade Queries
+        def _cascade_soft_delete_project_tasks(self, project_id: str, deleted_by: str, 
+                                             deleted_at: datetime, deletion_id: str):
+            # Single query to get all active tasks
+            tasks = self.session.query(Task).filter(
+                Task.project_id == project_id,
+                Task.deleted_at.is_(None)
+            ).all()
+            
+            # Bulk update
+            for task in tasks:
+                task.deleted_at = deleted_at
+                task.deleted_by = deleted_by
+                task.deletion_context_id = deletion_id
+      
+      query_patterns: |
+        # Active Records Only
+        def get_active_projects(self) -> List[Project]:
+            return self.session.query(Project).filter(Project.deleted_at.is_(None)).all()
+        
+        # Deleted Records (Trash)
+        def get_deleted_projects(self) -> List[Project]:
+            return self.session.query(Project).filter(Project.deleted_at.is_not(None)).all()
+        
+        # Deletion Context Queries
+        def get_deletion_context_items(self, deletion_context_id: str) -> Dict[str, List]:
+            projects = self.session.query(Project).filter_by(deletion_context_id=deletion_context_id).all()
+            tasks = self.session.query(Task).filter_by(deletion_context_id=deletion_context_id).all()
+            return {"projects": projects, "tasks": tasks}
+    
     tests:
       - type: "unit"
-        description: "Test soft delete operations set deleted_at timestamp"
+        description: "Test soft delete operations set deleted_at timestamp and deletion_context_id"
       - type: "unit"
         description: "Test deleted records filtered from normal queries"
       - type: "unit"
-        description: "Test restore operations clear deleted_at field"
+        description: "Test restore operations clear deleted_at field and deletion_context_id"
       - type: "unit"
-        description: "Test cascade soft delete behavior"
+        description: "Test project cascading soft delete to all tasks"
       - type: "unit"
-        description: "Test permanent delete operations"
+        description: "Test task hierarchy cascading soft delete to all subtasks"
+      - type: "unit"
+        description: "Test deletion context tracking across cascaded operations"
+      - type: "unit"
+        description: "Test context-aware restoration of project hierarchies"
+      - type: "unit"
+        description: "Test selective task restoration without affecting parent"
+      - type: "unit"
+        description: "Test permanent delete operations remove records completely"
+      - type: "unit"
+        description: "Test batch soft delete operations for performance"
+      - type: "unit"
+        description: "Test error handling for invalid restoration scenarios"
+      - type: "unit"
+        description: "Test circular reference validation in task hierarchies"
       - type: "integration"
-        description: "Test full soft delete lifecycle with database"
+        description: "Test full soft delete lifecycle with cascading using real database"
+      - type: "integration"
+        description: "Test complex project hierarchy deletion and restoration"
+      - type: "integration"
+        description: "Test performance with large datasets and deep task hierarchies"
+      - type: "integration"
+        description: "Test transaction rollback on cascade failures"
+      - type: "integration"
+        description: "Test deletion context isolation between different operations"
 
   - id: "DEL-003"
     title: "Phase 3c: API Routes for Soft Delete and Restore"
@@ -599,14 +756,26 @@ tasks:
         type: "file"
         description: "Add soft delete response models and restore request types"
     acceptance_criteria:
-      - "UPDATE existing DELETE endpoints to perform soft delete"
-      - "ADD POST /api/projects/{id}/restore endpoint"
-      - "ADD POST /api/tasks/{id}/restore endpoint"
-      - "ADD GET /api/projects/trash endpoint for deleted projects"
-      - "ADD GET /api/tasks/trash endpoint for deleted tasks"
+      # Core Soft Delete Endpoints
+      - "UPDATE existing DELETE endpoints to perform soft delete with cascading"
+      - "ADD POST /api/projects/{id}/restore endpoint with context-aware restoration"
+      - "ADD POST /api/tasks/{id}/restore endpoint with hierarchy restoration"
+      - "ADD GET /api/projects/trash endpoint for deleted projects with context info"
+      - "ADD GET /api/tasks/trash endpoint for deleted tasks with context info"
       - "ADD DELETE /api/projects/{id}/permanent endpoint (admin only)"
       - "ADD DELETE /api/tasks/{id}/permanent endpoint (admin only)"
-      - "Response models include deleted_at and deleted_by fields"
+      
+      # Cascading and Context Features
+      - "DELETE /api/projects/{id} cascades to all project tasks automatically"
+      - "DELETE /api/tasks/{id} cascades to all subtasks recursively"
+      - "Restore endpoints show what will be restored (preview mode)"
+      - "Batch operations: DELETE /api/projects/batch and /api/tasks/batch"
+      - "Deletion context endpoints: GET /api/deletion-contexts/{id}"
+      
+      # Enhanced Response Models
+      - "Response models include deleted_at, deleted_by, and deletion_context_id fields"
+      - "Cascade summary in delete responses (items affected count)"
+      - "Restoration preview in restore responses (items to be restored)"
       - "Proper HTTP status codes and error responses"
       - "Request validation and authorization checks"
     tests:
@@ -616,12 +785,24 @@ tasks:
         description: "Test request/response model validation"
       - type: "unit"
         description: "Test error handling for invalid operations"
+      - type: "unit"
+        description: "Test cascade summary response models"
+      - type: "unit"
+        description: "Test restoration preview response models"
       - type: "integration"
         description: "Test soft delete API endpoints with TestClient"
       - type: "integration"
         description: "Test restore API endpoints with TestClient"
       - type: "integration"
         description: "Test trash listing endpoints with pagination"
+      - type: "integration"
+        description: "Test cascading deletion through API endpoints"
+      - type: "integration"
+        description: "Test context-aware restoration through API endpoints"
+      - type: "integration"
+        description: "Test batch operations with multiple projects/tasks"
+      - type: "integration"
+        description: "Test deletion context endpoints and queries"
 
   - id: "DEL-004"
     title: "Phase 3d: Service Layer Soft Delete Business Logic"
