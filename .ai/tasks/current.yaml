@@ -3,15 +3,16 @@ project: "databricks-orchestrator"
 updated: "2025-01-09"
 
 tasks:
-  - id: "TEST-001"
-    title: "Critical Priority: Complete Missing Test Implementation"
-    status: "pending"
-    priority: "critical"
-    description: "Implement all missing tests for completed tasks to ensure comprehensive test coverage across API routes, orchestration services, and frontend integration. This addresses 30 missing tests across 4 completed tasks that are critical for production readiness."
-    dependencies: []
-    estimated_hours: 12
+  - id: "TEST-API-001"
+    title: "Test Suite: API Routes (Project & Task CRUD)"
+    status: "completed"
+    completion_date: "2025-01-09"
+    actual_hours: 4
+    priority: "high"
+    description: "Implement comprehensive test suite for API-001 deliverables, covering all project and task CRUD API endpoints with unit tests, integration tests, performance tests, and security validation. CRITICAL: Include test database isolation to prevent test interference."
+    dependencies: ["API-001"]
+    estimated_hours: 4
     deliverables:
-      # API-001 Missing Tests (10 tests)
       - path: "backend/tests/test_api/test_project_routes.py"
         type: "file"
         description: "Unit and integration tests for project CRUD API endpoints"
@@ -27,8 +28,46 @@ tasks:
       - path: "backend/tests/test_api/test_api_security.py"
         type: "file"
         description: "Security tests for input validation and SQL injection prevention"
-      
-      # API-002 Missing Tests (8 tests)
+      - path: "backend/tests/test_api/test_database_isolation.py"
+        type: "file"
+        description: "Test database isolation utilities and transaction management"
+    acceptance_criteria:
+      # CRITICAL: Test Database Isolation
+      - "Test database isolation: each test runs in isolated transaction that rolls back"
+      - "Test fixtures provide clean database state for each test"
+      - "Test utilities for creating isolated test data without persistence"
+      - "Test transactions are properly isolated between concurrent tests"
+      - "Test cleanup utilities ensure no data leakage between tests"
+      - "Test performance with proper isolation (should not significantly slow tests)"
+      - "Unit tests for all project route handlers with valid and invalid request data"
+      - "Unit tests for all task route handlers with valid and invalid request data"
+      - "Unit tests for request/response model validation and serialization"
+      - "Unit tests for error handling for non-existent resources and validation errors"
+      - "Integration tests for full CRUD lifecycle for projects using TestClient"
+      - "Integration tests for full CRUD lifecycle for tasks using TestClient"
+      - "Integration tests for cascade delete behavior for projects and tasks"
+      - "Integration tests for filtering and pagination for list endpoints"
+      - "Integration tests for database transactions and rollback on failures"
+      - "Performance tests for API response times under load with multiple concurrent requests"
+      - "Security tests for input validation and SQL injection prevention"
+    tests:
+      - type: "unit"
+        description: "Test all API route handlers with mocked dependencies"
+      - type: "integration"
+        description: "Test full API workflows with real database"
+      - type: "performance"
+        description: "Test API response times under concurrent load"
+      - type: "security"
+        description: "Test input validation and injection prevention"
+
+  - id: "TEST-API-002"
+    title: "Test Suite: Orchestration Service Layer"
+    status: "pending"
+    priority: "high"
+    description: "Implement comprehensive test suite for API-002 deliverables, covering all orchestration services including ProjectService, TaskService, and AgentService with proper mocking and integration testing."
+    dependencies: ["API-002"]
+    estimated_hours: 3
+    deliverables:
       - path: "backend/tests/test_orchestration/test_project_service.py"
         type: "file"
         description: "Unit tests for ProjectService with mocked dependencies"
@@ -41,8 +80,31 @@ tasks:
       - path: "backend/tests/test_orchestration/test_service_integration.py"
         type: "file"
         description: "Integration tests for service layer with real storage and agents"
-      
-      # UI-007 Missing Tests (10 tests)
+    acceptance_criteria:
+      - "Unit tests for ProjectService methods with mocked storage and agent dependencies"
+      - "Unit tests for TaskService methods including hierarchical operations"
+      - "Unit tests for AgentService coordination between agents and storage"
+      - "Unit tests for error handling and validation in all service methods"
+      - "Integration tests for service layer integration with real SQL storage"
+      - "Integration tests for service layer integration with PlannerAgent"
+      - "Integration tests for transaction handling across multiple service operations"
+      - "Integration tests for patch application with complex multi-operation patches"
+    tests:
+      - type: "unit"
+        description: "Test service methods with mocked dependencies"
+      - type: "integration"
+        description: "Test service integration with storage and agents"
+      - type: "transaction"
+        description: "Test transaction handling and rollback scenarios"
+
+  - id: "TEST-UI-007"
+    title: "Test Suite: Frontend-Backend Integration"
+    status: "pending"
+    priority: "high"
+    description: "Implement comprehensive test suite for UI-007 deliverables, covering frontend API services, hooks, and end-to-end user workflows with proper mocking and integration testing."
+    dependencies: ["UI-007"]
+    estimated_hours: 4
+    deliverables:
       - path: "frontend/src/services/api.test.ts"
         type: "file"
         description: "Unit tests for base API client with mocked HTTP responses"
@@ -52,43 +114,16 @@ tasks:
       - path: "frontend/src/services/taskService.test.ts"
         type: "file"
         description: "Unit tests for task-specific API operations"
-      - path: "frontend/src/hooks/useProjectManagement.integration.test.ts"
+      - path: "frontend/src/hooks/useProjectManagement.test.ts"
+        type: "file"
+        description: "Unit tests for project management hook with mocked services"
+      - path: "frontend/tests/integration/api-integration.test.ts"
         type: "file"
         description: "Integration tests for frontend-backend data synchronization"
       - path: "frontend/tests/e2e/user-workflows.spec.ts"
         type: "file"
         description: "E2E tests for complete user workflows with Playwright"
-      
-      # UI-002 Missing Tests (2 tests)
-      - path: "frontend/tests/integration/build.test.ts"
-        type: "file"
-        description: "Integration tests for development server and production build"
-    
     acceptance_criteria:
-      # API-001 Test Requirements (Project & Task CRUD API Routes)
-      - "Unit tests for all project route handlers with valid and invalid request data"
-      - "Unit tests for all task route handlers with valid and invalid request data"
-      - "Unit tests for request/response model validation and serialization"
-      - "Unit tests for error handling for non-existent resources and validation errors"
-      - "Integration tests for full CRUD lifecycle for projects using TestClient"
-      - "Integration tests for full CRUD lifecycle for tasks using TestClient"
-      - "Integration tests for cascade delete behavior for projects and tasks"
-      - "Integration tests for filtering and pagination for list endpoints"
-      - "Integration tests for database transactions and rollback on failures"
-      - "Performance tests for API response times under load with multiple concurrent requests"
-      - "Security tests for input validation and SQL injection prevention"
-      
-      # API-002 Test Requirements (Orchestration Service Layer)
-      - "Unit tests for ProjectService methods with mocked storage and agent dependencies"
-      - "Unit tests for TaskService methods including hierarchical operations"
-      - "Unit tests for AgentService coordination between agents and storage"
-      - "Unit tests for error handling and validation in all service methods"
-      - "Integration tests for service layer integration with real SQL storage"
-      - "Integration tests for service layer integration with PlannerAgent"
-      - "Integration tests for transaction handling across multiple service operations"
-      - "Integration tests for patch application with complex multi-operation patches"
-      
-      # UI-007 Test Requirements (Frontend-Backend Integration)
       - "Unit tests for API service methods with mocked HTTP responses"
       - "Unit tests for TypeScript interfaces matching expected API responses"
       - "Unit tests for error handling for different HTTP status codes"
@@ -99,43 +134,38 @@ tasks:
       - "Integration tests for optimistic updates and rollback on failures"
       - "Integration tests for data synchronization between frontend and backend"
       - "E2E tests for complete user workflows with Playwright"
-      
-      # UI-002 Test Requirements (React Application Build)
+    tests:
+      - type: "unit"
+        description: "Test frontend services and hooks with mocks"
+      - type: "integration"
+        description: "Test frontend-backend integration workflows"
+      - type: "e2e"
+        description: "Test complete user workflows end-to-end"
+
+  - id: "TEST-UI-002"
+    title: "Test Suite: React Application Build & Infrastructure"
+    status: "pending"
+    priority: "medium"
+    description: "Implement test suite for UI-002 deliverables, covering React application build processes, development server functionality, and production optimization verification."
+    dependencies: ["UI-002"]
+    estimated_hours: 1
+    deliverables:
+      - path: "frontend/tests/integration/build.test.ts"
+        type: "file"
+        description: "Integration tests for development server and production build"
+      - path: "frontend/tests/integration/dev-server.test.ts"
+        type: "file"
+        description: "Tests for development server functionality and HMR"
+    acceptance_criteria:
       - "Integration tests for development server functionality"
       - "Integration tests for production build optimization and bundle analysis"
-    
+      - "Tests for hot module replacement in development"
+      - "Tests for build output validation and asset optimization"
     tests:
-      - type: "meta"
-        description: "Verify all 30 missing tests are implemented and passing"
-      - type: "coverage"
-        description: "Ensure overall test coverage remains above 85% for backend and 80% for frontend"
       - type: "integration"
-        description: "Verify all new tests integrate properly with existing test suite"
-      - type: "ci"
-        description: "Confirm all tests pass in CI/CD pipeline without flakiness"
-    
-    notes: |
-      This task addresses the critical gap in test coverage identified during the comprehensive
-      test audit. The missing tests span across:
-      
-      - API-001: 10 missing tests for project/task CRUD endpoints
-      - API-002: 8 missing tests for orchestration service layer
-      - UI-007: 10 missing tests for frontend-backend integration
-      - UI-002: 2 missing tests for build/deployment processes
-      
-      Priority should be given to API route tests and service layer tests as they are
-      foundational for the application's core functionality. Frontend integration tests
-      should follow, with E2E tests implemented last.
-      
-      Each test file should include:
-      - Comprehensive docstrings explaining test purpose
-      - Setup and teardown fixtures
-      - Mock data factories for consistent test data
-      - Error case coverage
-      - Performance benchmarks where applicable
-      
-      Test implementation should follow existing patterns established in the codebase
-      and maintain consistency with current testing standards.
+        description: "Test development server and build processes"
+      - type: "build"
+        description: "Test production build optimization and output"
 
   - id: "MVP-001"
     title: "Phase 1: Define Core Pydantic Schemas"
@@ -549,7 +579,7 @@ tasks:
     title: "Phase 3b: Storage Layer Soft Delete Implementation with Cascading"
     status: "pending"
     priority: "high"
-    description: "Update storage layer to implement comprehensive soft delete operations with hierarchical cascading, deletion context tracking, and smart restoration capabilities."
+    description: "Update storage layer to implement comprehensive soft delete operations with hierarchical cascading, deletion context tracking, and smart restoration capabilities. CRITICAL: Must fix Foreign Key Constraint Issue identified in TEST-API-001 where project deletion fails when tasks exist."
     dependencies:
       - "DEL-001"
     estimated_hours: 5
@@ -564,6 +594,13 @@ tasks:
         type: "file"
         description: "Migration to add deletion_context_id field with index"
     acceptance_criteria:
+      # CRITICAL: Foreign Key Constraint Issue Fix
+      - "Fix Foreign Key Constraint Issue: project deletion must handle tasks with foreign key constraints"
+      - "Implement cascade soft delete logic for projects: when project is deleted, all related tasks are also soft deleted"
+      - "Replace hard delete with soft delete to prevent foreign key constraint violations"
+      - "Ensure project deletion endpoint returns 204 (success) instead of 500 (internal server error)"
+      - "Maintain referential integrity during soft delete operations"
+      
       # Core Soft Delete Functionality
       - "All get methods filter out deleted records (WHERE deleted_at IS NULL)"
       - "Replace delete_project() with soft_delete_project() method"
@@ -702,6 +739,17 @@ tasks:
             return {"projects": projects, "tasks": tasks}
     
     tests:
+      # CRITICAL: Foreign Key Constraint Issue Tests
+      - type: "unit"
+        description: "Test project deletion with existing tasks succeeds without foreign key constraint error"
+      - type: "unit"
+        description: "Test cascade soft delete preserves referential integrity"
+      - type: "integration"
+        description: "Test failing test_project_task_relationship_lifecycle from TEST-API-001 now passes"
+      - type: "integration"
+        description: "Test project deletion endpoint returns 204 instead of 500 when tasks exist"
+      
+      # Core Soft Delete Tests
       - type: "unit"
         description: "Test soft delete operations set deleted_at timestamp and deletion_context_id"
       - type: "unit"
@@ -1019,6 +1067,214 @@ tasks:
         description: "Test authorization and data protection"
       - type: "accessibility"
         description: "Test complete system accessibility compliance"
+
+  - id: "FIX-001"
+    title: "Fast Follow: Fix Task Listing Pagination and Filtering"
+    status: "pending"
+    priority: "high"
+    description: "Fix task listing pagination and filtering issues identified in TEST-API-001 integration tests. Tasks created during tests are not appearing in task listings due to pagination limits and filtering issues."
+    dependencies:
+      - "DEL-002"  # Should be fixed after soft delete implementation
+    estimated_hours: 2
+    deliverables:
+      - path: "backend/src/api/task_routes.py"
+        type: "file"
+        description: "Fix task listing endpoint pagination and filtering logic"
+      - path: "backend/src/storage/sql_implementation.py"
+        type: "file"
+        description: "Update storage layer to improve task listing queries"
+      - path: "backend/tests/test_api/test_task_pagination.py"
+        type: "file"
+        description: "Comprehensive tests for task listing pagination and filtering"
+    acceptance_criteria:
+      # CRITICAL: Task Listing Issues
+      - "Fix task listing pagination: ensure newly created tasks appear in listings"
+      - "Fix task listing filtering: support project_id, status, assignee, and other filters"
+      - "Improve default ordering: tasks should be ordered by created_at DESC or updated_at DESC"
+      - "Add proper pagination metadata: total count, page info, has_next/has_prev"
+      - "Optimize queries: use proper indexing and limit unnecessary data fetching"
+      - "Add search functionality: enable searching tasks by title and description"
+      
+      # Enhanced Filtering Options
+      - "Support multiple filter combinations: project_id + status + assignee"
+      - "Add date range filtering: created_at and updated_at ranges"
+      - "Add hierarchical filtering: parent_id, depth level filtering"
+      - "Add tag-based filtering: filter by tags using contains/exact match"
+      - "Add priority-based filtering: filter by task priority levels"
+      - "Add completion status filtering: filter by completion percentage ranges"
+      
+      # Performance Optimizations
+      - "Implement database indexes on frequently queried fields"
+      - "Add query optimization for large datasets"
+      - "Implement proper pagination cursor support"
+      - "Add query result caching for frequently accessed data"
+      - "Optimize subquery performance for task hierarchies"
+      
+      # API Response Improvements
+      - "Consistent response format with pagination metadata"
+      - "Add sort parameter support: sort by title, created_at, updated_at, priority"
+      - "Add limit parameter validation: min=1, max=100, default=20"
+      - "Add proper error handling for invalid filter parameters"
+      - "Add response headers for pagination navigation"
+    
+    implementation_details:
+      issue_analysis: |
+        # Root Cause Analysis from TEST-API-001
+        
+        1. **Task Listing Pagination Issue**:
+           - Current implementation returns fixed 100 tasks by default
+           - New tasks created during tests get lost in pagination
+           - Evidence: "Total tasks in listing: 100", "Our task found in listing: False"
+           
+        2. **Filtering Logic Problems**:
+           - Task filters may not be properly applied in combination
+           - Project-specific task queries may not work correctly
+           - Need better query optimization for complex filters
+           
+        3. **Query Performance Issues**:
+           - Large datasets cause slow response times
+           - Pagination queries are inefficient
+           - Missing database indexes on filter columns
+           
+        4. **API Response Format**:
+           - Inconsistent pagination metadata across endpoints
+           - Missing sorting and ordering options
+           - Limited filtering capabilities
+      
+      proposed_solution: |
+        # Task Listing Endpoint Improvements
+        
+        def list_tasks(
+            skip: int = 0,
+            limit: int = 20,
+            project_id: Optional[str] = None,
+            status: Optional[TaskStatus] = None,
+            priority: Optional[TaskPriority] = None,
+            assignee: Optional[str] = None,
+            parent_id: Optional[str] = None,
+            search: Optional[str] = None,
+            tags: Optional[List[str]] = None,
+            created_after: Optional[datetime] = None,
+            created_before: Optional[datetime] = None,
+            sort_by: str = "created_at",
+            sort_order: str = "desc"
+        ) -> TaskListResponse:
+            # Build query with proper filtering and ordering
+            query = self.session.query(Task).filter(Task.deleted_at.is_(None))
+            
+            # Apply filters
+            if project_id:
+                query = query.filter(Task.project_id == project_id)
+            if status:
+                query = query.filter(Task.status == status)
+            if priority:
+                query = query.filter(Task.priority == priority)
+            if assignee:
+                query = query.filter(Task.assignee == assignee)
+            if parent_id:
+                query = query.filter(Task.parent_id == parent_id)
+            if search:
+                query = query.filter(or_(
+                    Task.title.ilike(f"%{search}%"),
+                    Task.description.ilike(f"%{search}%")
+                ))
+            if tags:
+                query = query.filter(Task.tags.op("&&")(tags))
+            if created_after:
+                query = query.filter(Task.created_at >= created_after)
+            if created_before:
+                query = query.filter(Task.created_at <= created_before)
+            
+            # Apply sorting
+            if sort_order.lower() == "desc":
+                query = query.order_by(desc(getattr(Task, sort_by)))
+            else:
+                query = query.order_by(asc(getattr(Task, sort_by)))
+            
+            # Get total count before pagination
+            total_count = query.count()
+            
+            # Apply pagination
+            tasks = query.offset(skip).limit(limit).all()
+            
+            # Build response with pagination metadata
+            return TaskListResponse(
+                tasks=tasks,
+                total=total_count,
+                page=skip // limit + 1,
+                per_page=limit,
+                has_next=skip + limit < total_count,
+                has_prev=skip > 0,
+                next_page=skip + limit if skip + limit < total_count else None,
+                prev_page=skip - limit if skip > 0 else None
+            )
+      
+      database_optimizations: |
+        # Database Index Recommendations
+        
+        CREATE INDEX idx_tasks_project_id ON tasks(project_id) WHERE deleted_at IS NULL;
+        CREATE INDEX idx_tasks_status ON tasks(status) WHERE deleted_at IS NULL;
+        CREATE INDEX idx_tasks_assignee ON tasks(assignee) WHERE deleted_at IS NULL;
+        CREATE INDEX idx_tasks_parent_id ON tasks(parent_id) WHERE deleted_at IS NULL;
+        CREATE INDEX idx_tasks_created_at ON tasks(created_at) WHERE deleted_at IS NULL;
+        CREATE INDEX idx_tasks_updated_at ON tasks(updated_at) WHERE deleted_at IS NULL;
+        CREATE INDEX idx_tasks_priority ON tasks(priority) WHERE deleted_at IS NULL;
+        CREATE INDEX idx_tasks_tags ON tasks USING GIN(tags) WHERE deleted_at IS NULL;
+        CREATE INDEX idx_tasks_search ON tasks USING GIN(to_tsvector('english', title || ' ' || description)) WHERE deleted_at IS NULL;
+        
+        # Composite indexes for common filter combinations
+        CREATE INDEX idx_tasks_project_status ON tasks(project_id, status) WHERE deleted_at IS NULL;
+        CREATE INDEX idx_tasks_project_assignee ON tasks(project_id, assignee) WHERE deleted_at IS NULL;
+        CREATE INDEX idx_tasks_status_priority ON tasks(status, priority) WHERE deleted_at IS NULL;
+    
+    tests:
+      # CRITICAL: Fix Existing Test Failures
+      - type: "integration"
+        description: "Test failing test_task_lifecycle from TEST-API-001 now passes with proper pagination"
+      - type: "integration"
+        description: "Test task listing returns newly created tasks in first page"
+      - type: "integration"
+        description: "Test task listing with project_id filter works correctly"
+      - type: "integration"
+        description: "Test task listing pagination metadata is accurate"
+      
+      # Enhanced Filtering Tests
+      - type: "unit"
+        description: "Test task filtering by single parameters (status, priority, assignee)"
+      - type: "unit"
+        description: "Test task filtering by multiple parameters combined"
+      - type: "unit"
+        description: "Test task search functionality by title and description"
+      - type: "unit"
+        description: "Test task filtering by date ranges (created_at, updated_at)"
+      - type: "unit"
+        description: "Test task filtering by hierarchical parameters (parent_id, depth)"
+      - type: "unit"
+        description: "Test task filtering by tags using contains and exact match"
+      - type: "unit"
+        description: "Test task sorting by different fields (title, created_at, priority)"
+      - type: "unit"
+        description: "Test pagination parameter validation and error handling"
+      
+      # Performance Tests
+      - type: "performance"
+        description: "Test task listing performance with large datasets (10k+ tasks)"
+      - type: "performance"
+        description: "Test complex filter combinations performance"
+      - type: "performance"
+        description: "Test pagination performance with deep page offsets"
+      - type: "performance"
+        description: "Test search functionality performance with large text data"
+      
+      # Integration Tests
+      - type: "integration"
+        description: "Test complete task listing workflow through API endpoints"
+      - type: "integration"
+        description: "Test task listing integration with project management workflow"
+      - type: "integration"
+        description: "Test task listing with real database and concurrent access"
+      - type: "integration"
+        description: "Test task listing response format consistency"
 
   - id: "UI-008"
     title: "Phase 3: Integrate Natural Language Processing"

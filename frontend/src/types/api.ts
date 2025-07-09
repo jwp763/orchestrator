@@ -37,9 +37,9 @@ export interface ProjectListResponse {
 export interface ProjectCreateRequest {
   name: string;
   description?: string;
-  status: 'planning' | 'active' | 'on_hold' | 'completed' | 'archived';
-  priority: 'critical' | 'high' | 'medium' | 'low' | 'backlog';
-  tags: string[];
+  status?: 'planning' | 'active' | 'on_hold' | 'completed' | 'archived';
+  priority?: 'critical' | 'high' | 'medium' | 'low' | 'backlog';
+  tags?: string[];
   due_date?: string;
   start_date?: string;
   created_by: string;
@@ -70,7 +70,7 @@ export interface TaskResponse {
   parent_id: string | null;
   title: string;
   description: string | null;
-  status: 'todo' | 'in_progress' | 'blocked' | 'in_review' | 'completed' | 'cancelled';
+  status: 'todo' | 'in_progress' | 'blocked' | 'completed';
   priority: 'critical' | 'high' | 'medium' | 'low' | 'backlog';
   tags: string[];
   estimated_minutes: number | null;
@@ -111,17 +111,14 @@ export interface TaskCreateRequest {
   parent_id?: string;
   title: string;
   description?: string;
-  status: 'todo' | 'in_progress' | 'blocked' | 'in_review' | 'completed' | 'cancelled';
-  priority: 'critical' | 'high' | 'medium' | 'low' | 'backlog';
-  tags: string[];
+  status?: 'todo' | 'in_progress' | 'blocked' | 'completed';
+  priority?: 'critical' | 'high' | 'medium' | 'low' | 'backlog';
+  tags?: string[];
   estimated_minutes?: number;
   due_date?: string;
   assignee?: string;
-  sort_order: number;
-  completion_percentage: number;
-  dependencies: string[];
-  notes?: string;
-  metadata: Record<string, any>;
+  dependencies?: string[];
+  metadata?: Record<string, any>;
   created_by: string;
   motion_task_id?: string;
   linear_issue_id?: string;
@@ -132,7 +129,7 @@ export interface TaskCreateRequest {
 export interface TaskUpdateRequest {
   title?: string;
   description?: string;
-  status?: 'todo' | 'in_progress' | 'blocked' | 'in_review' | 'completed' | 'cancelled';
+  status?: 'todo' | 'in_progress' | 'blocked' | 'completed';
   priority?: 'critical' | 'high' | 'medium' | 'low' | 'backlog';
   tags?: string[];
   estimated_minutes?: number;
@@ -140,10 +137,7 @@ export interface TaskUpdateRequest {
   due_date?: string;
   assignee?: string;
   parent_id?: string;
-  sort_order?: number;
-  completion_percentage?: number;
   dependencies?: string[];
-  notes?: string;
   metadata?: Record<string, any>;
   motion_task_id?: string;
   linear_issue_id?: string;
@@ -164,8 +158,9 @@ export interface PlannerConfig {
 }
 
 export interface PlannerRequest {
-  project_idea: string
-  config: PlannerConfig
+  idea: string
+  config?: PlannerConfig
+  context?: Record<string, any>
 }
 
 export interface ProjectData {
