@@ -14,6 +14,7 @@ from .models import (
 from ..models.project import Project, ProjectCreate, ProjectUpdate, ProjectStatus, ProjectPriority
 from ..storage.interface import StorageInterface
 from ..storage.sql_implementation import SQLStorage
+from ..orchestration.project_service import ProjectService
 
 # Configure logging
 logger = logging.getLogger(__name__)
@@ -25,6 +26,11 @@ router = APIRouter()
 def get_storage() -> StorageInterface:
     """Get storage instance."""
     return SQLStorage()
+
+# Dependency to get project service
+def get_project_service() -> ProjectService:
+    """Get project service instance."""
+    return ProjectService()
 
 
 def project_to_response(project: Project) -> ProjectResponse:
@@ -112,7 +118,7 @@ async def list_projects(
     limit: int = Query(100, ge=1, le=1000, description="Maximum number of projects to return"),
     status: Optional[ProjectStatus] = Query(None, description="Filter by project status"),
     priority: Optional[ProjectPriority] = Query(None, description="Filter by project priority"),
-    storage: StorageInterface = Depends(get_storage)
+    project_service: ProjectService = Depends(get_project_service)
 ):
     """
     List all projects with optional filtering and pagination.
@@ -122,19 +128,17 @@ async def list_projects(
     try:
         logger.info(f"Listing projects with skip={skip}, limit={limit}, status={status}, priority={priority}")
         
-        # Get all projects from storage
-        all_projects = storage.get_projects()
+        # Use project service for listing with filters
+        filtered_projects = project_service.list_projects(
+            skip=skip,
+            limit=limit,
+            status=status,
+            priority=priority
+        )
         
-        # Apply filters
-        filtered_projects = all_projects
-        if status:
-            filtered_projects = [p for p in filtered_projects if p.status == status]
-        if priority:
-            filtered_projects = [p for p in filtered_projects if p.priority == priority]
-        
-        # Apply pagination
-        total = len(filtered_projects)
-        projects = filtered_projects[skip:skip + limit]
+        # Get total count for pagination (simplified - in production you'd want a count method)
+        all_projects = project_service.list_projects(skip=0, limit=1000)  # Get as many as we can
+        total = len(all_projects)
         
         # Calculate pagination info
         page = (skip // limit) + 1
@@ -142,7 +146,7 @@ async def list_projects(
         has_prev = skip > 0
         
         return ProjectListResponse(
-            projects=[project_to_response(p) for p in projects],
+            projects=[project_to_response(p) for p in filtered_projects],
             total=total,
             page=page,
             per_page=limit,
@@ -153,7 +157,7 @@ async def list_projects(
     except Exception as e:
         logger.error(f"Error listing projects: {e}")
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            status_code=500,
             detail=f"Failed to list projects: {str(e)}"
         )
 
@@ -161,7 +165,7 @@ async def list_projects(
 @router.post("/projects", response_model=ProjectResponse, status_code=status.HTTP_201_CREATED)
 async def create_project(
     project_request: ProjectCreateRequest,
-    storage: StorageInterface = Depends(get_storage)
+    project_service: ProjectService = Depends(get_project_service)
 ):
     """
     Create a new project.
@@ -186,14 +190,8 @@ async def create_project(
             gitlab_project_id=project_request.gitlab_project_id
         )
         
-        # Create Project instance
-        project = Project(
-            **project_create.model_dump(),
-            created_by=project_request.created_by
-        )
-        
-        # Store in database
-        created_project = storage.create_project(project)
+        # Create project using service
+        created_project = project_service.create_project(project_create, project_request.created_by)
         
         if not created_project:
             raise HTTPException(
@@ -221,7 +219,7 @@ async def create_project(
 @router.get("/projects/{project_id}", response_model=ProjectWithTasksResponse)
 async def get_project(
     project_id: str,
-    storage: StorageInterface = Depends(get_storage)
+    project_service: ProjectService = Depends(get_project_service)
 ):
     """
     Get a project by ID with its tasks.
@@ -231,16 +229,12 @@ async def get_project(
     try:
         logger.info(f"Getting project: {project_id}")
         
-        project = storage.get_project(project_id)
+        project = project_service.get_project(project_id)
         if not project:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail=f"Project with ID {project_id} not found"
             )
-        
-        # Get tasks for this project
-        tasks = storage.get_tasks_by_project(project_id)
-        project.tasks = tasks
         
         return project_with_tasks_to_response(project)
         
