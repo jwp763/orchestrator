@@ -35,8 +35,12 @@ class Project(Base):
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     created_by = Column(String, nullable=False)
+    
+    # Soft delete fields
+    deleted_at = Column(DateTime, nullable=True)
+    deleted_by = Column(String, nullable=True)
 
-    tasks = relationship("Task", back_populates="project", cascade="all, delete-orphan")
+    tasks = relationship("Task", back_populates="project")
 
 
 class Task(Base):
@@ -76,6 +80,10 @@ class Task(Base):
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     completed_at = Column(DateTime)
     created_by = Column(String, nullable=False)
+    
+    # Soft delete fields
+    deleted_at = Column(DateTime, nullable=True)
+    deleted_by = Column(String, nullable=True)
 
     # Computed fields (these would be calculated dynamically, not stored)
     # is_overdue = Column(Boolean, default=False)
@@ -83,4 +91,4 @@ class Task(Base):
 
     project = relationship("Project", back_populates="tasks")
     parent = relationship("Task", remote_side=[id])
-    children = relationship("Task")
+    children = relationship("Task", overlaps="parent")
