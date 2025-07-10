@@ -95,62 +95,95 @@ def task_with_subtasks_to_response(task: Task, subtasks: List[Task]) -> TaskWith
 @router.get("/tasks", response_model=TaskListResponse)
 async def list_tasks(
     skip: int = Query(0, ge=0, description="Number of tasks to skip"),
-    limit: int = Query(100, ge=1, le=1000, description="Maximum number of tasks to return"),
+    limit: int = Query(20, ge=1, le=100, description="Maximum number of tasks to return"),
     project_id: Optional[str] = Query(None, description="Filter by project ID"),
     parent_id: Optional[str] = Query(None, description="Filter by parent task ID"),
-    status: Optional[TaskStatus] = Query(None, description="Filter by task status"),
+    task_status: Optional[TaskStatus] = Query(None, description="Filter by task status"),
     priority: Optional[TaskPriority] = Query(None, description="Filter by task priority"),
     assignee: Optional[str] = Query(None, description="Filter by assignee"),
+    search: Optional[str] = Query(None, description="Search in task title and description"),
+    tags: Optional[str] = Query(None, description="Filter by tags (comma-separated)"),
+    created_after: Optional[str] = Query(None, description="Filter by creation date (ISO format)"),
+    created_before: Optional[str] = Query(None, description="Filter by creation date (ISO format)"),
+    sort_by: str = Query("created_at", description="Sort by field (created_at, updated_at, title, priority)"),
+    sort_order: str = Query("desc", description="Sort order (asc, desc)"),
     storage: StorageInterface = Depends(get_storage)
 ):
     """
-    List all tasks with optional filtering and pagination.
+    List all tasks with advanced filtering, searching, and pagination.
     
-    Returns a paginated list of tasks with optional filtering by various criteria.
+    Returns a paginated list of tasks with comprehensive filtering and sorting options.
     """
     try:
-        logger.info(f"Listing tasks with skip={skip}, limit={limit}, project_id={project_id}, parent_id={parent_id}, status={status}, priority={priority}, assignee={assignee}")
+        logger.info(f"Listing tasks with skip={skip}, limit={limit}, project_id={project_id}, search='{search}'")
         
-        # Get tasks based on filters
-        if project_id:
-            all_tasks = storage.get_tasks_by_project(project_id)
-        else:
-            # If no project_id, we need to get all tasks from all projects
-            # This is a simplified approach - in production, you might want a more efficient method
-            all_projects = storage.get_projects()
-            all_tasks = []
-            for project in all_projects:
-                all_tasks.extend(storage.get_tasks_by_project(project.id))
+        # Parse tags if provided
+        tag_list = None
+        if tags:
+            tag_list = [tag.strip() for tag in tags.split(",") if tag.strip()]
         
-        # Apply additional filters
-        filtered_tasks = all_tasks
-        if parent_id:
-            filtered_tasks = [t for t in filtered_tasks if t.parent_id == parent_id]
-        if status:
-            filtered_tasks = [t for t in filtered_tasks if t.status == status]
-        if priority:
-            filtered_tasks = [t for t in filtered_tasks if t.priority == priority]
-        if assignee:
-            filtered_tasks = [t for t in filtered_tasks if t.assignee == assignee]
+        # Parse date filters if provided
+        created_after_dt = None
+        created_before_dt = None
+        if created_after:
+            try:
+                created_after_dt = datetime.fromisoformat(created_after.replace('Z', '+00:00'))
+            except ValueError:
+                raise HTTPException(
+                    status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                    detail=f"Invalid created_after date format: {created_after}"
+                )
+        if created_before:
+            try:
+                created_before_dt = datetime.fromisoformat(created_before.replace('Z', '+00:00'))
+            except ValueError:
+                raise HTTPException(
+                    status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                    detail=f"Invalid created_before date format: {created_before}"
+                )
         
-        # Apply pagination
-        total = len(filtered_tasks)
-        tasks = filtered_tasks[skip:skip + limit]
+        # Validate sort parameters
+        valid_sort_fields = ["created_at", "updated_at", "title", "priority", "status"]
+        if sort_by not in valid_sort_fields:
+            raise HTTPException(
+                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                detail=f"Invalid sort_by field. Must be one of: {', '.join(valid_sort_fields)}"
+            )
         
-        # Calculate pagination info
-        page = (skip // limit) + 1
-        has_next = skip + limit < total
-        has_prev = skip > 0
+        if sort_order.lower() not in ["asc", "desc"]:
+            raise HTTPException(
+                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                detail="Invalid sort_order. Must be 'asc' or 'desc'"
+            )
         
-        return TaskListResponse(
-            tasks=[task_to_response(t) for t in tasks],
-            total=total,
-            page=page,
-            per_page=limit,
-            has_next=has_next,
-            has_prev=has_prev
+        # Use the new enhanced list_tasks method
+        result = storage.list_tasks(
+            skip=skip,
+            limit=limit,
+            project_id=project_id,
+            status=task_status.value if task_status else None,
+            priority=priority.value if priority else None,
+            assignee=assignee,
+            parent_id=parent_id,
+            search=search,
+            tags=tag_list,
+            created_after=created_after_dt,
+            created_before=created_before_dt,
+            sort_by=sort_by,
+            sort_order=sort_order
         )
         
+        return TaskListResponse(
+            tasks=[task_to_response(t) for t in result["tasks"]],
+            total=result["total"],
+            page=result["page"],
+            per_page=result["per_page"],
+            has_next=result["has_next"],
+            has_prev=result["has_prev"]
+        )
+        
+    except HTTPException:
+        raise
     except Exception as e:
         logger.error(f"Error listing tasks: {e}")
         raise HTTPException(
