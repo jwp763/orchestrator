@@ -50,26 +50,38 @@ class TestDatabaseIsolation:
     @pytest.fixture(scope="function")
     def isolated_storage(self, isolated_session):
         """Create isolated storage instance for testing."""
-        # Override the storage session for testing
-        storage = SQLStorage()
+        # Create storage with in-memory database and override session
+        storage = SQLStorage(database_url="sqlite:///:memory:")
         storage.session = isolated_session
-        return storage
+        
+        yield storage
+        
+        # Cleanup: ensure session is properly closed
+        if hasattr(storage, '_session') and storage._session is not None:
+            storage._session.close()
+            storage._session = None
     
     @pytest.fixture(scope="function")
     def isolated_client(self, isolated_storage):
         """Create isolated test client with database isolation."""
-        from src.api.project_routes import get_storage as get_project_storage
+        from src.api.project_routes import get_storage as get_project_storage, get_project_service
         from src.api.task_routes import get_storage as get_task_storage
+        from src.orchestration.project_service import ProjectService
         
-        # Override dependencies
+        # Create isolated project service
+        isolated_project_service = ProjectService(storage=isolated_storage)
+        
+        # Override dependencies - using lambda to capture the storage instance
         app.dependency_overrides[get_project_storage] = lambda: isolated_storage
         app.dependency_overrides[get_task_storage] = lambda: isolated_storage
+        app.dependency_overrides[get_project_service] = lambda: isolated_project_service
         
-        client = TestClient(app)
-        yield client
-        
-        # Clean up overrides
-        app.dependency_overrides.clear()
+        try:
+            client = TestClient(app)
+            yield client
+        finally:
+            # Clean up overrides
+            app.dependency_overrides.clear()
     
     def test_database_isolation_basics(self, isolated_session):
         """Test basic database isolation functionality."""

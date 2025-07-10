@@ -33,6 +33,13 @@ class SQLStorage(StorageInterface):
             self._session = self.SessionLocal()
         return self._session
 
+    @session.setter
+    def session(self, value: Session) -> None:
+        """Set the session for testing purposes."""
+        if self._session is not None:
+            self._session.close()
+        self._session = value
+
     def _convert_sql_project_to_pydantic(self, sql_project: SQLProject) -> Project:
         """Convert SQLAlchemy Project to Pydantic Project."""
         tasks = [self._convert_sql_task_to_pydantic(task) for task in sql_project.tasks]
