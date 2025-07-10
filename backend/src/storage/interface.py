@@ -1,7 +1,8 @@
 """Storage interface for the Orchestrator application."""
 
 from abc import ABC, abstractmethod
-from typing import List, Optional
+from typing import List, Optional, Dict, Any
+from datetime import datetime
 
 from src.models import Project, Task
 from src.models.patch import Patch, ProjectPatch, TaskPatch
@@ -43,6 +44,35 @@ class StorageInterface(ABC):
     @abstractmethod
     def get_tasks_by_project(self, project_id: str) -> List[Task]:
         """Retrieve all tasks for a project."""
+        pass
+
+    @abstractmethod
+    def list_tasks(
+        self,
+        skip: int = 0,
+        limit: int = 20,
+        project_id: Optional[str] = None,
+        status: Optional[str] = None,
+        priority: Optional[str] = None,
+        assignee: Optional[str] = None,
+        parent_id: Optional[str] = None,
+        search: Optional[str] = None,
+        tags: Optional[List[str]] = None,
+        created_after: Optional[datetime] = None,
+        created_before: Optional[datetime] = None,
+        sort_by: str = "created_at",
+        sort_order: str = "desc"
+    ) -> Dict[str, Any]:
+        """List tasks with filtering, pagination, and sorting.
+        
+        Returns a dictionary with:
+        - tasks: List of tasks
+        - total: Total count of tasks matching filters
+        - page: Current page number
+        - per_page: Items per page
+        - has_next: Whether there's a next page
+        - has_prev: Whether there's a previous page
+        """
         pass
 
     @abstractmethod

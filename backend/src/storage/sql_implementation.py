@@ -1,9 +1,9 @@
 """SQL implementation of the storage interface."""
 
-from typing import List, Optional
+from typing import List, Optional, Dict, Any
 from datetime import datetime
 
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, desc, asc, or_
 from sqlalchemy.orm import sessionmaker, Session
 from sqlalchemy.exc import SQLAlchemyError
 
@@ -209,6 +209,94 @@ class SQLStorage(StorageInterface):
             return [self._convert_sql_task_to_pydantic(t) for t in sql_tasks]
         except SQLAlchemyError:
             return []
+
+    def list_tasks(
+        self,
+        skip: int = 0,
+        limit: int = 20,
+        project_id: Optional[str] = None,
+        status: Optional[str] = None,
+        priority: Optional[str] = None,
+        assignee: Optional[str] = None,
+        parent_id: Optional[str] = None,
+        search: Optional[str] = None,
+        tags: Optional[List[str]] = None,
+        created_after: Optional[datetime] = None,
+        created_before: Optional[datetime] = None,
+        sort_by: str = "created_at",
+        sort_order: str = "desc"
+    ) -> Dict[str, Any]:
+        """List tasks with filtering, pagination, and sorting."""
+        try:
+            # Build base query
+            query = self.session.query(SQLTask)
+            
+            # Apply filters
+            if project_id:
+                query = query.filter(SQLTask.project_id == project_id)
+            if status:
+                query = query.filter(SQLTask.status == status)
+            if priority:
+                query = query.filter(SQLTask.priority == priority)
+            if assignee:
+                query = query.filter(SQLTask.assignee == assignee)
+            if parent_id:
+                query = query.filter(SQLTask.parent_id == parent_id)
+            if search:
+                search_pattern = f"%{search}%"
+                query = query.filter(or_(
+                    SQLTask.title.ilike(search_pattern),
+                    SQLTask.description.ilike(search_pattern)
+                ))
+            if tags:
+                # For PostgreSQL array contains: query = query.filter(SQLTask.tags.op("&&")(tags))
+                # For SQLite, we'll use a simpler approach
+                for tag in tags:
+                    query = query.filter(SQLTask.tags.like(f"%{tag}%"))
+            if created_after:
+                query = query.filter(SQLTask.created_at >= created_after)
+            if created_before:
+                query = query.filter(SQLTask.created_at <= created_before)
+            
+            # Apply sorting
+            sort_column = getattr(SQLTask, sort_by, SQLTask.created_at)
+            if sort_order.lower() == "desc":
+                query = query.order_by(desc(sort_column))
+            else:
+                query = query.order_by(asc(sort_column))
+            
+            # Get total count before pagination
+            total_count = query.count()
+            
+            # Apply pagination
+            sql_tasks = query.offset(skip).limit(limit).all()
+            
+            # Convert to Pydantic models
+            tasks = [self._convert_sql_task_to_pydantic(t) for t in sql_tasks]
+            
+            # Calculate pagination metadata
+            page = (skip // limit) + 1 if limit > 0 else 1
+            has_next = skip + limit < total_count
+            has_prev = skip > 0
+            
+            return {
+                "tasks": tasks,
+                "total": total_count,
+                "page": page,
+                "per_page": limit,
+                "has_next": has_next,
+                "has_prev": has_prev
+            }
+            
+        except SQLAlchemyError:
+            return {
+                "tasks": [],
+                "total": 0,
+                "page": 1,
+                "per_page": limit,
+                "has_next": False,
+                "has_prev": False
+            }
 
     def create_task(self, task: Task) -> Task:
         """Create a new task."""
