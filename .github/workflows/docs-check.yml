@@ -50,6 +50,7 @@ jobs:
           --exclude '^https?://'
           --exclude '^#'
           --exclude '.*\.(jpg|jpeg|png|gif|svg|ico)$'
+          --exclude-path 'docs_archive'
           'docs/**/*.md'
           'README.md'
           'PROJECT.md'

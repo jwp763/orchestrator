@@ -362,7 +362,7 @@ Key features:
 **Deliverable**: The MVP project and its full task hierarchy are created and stored in Delta tables.
 **Implementation**:
 
-1. Run the `create_plan_from_description` tool with `docs/mvp_plan.md` as input.
+1. Run the `create_plan_from_description` tool with `mvp_plan.md` as input.
 2. Verify the plan's structure, estimates, and dependencies in Delta.
 3. Make initial corrections to the data as needed, providing feedback for prompt improvements.
 
