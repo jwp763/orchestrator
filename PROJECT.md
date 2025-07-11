@@ -70,8 +70,10 @@ This project, the Orchestrator, is a personal project and task management system
 
 **Testing Documentation:**
 
-- Backend: See `backend/tests/README.md` for comprehensive backend testing guidelines
-- Frontend: See `frontend/tests/README.md` for comprehensive frontend testing guidelines
+- **Testing Overview**: See `testing_overview.md` for comprehensive testing strategy, frameworks, and current test statistics
+- **Backend**: See `backend/tests/README.md` for comprehensive backend testing guidelines
+- **Frontend**: See `frontend/tests/README.md` for comprehensive frontend testing guidelines
+- **Troubleshooting**: See `TESTING_TROUBLESHOOTING.md` for specific error patterns and solutions
 
 ## 6. Current Tasks
 

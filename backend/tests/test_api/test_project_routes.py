@@ -587,13 +587,8 @@ class TestProjectRoutesIntegration(TestDatabaseIsolation):
         assert response.status_code == 404
 
 
-class TestProjectRoutesErrorHandling:
+class TestProjectRoutesErrorHandling(TestDatabaseIsolation):
     """Test error handling in project routes."""
-
-    @pytest.fixture
-    def client(self):
-        """Create test client."""
-        return TestClient(app)
 
     def test_service_error_handling(self, isolated_client):
         """Test proper error handling when service raises exceptions."""
@@ -609,7 +604,7 @@ class TestProjectRoutesErrorHandling:
             "created_by": "test_user"
         }
         
-        response = client.post("/api/projects", json=project_data)
+        response = isolated_client.post("/api/projects", json=project_data)
         assert response.status_code == 500
         error_detail = response.json()
         assert "detail" in error_detail

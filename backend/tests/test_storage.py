@@ -98,14 +98,37 @@ class TestSQLStorageUnit:
 
         # Mock the query to return an existing project
         mock_sql_project = Mock()
-        mock_query = Mock()
-        mock_session.query.return_value = mock_query
-        mock_query.filter.return_value = mock_query
-        mock_query.first.return_value = mock_sql_project
+        mock_sql_task = Mock()
+        mock_tasks = [mock_sql_task]
+        
+        # Create separate mock queries for project and tasks
+        mock_project_query = Mock()
+        mock_tasks_query = Mock()
+        
+        # Configure the session.query to return different mocks based on the model
+        def query_side_effect(model):
+            if model.__name__ == 'Project':
+                return mock_project_query
+            elif model.__name__ == 'Task':
+                return mock_tasks_query
+            return Mock()
+        
+        mock_session.query.side_effect = query_side_effect
+        
+        # Configure project query
+        mock_project_query.filter.return_value = mock_project_query
+        mock_project_query.first.return_value = mock_sql_project
+        
+        # Configure tasks query  
+        mock_tasks_query.filter.return_value = mock_tasks_query
+        mock_tasks_query.all.return_value = mock_tasks
 
         result = storage.delete_project(project_id)
 
-        mock_session.delete.assert_called_once_with(mock_sql_project)
+        # Verify task deletion
+        mock_session.delete.assert_any_call(mock_sql_task)
+        # Verify project deletion
+        mock_session.delete.assert_any_call(mock_sql_project)
         mock_session.flush.assert_called_once()
         assert result is True
 
