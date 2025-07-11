@@ -46,7 +46,6 @@ jobs:
         args: >
           --verbose
           --no-progress
-          --exclude-external
           --exclude '^https?://'
           --exclude '^#'
           --exclude '.*\.(jpg|jpeg|png|gif|svg|ico)$'
