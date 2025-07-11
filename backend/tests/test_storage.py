@@ -7,7 +7,6 @@ from unittest.mock import patch as mock_patch
 from uuid import uuid4
 
 import pytest
-
 from src.models import Project, ProjectStatus, Task, TaskPriority, TaskStatus
 from src.models.patch import Op, Patch, ProjectPatch, TaskPatch
 from src.models.project import ProjectPriority
@@ -21,7 +20,7 @@ class TestStorageInterface:
     def test_storage_interface_is_abstract(self) -> None:
         """Test that StorageInterface cannot be instantiated."""
         with pytest.raises(TypeError):
-            StorageInterface()  # type: ignore
+            StorageInterface()
 
 
 class TestSQLStorageUnit:
@@ -59,7 +58,10 @@ class TestSQLStorageUnit:
         project = Project(name="Test Project", created_by="test_user")
 
         with mock_patch.object(storage, "_convert_pydantic_project_to_sql") as mock_convert:
+            # Create a properly configured mock SQL project
             mock_sql_project = Mock()
+            mock_sql_project.__class__ = Mock()
+            mock_sql_project.__class__.__name__ = "SQLProject"
             mock_convert.return_value = mock_sql_project
 
             with mock_patch.object(storage, "_convert_sql_project_to_pydantic") as mock_convert_back:
@@ -100,26 +102,26 @@ class TestSQLStorageUnit:
         mock_sql_project = Mock()
         mock_sql_task = Mock()
         mock_tasks = [mock_sql_task]
-        
+
         # Create separate mock queries for project and tasks
         mock_project_query = Mock()
         mock_tasks_query = Mock()
-        
+
         # Configure the session.query to return different mocks based on the model
         def query_side_effect(model):
-            if model.__name__ == 'Project':
+            if model.__name__ == "Project":
                 return mock_project_query
-            elif model.__name__ == 'Task':
+            elif model.__name__ == "Task":
                 return mock_tasks_query
             return Mock()
-        
+
         mock_session.query.side_effect = query_side_effect
-        
+
         # Configure project query
         mock_project_query.filter.return_value = mock_project_query
         mock_project_query.first.return_value = mock_sql_project
-        
-        # Configure tasks query  
+
+        # Configure tasks query
         mock_tasks_query.filter.return_value = mock_tasks_query
         mock_tasks_query.all.return_value = mock_tasks
 

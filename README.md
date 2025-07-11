@@ -1,313 +1,147 @@
-# Databricks Orchestrator
+# Orchestrator
 
-A modern AI-powered project planning and task management system that intelligently orchestrates work across multiple platforms. The system combines a FastAPI backend with a React frontend to provide a comprehensive solution for project management with AI assistance.
+A modern AI-powered project planning and task management system that intelligently orchestrates work across multiple platforms.
 
 ## 🚀 Features
 
 - **AI-Powered Planning**: Intelligent project breakdown using multiple AI providers (OpenAI, Anthropic, Gemini, xAI)
-- **Project Management**: Complete CRUD operations for projects and tasks
-- **Task Hierarchies**: Support for subtasks and task dependencies
+- **Project Management**: Complete CRUD operations for projects and tasks with hierarchical support
 - **Real-time Sync**: Frontend-backend integration with optimistic updates
-- **Multi-Platform Integration**: Support for Motion, Linear, Notion, and GitLab
-- **Modern UI**: Responsive React interface with Tailwind CSS
-- **Type Safety**: Full TypeScript coverage with Pydantic models
+- **Multi-Platform**: Support for Motion, Linear, Notion, and GitLab integrations
+- **Modern Stack**: FastAPI backend + React TypeScript frontend
+- **Comprehensive Testing**: 672+ tests with 99%+ coverage
 
-## 🏗️ Architecture
+## 🚀 Quick Start
 
-### Backend (FastAPI)
-- **API Layer**: RESTful endpoints with automatic documentation
-- **Storage Layer**: SQLAlchemy ORM with SQLite database
-- **AI Integration**: Pluggable AI agents for project planning
-- **Service Layer**: Business logic for orchestration and coordination
+### Prerequisites
+- Python 3.8+
+- Node.js 16+
+- Git
 
-### Frontend (React)
-- **UI Components**: Modern React components with TypeScript
-- **State Management**: Custom hooks for API integration
-- **Routing**: Simple router for different views
-- **API Client**: Robust HTTP client with retry logic and error handling
-
-## 📋 Prerequisites
-
-- **Python**: 3.8 or higher
-- **Node.js**: 16 or higher
-- **npm**: 7 or higher
-
-## 🛠️ Installation & Setup
-
-### 1. Clone the Repository
+### Installation
 
 ```bash
+# Clone repository
 git clone <repository-url>
 cd databricks_orchestrator
-```
 
-### 2. Backend Setup
-
-```bash
-# Navigate to backend directory
+# Backend setup
 cd backend
-
-# Create virtual environment (recommended)
 python -m venv venv
 source venv/bin/activate  # On Windows: venv\Scripts\activate
-
-# Install dependencies
 pip install -r requirements.txt
 
-# Set up environment variables (optional)
-cp .env.example .env
-# Edit .env with your AI provider API keys
-
 # Initialize database
-python -c "
-from src.storage.sql_models import Base
-from sqlalchemy import create_engine
-engine = create_engine('sqlite:///orchestrator.db')
-Base.metadata.create_all(engine)
-print('Database initialized successfully')
-"
-```
+python -c "from src.storage.sql_models import Base; from sqlalchemy import create_engine; engine = create_engine('sqlite:///orchestrator.db'); Base.metadata.create_all(engine)"
 
-### 3. Frontend Setup
-
-```bash
-# Navigate to frontend directory (from project root)
+# Frontend setup (new terminal)
 cd frontend
-
-# Install dependencies
 npm install
-
-# Build for development
-npm run dev
 ```
 
-## 🚀 Running the Application
-
-### Start the Backend Server
+### Running the Application
 
 ```bash
+# Terminal 1 - Backend
 cd backend
 python -m uvicorn src.api.main:app --reload --port 8000
-```
 
-The backend API will be available at:
-- **API**: http://localhost:8000
-- **Documentation**: http://localhost:8000/api/docs
-- **Health Check**: http://localhost:8000/health
-
-### Start the Frontend Application
-
-```bash
+# Terminal 2 - Frontend
 cd frontend
 npm run dev
 ```
 
-The frontend will be available at:
-- **Application**: http://localhost:5173 (or next available port)
-- **API Test Interface**: Click "API Test" button in the navigation
+- **Frontend**: http://localhost:5173
+- **API Docs**: http://localhost:8000/api/docs
+- **Health Check**: http://localhost:8000/health
 
-## 🔧 API Usage
+## 📖 Documentation
 
-### Project Operations
+### Development
+- [Detailed Setup Guide](docs/development/setup.md) - Complete setup instructions
+- [AI Instructions](docs/development/ai-instructions.md) - Guidelines for AI assistants
+- [Architecture Overview](docs/testing_architecture.md) - System architecture
 
-```bash
-# List all projects
-curl -X GET "http://localhost:8000/api/projects"
+### Testing
+- [Testing Strategy](docs/testing_architecture.md) - Comprehensive testing overview
+- [Backend Testing](docs/testing/backend-guide.md) - Backend test patterns
+- [Frontend Testing](docs/testing/frontend-guide.md) - Frontend test patterns
+- [Troubleshooting](docs/testing/troubleshooting.md) - Common issues and solutions
 
-# Create a new project
-curl -X POST "http://localhost:8000/api/projects" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "name": "My Project",
-    "description": "Project description",
-    "created_by": "user-id"
-  }'
-
-# Get project with tasks
-curl -X GET "http://localhost:8000/api/projects/{project_id}"
-
-# Update project
-curl -X PUT "http://localhost:8000/api/projects/{project_id}" \
-  -H "Content-Type: application/json" \
-  -d '{"name": "Updated Project Name"}'
-
-# Delete project
-curl -X DELETE "http://localhost:8000/api/projects/{project_id}"
-```
-
-### Task Operations
-
-```bash
-# List all tasks
-curl -X GET "http://localhost:8000/api/tasks"
-
-# Create a new task
-curl -X POST "http://localhost:8000/api/tasks" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "project_id": "project-id",
-    "title": "My Task",
-    "description": "Task description",
-    "created_by": "user-id"
-  }'
-
-# Get task with subtasks
-curl -X GET "http://localhost:8000/api/tasks/{task_id}"
-
-# Update task
-curl -X PUT "http://localhost:8000/api/tasks/{task_id}" \
-  -H "Content-Type: application/json" \
-  -d '{"status": "completed"}'
-
-# Delete task
-curl -X DELETE "http://localhost:8000/api/tasks/{task_id}"
-```
-
-### AI Planning
-
-```bash
-# Generate project plan
-curl -X POST "http://localhost:8000/api/planner/plan" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "idea": "Build a web application for task management",
-    "config": {
-      "provider": "openai",
-      "create_milestones": true,
-      "max_milestones": 5
-    }
-  }'
-```
+### Project Management
+- [Current Tasks](PROJECT.md) - Active development tasks and sprint focus
+- [MVP Plan](docs/mvp_plan.md) - Product roadmap
+- [Task Details](.ai/tasks/current.yaml) - Machine-readable task tracking
 
 ## 🧪 Testing
 
-### Backend Tests
-
 ```bash
-cd backend
+# Backend tests
+cd backend && pytest              # Run all tests
+cd backend && pytest --cov=src    # With coverage
 
-# Run all tests
-pytest
-
-# Run specific test file
-pytest tests/test_api/test_project_routes.py
-
-# Run with coverage
-pytest --cov=src
+# Frontend tests  
+npm test                          # Run all tests
+npm run test:coverage             # With coverage
 ```
 
-### Frontend Testing
+**Current Status**: 672 tests (Backend: 516, Frontend: 156) with 99.6% success rate
 
-The frontend includes an API test interface accessible through the web application:
-
-1. Start both backend and frontend servers
-2. Open the frontend in your browser
-3. Click the "API Test" button in the navigation
-4. Use the interface to test CRUD operations
-
-## 📁 Project Structure
+## 🏗️ Project Structure
 
 ```
 databricks_orchestrator/
-├── backend/                    # FastAPI backend
-│   ├── src/
-│   │   ├── api/               # API routes and models
-│   │   ├── models/            # Pydantic data models
-│   │   ├── storage/           # Database layer
-│   │   ├── orchestration/     # Service layer
-│   │   └── agent/             # AI agents
-│   ├── tests/                 # Backend tests
-│   └── requirements.txt       # Python dependencies
-├── frontend/                  # React frontend
-│   ├── src/
-│   │   ├── components/        # React components
-│   │   ├── hooks/            # Custom React hooks
-│   │   ├── services/         # API client services
-│   │   └── types/            # TypeScript definitions
-│   ├── public/               # Static assets
-│   └── package.json          # Node.js dependencies
-├── docs/                     # Documentation
-├── .ai/                      # AI configuration and tasks
-└── README.md                 # This file
+├── backend/              # FastAPI backend
+│   ├── src/             # Application code
+│   └── tests/           # Backend tests
+├── frontend/            # React frontend
+│   ├── src/             # React components
+│   └── tests/           # Frontend tests
+├── docs/                # Documentation
+├── notebooks/           # Databricks notebooks
+└── .ai/                # AI configurations
 ```
 
-## 🔑 Environment Variables
+## 🔧 Development
 
-Create a `.env` file in the backend directory with the following optional variables:
+### Common Commands
 
-```env
-# AI Provider API Keys (optional)
-OPENAI_API_KEY=your_openai_key
-ANTHROPIC_API_KEY=your_anthropic_key
-GEMINI_API_KEY=your_gemini_key
-XAI_API_KEY=your_xai_key
+```bash
+# Backend
+black .                  # Format Python code
+mypy .                   # Type checking
 
-# Database URL (optional, defaults to SQLite)
-DATABASE_URL=sqlite:///orchestrator.db
-
-# API Configuration
-API_HOST=0.0.0.0
-API_PORT=8000
+# Frontend
+npm run format           # Format TypeScript code
+npm run lint            # Lint code
 ```
-
-## 🔄 Development Workflow
 
 ### Making Changes
 
-1. **Backend Changes**: The server runs with `--reload` flag, so changes are automatically reflected
-2. **Frontend Changes**: Vite provides hot module replacement for instant updates
-3. **Database Changes**: Recreate the database if you modify the schema:
-   ```bash
-   cd backend
-   rm orchestrator.db
-   python -c "from src.storage.sql_models import Base; from sqlalchemy import create_engine; engine = create_engine('sqlite:///orchestrator.db'); Base.metadata.create_all(engine)"
-   ```
-
-### Adding New Features
-
-1. **Backend**: Add routes in `src/api/`, models in `src/models/`, and services in `src/orchestration/`
-2. **Frontend**: Add components in `src/components/`, hooks in `src/hooks/`, and services in `src/services/`
-3. **Types**: Update TypeScript interfaces in `src/types/` to match backend models
-
-## 🐛 Troubleshooting
-
-### Common Issues
-
-1. **Port Already in Use**: The application will automatically find the next available port
-2. **Database Errors**: Recreate the database using the command above
-3. **API Connection Issues**: Ensure the backend is running on port 8000
-4. **CORS Issues**: The backend is configured to allow all origins in development
-
-### Logs
-
-- **Backend Logs**: Displayed in the terminal where you started the backend
-- **Frontend Logs**: Check the browser console for client-side issues
-
-## 📖 API Documentation
-
-When the backend is running, visit http://localhost:8000/api/docs for interactive API documentation powered by Swagger UI.
+1. Backend changes auto-reload with `--reload` flag
+2. Frontend has hot module replacement via Vite
+3. See [Development Guide](docs/development/setup.md) for detailed workflow
 
 ## 🤝 Contributing
 
 1. Fork the repository
-2. Create a feature branch: `git checkout -b feature/new-feature`
-3. Make your changes and add tests
-4. Commit your changes: `git commit -am 'Add new feature'`
-5. Push to the branch: `git push origin feature/new-feature`
-6. Submit a pull request
+2. Create feature branch: `git checkout -b feature/amazing-feature`
+3. Commit changes: `git commit -m 'Add amazing feature'`
+4. Push branch: `git push origin feature/amazing-feature`
+5. Open Pull Request
+
+See [CONTRIBUTING.md](CONTRIBUTING.md) for detailed guidelines.
 
 ## 📄 License
 
-This project is licensed under the MIT License - see the LICENSE file for details.
+This project is licensed under the MIT License - see [LICENSE](LICENSE) for details.
 
 ## 🆘 Support
 
-For issues and questions:
-- Check the troubleshooting section above
-- Review the API documentation at http://localhost:8000/api/docs
-- Check existing issues in the repository
-- Create a new issue with detailed information about your problem
+- **Documentation**: Check our comprehensive [docs](docs/)
+- **Issues**: [GitHub Issues](https://github.com/your-repo/issues)
+- **Discussions**: [GitHub Discussions](https://github.com/your-repo/discussions)
 
 ---
 
-**Happy orchestrating!** 🎯
+Built with ❤️ using AI-assisted development

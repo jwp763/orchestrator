@@ -1,193 +1,236 @@
 # AI-Assisted Project Plan & Context
 
+## Table of Contents
+
+- [Current Sprint Focus](#current-sprint-focus)
+- [1. Project Goal](#1-project-goal)
+- [2. Tech Stack](#2-tech-stack)
+- [3. Project Structure](#3-project-structure)
+- [4. Development Standards](#4-development-standards)
+- [5. Workflow Commands](#5-workflow-commands)
+- [6. Current Tasks](#6-current-tasks)
+- [7. Architecture & Design](#7-architecture--design)
+- [8. Agent-Hints & Constraints](#8-agent-hints--constraints)
+- [9. Critical Test Troubleshooting](#9-critical-test-troubleshooting)
+- [10. Task Completion Protocol](#10-task-completion-protocol)
+- [11. Documentation Maintenance](#11-documentation-maintenance)
+- [12. AI Assistant Instructions](#12-ai-assistant-instructions)
+
+---
+
+## Current Sprint Focus
+
+### 🎯 Active Development Tasks
+
+**Priority:** Backend-Frontend Integration & Testing
+
+1. **TEST-API-002** - Test Suite: Orchestration Service Layer (Pending - High Priority)
+   - Unit tests for ProjectService, TaskService, and AgentService
+   - Integration tests with real storage and agents
+   - Transaction handling across multiple operations
+
+2. **TEST-UI-007** - Test Suite: Frontend-Backend Integration (Pending - High Priority)
+   - Frontend API service tests with mocked responses
+   - Hook tests with proper service mocking
+   - E2E tests for complete user workflows
+
+3. **DEL-002** - Storage Layer Soft Delete Implementation (Pending - High Priority)
+   - **CRITICAL**: Fix Foreign Key Constraint Issue from TEST-API-001
+   - Implement cascading soft delete operations
+   - Add restoration capabilities with context tracking
+
+### 📊 Recent Achievements (July 2025)
+
+- ✅ **Testing Infrastructure**: 672 total tests (Backend: 516, Frontend: 156)
+- ✅ **Backend**: 99.4% test success rate (3 acceptable failures)
+- ✅ **Frontend**: 100% test success rate (fixed all 16 critical failures)
+- ✅ **Documentation**: Comprehensive testing architecture and troubleshooting guides
+
+### 📋 Task Summary
+
+- **Completed**: 9 tasks (MVP-001, MVP-002, MVP-003a/b, UI-001, UI-002, API-001, API-002, TEST-API-001, FIX-001, UI-007, DEL-001)
+- **In Progress**: 0 tasks
+- **Pending**: 15 tasks (prioritized by dependencies and business value)
+
+---
+
 ## 1. Project Goal
 
 This project, the Orchestrator, is a personal project and task management system that uses AI agents to intelligently orchestrate work across multiple platforms. The MVP focuses on a conversational interface for project and task management, where the AI agent assists the user in breaking down goals into actionable tasks.
 
-**Recent Achievement (July 2025)**: Successfully improved test suite reliability from 478 to 499 passing tests by implementing proper database isolation patterns, fixing cascade delete logic, and resolving mock configuration issues. Test failure rate reduced from 8 to 5 critical issues.
-
 ## 2. Tech Stack
 
-- **Language:** Python 3.8+
-- **Platform:** Local Development (FastAPI, SQLite)
-- **Core Libraries:** pydantic, sqlalchemy, fastapi
-- **IDE:** Cursor with AI assistance
-- **Version Control:** GitLab
+- **Language:** Python 3.8+ (Backend), TypeScript (Frontend)
+- **Backend:** FastAPI, SQLAlchemy, Pydantic
+- **Frontend:** React 18, TypeScript, Tailwind CSS, Vite
+- **Database:** SQLite (Development), PostgreSQL (Production ready)
+- **Testing:** pytest (Backend), Vitest + React Testing Library (Frontend)
+- **AI Integration:** Multi-provider support (OpenAI, Anthropic, Gemini, XAI)
+- **Version Control:** Git with GitHub
 
 ## 3. Project Structure
 
-- `src/`: Core application code, including the AI agent, data models, and integrations.
-- `notebooks/`: Databricks notebooks for interactive development and setup.
-- `tests/`: Unit and integration tests.
-- `configs/`: Environment-specific configurations.
-- `.ai/`: AI tool configurations, detailed tasks, and context.
-- `docs/`: Human-readable documentation, including architecture and decision records.
+```
+databricks_orchestrator/
+├── backend/           # FastAPI backend application
+│   ├── src/          # Core application code
+│   │   ├── agent/    # AI agents (Planner, Decomposer, Editor)
+│   │   ├── api/      # REST API endpoints
+│   │   ├── models/   # Pydantic data models
+│   │   ├── orchestration/  # Service layer
+│   │   └── storage/  # Database abstraction
+│   └── tests/        # Comprehensive test suite
+├── frontend/         # React frontend application
+│   ├── src/         # React components and hooks
+│   └── tests/       # Frontend test suite
+├── docs/            # Project documentation
+├── notebooks/       # Databricks notebooks
+└── .ai/            # AI tool configurations
+```
 
 ## 4. Development Standards
 
 ### Code Style
 
-- Follow PEP 8 with Black formatting.
-- Use type hints for all functions.
-- Write clear, structured docstrings for all public methods.
+- **Python**: PEP 8 with Black formatting, type hints for all functions
+- **TypeScript**: ESLint + Prettier, strict type checking
+- **Documentation**: Clear docstrings for public methods, inline comments for complex logic
 
-### Testing
+### Testing Requirements
 
-- Use pytest for all testing.
-- Aim for a minimum of 80% code coverage.
-- All new features must be accompanied by tests, as detailed in the MVP plan.
-- **CRITICAL**: Follow the testing patterns and guidelines in `backend/tests/README.md` for backend tests
-- **CRITICAL**: Follow the testing patterns and guidelines in `frontend/tests/README.md` for frontend tests
-- **CRITICAL**: When introducing new testing techniques or patterns, update the respective README files to document them
-- **Backend**: Use database isolation for all API and integration tests (inherit from `TestDatabaseIsolation`)
-- **Frontend**: Use React Testing Library with Vitest for component and hook testing
-- Write unit tests with proper mocking for fast execution
-- Include performance and security tests for critical features
+- **Coverage**: Minimum 80% code coverage
+- **Patterns**: Follow established patterns in `backend/tests/README.md` and `frontend/tests/README.md`
+- **Isolation**: Use `TestDatabaseIsolation` for backend integration tests
+- **Frontend**: React Testing Library with user-centric testing approach
 
 ## 5. Workflow Commands
 
-### Backend Testing
+### Backend Development
 
-**CRITICAL**: Always run from backend directory to avoid import errors:
+```bash
+# Testing (ALWAYS run from backend directory)
+cd backend && pytest                    # Run all tests
+cd backend && pytest -v                 # Verbose output
+cd backend && pytest --cov=src         # With coverage
+cd backend && pytest tests/test_api/   # Specific directory
 
-- `cd backend && pytest`: Run the backend test suite.
-- `cd backend && pytest -v`: Run tests with verbose output.
-- `cd backend && pytest --cov=src`: Run tests with coverage reporting.
-- `cd backend && pytest tests/test_api/test_task_pagination.py`: Run specific test file.
-- `cd backend && pytest tests/ -x --tb=short`: Stop on first failure with short traceback.
+# Code Quality
+black .                                # Format code
+mypy .                                 # Type checking
+```
 
-### Frontend Testing
+### Frontend Development
 
-- `cd frontend && npm test`: Run the frontend test suite.
-- `cd frontend && npm run test:watch`: Run tests in watch mode.
-- `cd frontend && npm run test:coverage`: Run tests with coverage.
-- `cd frontend && npm run test:ui`: Run tests with Vitest UI.
+```bash
+# Development
+npm run dev                           # Start dev server
+npm run build                         # Production build
 
-### Code Quality
+# Testing
+npm test                              # Run tests
+npm run test:watch                    # Watch mode
+npm run test:coverage                 # With coverage
+npm run test:ui                       # Vitest UI
+```
 
-- `black .`: Format the code.
-- `mypy .`: Run static type checking.
+### Documentation References
 
-**Testing Documentation:**
-
-- **Testing Overview**: See `testing_overview.md` for comprehensive testing strategy, frameworks, and current test statistics
-- **Backend**: See `backend/tests/README.md` for comprehensive backend testing guidelines
-- **Frontend**: See `frontend/tests/README.md` for comprehensive frontend testing guidelines
-- **Troubleshooting**: See `TESTING_TROUBLESHOOTING.md` for specific error patterns and solutions
+- **Testing Strategy**: `docs/testing_architecture.md`
+- **Backend Testing**: `docs/testing/backend-guide.md`
+- **Frontend Testing**: `docs/testing/frontend-guide.md`
+- **Troubleshooting**: `docs/testing/troubleshooting.md`
 
 ## 6. Current Tasks
 
-For the current development sprint, please refer to the detailed MVP plan, which includes detailed descriptions, implementation details, and tests for each task.
-
-- **Active Plan:** [MVP Project Plan](docs/MVP_PLAN.md)
-
-For a machine-readable list of tasks, see:
-
-- **Structured Tasks:** `.ai/tasks/current.yaml`
+- **Active Sprint**: See [Current Sprint Focus](#current-sprint-focus)
+- **Full Task List**: `.ai/tasks/current.yaml`
+- **MVP Plan**: `docs/mvp_plan.md`
 
 ## 7. Architecture & Design
 
-For a deeper understanding of the system architecture and key design decisions, please refer to:
-
-- **Architecture Overview:** `docs/architecture.md`
-- **Architecture Decision Records (ADRs):** `docs/decisions/`
+- **Testing Architecture**: `docs/testing_architecture.md`
+- **Architecture Decision Records**: `docs/decisions/`
+- **MVP Plan**: `docs/mvp_plan.md`
 
 ## 8. Agent-Hints & Constraints
 
-- **Do Not Modify:** Production configurations or secrets without explicit approval.
-- **Idempotency:** Ensure that all data operations are idempotent where possible.
-- **Transactions:** When performing operations that span multiple systems (e.g., database and an external API), ensure they are handled within a transaction or have a clear rollback strategy.
-- **Test Execution**: Always run tests from the backend/ directory: `cd backend && python -m pytest tests/`
-- **Session Management**: SQLStorage uses flush() for transactions, commit() for standalone operations
+- **Production Safety**: Do not modify production configurations or secrets
+- **Idempotency**: Ensure all data operations are idempotent where possible
+- **Transactions**: Use proper transaction boundaries for multi-system operations
+- **Test Execution**: Always run tests from backend directory: `cd backend && pytest`
+- **Session Management**: SQLStorage uses flush() for transactions, commit() for standalone
 
-## 9. Critical Test Troubleshooting - MUST READ FIRST
-
-**WHEN TESTS FAIL, CHECK THIS SECTION FIRST:**
+<details>
+<summary><strong>9. Critical Test Troubleshooting</strong> (Click to expand)</summary>
 
 ### Common Test Issues and Solutions
 
-1. **Database Isolation Problems**
-   - **Symptom**: Tests fail with "Session is already flushing", "database is locked", or "session closed"
-   - **Solution**: Ensure test classes inherit from `TestDatabaseIsolation` and use `isolated_client` fixture
-   - **Example**: `class TestMyFeature(TestDatabaseIsolation): def test_something(self, isolated_client):`
-   - **Details**: See `backend/tests/README.md` section "Database Isolation"
+#### 1. Database Isolation Problems
+- **Symptom**: "Session is already flushing", "database is locked", "session closed"
+- **Solution**: Ensure test classes inherit from `TestDatabaseIsolation` and use `isolated_client`
+- **Example**: `class TestMyFeature(TestDatabaseIsolation): def test_something(self, isolated_client):`
 
-2. **Mock Object Errors**
-   - **Symptom**: "'Mock' object is not subscriptable" or "'Mock' object has no attribute"
-   - **Solution**: Check that mocks return the expected data structure (dict vs list vs object)
-   - **Example**: `mock_storage.list_tasks.return_value = {"tasks": [...], "total": 1, "page": 1}`
-   - **Details**: See `backend/tests/README.md` section "Mock Configuration Problems"
+#### 2. Mock Object Errors
+- **Symptom**: "'Mock' object is not subscriptable" or has no attribute
+- **Solution**: Check mock return value matches expected data structure
+- **Example**: `mock_storage.list_tasks.return_value = {"tasks": [...], "total": 1, "page": 1}`
 
-3. **Foreign Key Constraint Errors**
-   - **Symptom**: 500 errors when deleting projects with tasks
-   - **Solution**: Check if cascade delete is implemented in storage layer
-   - **Location**: `src/storage/sql_implementation.py` delete_project method
-   - **Details**: See `backend/tests/TESTING_TROUBLESHOOTING.md`
+#### 3. Foreign Key Constraint Errors
+- **Symptom**: 500 errors when deleting projects with tasks
+- **Solution**: Implement cascade delete in storage layer
+- **Location**: `src/storage/sql_implementation.py` delete_project method
 
-4. **Import Path Issues**
-   - **Symptom**: `ImportError: attempted relative import beyond top-level package`
-   - **Solution**: ALWAYS run tests from backend directory: `cd backend && python -m pytest tests/`
-   - **Details**: See `backend/tests/TESTING_TROUBLESHOOTING.md`
+#### 4. Import Path Issues
+- **Symptom**: `ImportError: attempted relative import beyond top-level package`
+- **Solution**: ALWAYS run tests from backend directory: `cd backend && python -m pytest tests/`
 
-5. **Test Data Not Appearing**
-   - **Symptom**: Created objects don't appear in listings, `assert our_project is not None` fails
-   - **Solution**: Check if test is using `isolated_client` instead of `client`
-   - **Common Fix**: Replace `client` parameter with `isolated_client` in test methods
+#### 5. Test Data Not Appearing
+- **Symptom**: Created objects don't appear in listings
+- **Solution**: Check if test is using `isolated_client` instead of `client`
 
-**QUICK FIX CHECKLIST:**
+### Quick Fix Checklist
 - [ ] Test class inherits from `TestDatabaseIsolation`?
 - [ ] Using `isolated_client` fixture instead of `client`?
 - [ ] Running tests from backend directory?
 - [ ] Mocks return correct data structure?
-- [ ] Check `backend/tests/TESTING_TROUBLESHOOTING.md` for specific error patterns
+- [ ] Check `docs/testing/troubleshooting.md` for specific patterns
 
-**For detailed troubleshooting, see:**
-- `backend/tests/README.md` - Comprehensive testing guide
-- `backend/tests/TESTING_TROUBLESHOOTING.md` - Specific error patterns and solutions
+**Detailed Guides**:
+- Backend: `docs/testing/backend-guide.md`
+- Frontend: `docs/testing/frontend-guide.md`
+- Troubleshooting: `docs/testing/troubleshooting.md`
+
+</details>
 
 ## 10. Task Completion Protocol
 
-**CRITICAL: When completing any task, you MUST update both tracking systems:**
+**CRITICAL: Update both tracking systems when completing tasks:**
 
-1. **TodoWrite Tool:** Mark internal todo as "completed"
-2. **Task File:** Update the task status in `.ai/tasks/current.yaml` from "pending" to "completed"
-
-**Example workflow:**
+1. **TodoWrite Tool**: Mark internal todo as "completed"
+2. **Task File**: Update status in `.ai/tasks/current.yaml` from "pending" to "completed"
 
 ```
 1. Start task → Update TodoWrite (status: "in_progress")
 2. Work on task → Keep TodoWrite updated
-3. Finish task → Update TodoWrite (status: "completed") AND update .ai/tasks/current.yaml (status: "completed")
+3. Finish task → Update TodoWrite (status: "completed") 
+                 AND update .ai/tasks/current.yaml (status: "completed")
 ```
-
-**Never forget step 3** - both systems must be updated or the task is not truly complete.
 
 ## 11. Documentation Maintenance
 
-**CRITICAL: Keep Documentation Current**
+**Keep Documentation Current:**
 
-- **Testing Guides**: When adding new testing patterns, fixtures, or techniques, immediately update the appropriate testing README:
-
-  - **Backend (`backend/tests/README.md`)**: Database isolation techniques, fixture patterns, API testing, performance testing
-  - **Frontend (`frontend/tests/README.md`)**: Component testing patterns, hook testing, mocking strategies, user interaction testing
-  - Include new fixture patterns and their usage
-  - Document new testing utilities or helpers
-  - Update best practices or troubleshooting steps
-  - Provide examples of the new patterns in action
-
-- **Architecture Changes**: Update `docs/architecture.md` when making significant structural changes
-- **API Changes**: Update API documentation when modifying endpoints or data models
-- **Decision Records**: Create ADRs in `docs/decisions/` for significant technical decisions
-
-**The testing READMEs are living documents** - they should be the single source of truth for how to write, run, and maintain tests in both the backend and frontend codebases. Keeping them current ensures consistent testing practices across the team and reduces onboarding time for new contributors.
-
-- **Backend testing**: Database isolation, API integration, performance, and security testing
-- **Frontend testing**: Component behavior, user interactions, hooks, and mocking strategies
+- **Testing Guides**: Update when adding new patterns or fixtures
+  - Backend: `docs/testing/backend-guide.md`
+  - Frontend: `docs/testing/frontend-guide.md`
+- **Architecture**: Update `docs/testing_architecture.md` for structural changes
+- **API Changes**: Update documentation when modifying endpoints
+- **Decision Records**: Create ADRs in `docs/decisions/` for significant decisions
 
 ## 12. AI Assistant Instructions
 
 For AI assistants working on this project:
 
-- **Detailed Instructions:** See `.ai/ai-instructions.md` for comprehensive guidance tailored to the developer's experience level and learning goals
-- **Quick Reference:** See `.ai/ai-quick-reference.md` for a condensed reference guide
-- **Note:** This project is built with assistance from AI coding agents (Claude, GPT-4, Gemini, etc.) - the instructions apply to all AI assistants
+- **Detailed Instructions**: See `docs/development/ai-instructions.md`
+- **Quick Reference**: See `.ai/ai-quick-reference.md`
+- **Note**: This project is built with AI coding assistants (Claude, GPT-4, Gemini, etc.)
