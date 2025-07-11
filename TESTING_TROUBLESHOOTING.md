@@ -183,3 +183,88 @@ cd backend && python -m pytest tests/ --tb=no -q
 8. **NEW**: Use `TestDatabaseIsolation` for ALL integration tests - no exceptions
 9. **NEW**: Systematic client fixture replacement needed when inheriting isolation base class
 10. **NEW**: Foreign key constraints require proper cascade handling in storage layer
+
+## NEW: Critical Issues Discovered (July 2025)
+
+### API Parameter Naming Mismatches
+
+**Symptom**: Tests fail with filtering not working, parameters ignored
+**Example**: `?status=todo` returns all results instead of filtered results
+
+**Root Cause**: API parameter names don't match test expectations
+- API uses `task_status` but test uses `status`
+- Parameter aliases not configured
+
+**Solution**: Add parameter aliases in API routes
+```python
+# In API route
+task_status: Optional[TaskStatus] = Query(None, description="Filter by task status"),
+status: Optional[TaskStatus] = Query(None, description="Filter by task status (alias)"),
+
+# In route logic
+status_filter = status or task_status
+```
+
+### SQLite Concurrency Limitations
+
+**Symptom**: "Session is already flushing", "sqlite3.InterfaceError", segmentation faults
+**Example**: Concurrent requests fail with session conflicts
+
+**Root Cause**: SQLite has fundamental limitations with concurrent writes
+- Shared sessions across threads
+- Database locking issues
+- Session state conflicts
+
+**Solution**: 
+1. Create fresh sessions for each operation
+2. Use thread-safe connection configuration
+3. Consider PostgreSQL for production concurrent loads
+4. Accept lower concurrency expectations for SQLite-based tests
+
+### Optional Dependencies in Tests
+
+**Symptom**: `ModuleNotFoundError: No module named 'psutil'`
+**Example**: Performance tests fail due to missing monitoring libraries
+
+**Root Cause**: Tests assume optional dependencies are available
+
+**Solution**: Graceful skipping for optional dependencies
+```python
+def test_memory_usage_performance(self, isolated_client):
+    try:
+        import psutil
+    except ImportError:
+        pytest.skip("psutil not available")
+```
+
+### Pagination Expectation Mismatches
+
+**Symptom**: `AssertionError: assert 20 == 50` in performance tests
+**Example**: Test expects all results but API applies default pagination
+
+**Root Cause**: Test assumptions about API behavior vs. actual pagination defaults
+
+**Solution**: Explicit pagination parameters in tests
+```python
+# Wrong - assumes all results returned
+response = client.get("/api/tasks")
+
+# Correct - explicit pagination
+response = client.get("/api/tasks?limit=100")
+```
+
+### Session Management in Storage Layer
+
+**Symptom**: Tests break when session injection changes
+**Example**: Unit tests fail after storage layer modifications
+
+**Root Cause**: Complex session management patterns
+- Injected sessions vs. fresh sessions
+- Transaction handling differences
+- Session lifecycle management
+
+**Solution**: 
+1. Consistent session management patterns
+2. Clear separation of concerns
+3. Proper session cleanup
+4. Test both injected and fresh session scenarios

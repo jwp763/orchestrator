@@ -99,6 +99,7 @@ async def list_tasks(
     project_id: Optional[str] = Query(None, description="Filter by project ID"),
     parent_id: Optional[str] = Query(None, description="Filter by parent task ID"),
     task_status: Optional[TaskStatus] = Query(None, description="Filter by task status"),
+    status: Optional[TaskStatus] = Query(None, description="Filter by task status (alias for task_status)"),
     priority: Optional[TaskPriority] = Query(None, description="Filter by task priority"),
     assignee: Optional[str] = Query(None, description="Filter by assignee"),
     search: Optional[str] = Query(None, description="Search in task title and description"),
@@ -157,11 +158,13 @@ async def list_tasks(
             )
         
         # Use the new enhanced list_tasks method
+        # Use status parameter if provided, otherwise use task_status
+        status_filter = status or task_status
         result = storage.list_tasks(
             skip=skip,
             limit=limit,
             project_id=project_id,
-            status=task_status.value if task_status else None,
+            status=status_filter.value if status_filter else None,
             priority=priority.value if priority else None,
             assignee=assignee,
             parent_id=parent_id,

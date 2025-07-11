@@ -31,7 +31,10 @@ class SQLStorage(StorageInterface):
                 echo=False,
                 # Enable connection pooling and thread safety
                 poolclass=None,  # Use default pool for SQLite
-                connect_args={"check_same_thread": False} if "sqlite" in database_url else {}
+                connect_args={
+                    "check_same_thread": False,
+                    "timeout": 30  # 30 second timeout for SQLite locks
+                } if "sqlite" in database_url else {}
             )
             self.SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=self.engine)
             self._session = None
@@ -183,22 +186,31 @@ class SQLStorage(StorageInterface):
 
     def create_project(self, project: Project) -> Project:
         """Create a new project."""
-        # Use existing session if available (for transactions), otherwise create new one
-        if self._session is not None:
-            # We're in a transaction or have an injected session
-            sql_project = self._convert_pydantic_project_to_sql(project)
-            self.session.add(sql_project)
-            self.session.flush()  # Flush but don't commit (let transaction handle it)
-            return self._convert_sql_project_to_pydantic(sql_project)
-        else:
-            # Create a new session for this operation
+        # Always create a new session for each operation to avoid concurrency issues
+        # Use SessionLocal if available, otherwise use the engine directly
+        if self.SessionLocal is not None:
             with self.SessionLocal() as session:
                 sql_project = self._convert_pydantic_project_to_sql(project)
                 session.add(sql_project)
                 session.commit()
-                # Refresh to get the committed state
+                # Refresh to get the committed state before session closes
                 session.refresh(sql_project)
-                return self._convert_sql_project_to_pydantic(sql_project)
+                # Convert to pydantic before session closes
+                result = self._convert_sql_project_to_pydantic(sql_project)
+                return result
+        else:
+            # Fallback for injected sessions - create session from engine
+            from sqlalchemy.orm import sessionmaker
+            SessionMaker = sessionmaker(bind=self.engine)
+            with SessionMaker() as session:
+                sql_project = self._convert_pydantic_project_to_sql(project)
+                session.add(sql_project)
+                session.commit()
+                # Refresh to get the committed state before session closes
+                session.refresh(sql_project)
+                # Convert to pydantic before session closes
+                result = self._convert_sql_project_to_pydantic(sql_project)
+                return result
 
     def update_project(self, project_id: str, project: Project) -> Optional[Project]:
         """Update an existing project."""
