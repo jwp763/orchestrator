@@ -223,7 +223,7 @@ npm run test:ui                       # Vitest UI
 - **Testing Guides**: Update when adding new patterns or fixtures
   - Backend: `docs/testing/backend-guide.md`
   - Frontend: `docs/testing/frontend-guide.md`
-- **Architecture**: Update `docs/testing_architecture.md` for structural changes
+- **Architecture**: Update `docs/architecture/overview.md` for structural changes
 - **API Changes**: Update documentation when modifying endpoints
 - **Decision Records**: Create ADRs in `docs/decisions/` for significant decisions
 
