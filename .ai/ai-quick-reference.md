@@ -1,4 +1,4 @@
-# Claude Quick Reference - Python Dev Learning Web
+# AI Assistant Quick Reference - Python Dev Learning Web
 
 ## 🎯 User Context
 - Python expert, web dev learner
@@ -71,6 +71,6 @@ test('feature works', async () => {
 - [ ] Did I mention common mistakes?
 
 ## 🔗 See Also
-- Full instructions: `.ai/claude-instructions.md`
+- Full instructions: `.ai/ai-instructions.md`
 - Project context: `PROJECT.md`
 - Current tasks: `.ai/tasks/current.yaml`

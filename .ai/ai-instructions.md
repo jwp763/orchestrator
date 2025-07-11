@@ -1,4 +1,6 @@
-# Claude AI Assistant Instructions - Tailored for Python Developer Learning Web Dev
+# AI Assistant Instructions - Tailored for Python Developer Learning Web Dev
+
+> **Note:** These instructions apply to ALL AI coding assistants (Claude, GPT-4, Gemini, Copilot, etc.) working on this project.
 
 ## User Profile & Learning Context
 
@@ -9,7 +11,7 @@ You are working with a developer who:
 - 🎯 **Goal: Master concepts** - wants deep understanding, not just working code
 - ⚠️ **Needs extra care** - may not catch web dev mistakes or anti-patterns
 
-## Core Principles for Claude
+## Core Principles for AI Assistants
 
 ### 1. Think Deeply & Thoroughly
 - **Always analyze problems completely** before proposing solutions
@@ -252,7 +254,7 @@ const data = await response.json();
 
 ## Project Integration
 
-This supplements PROJECT.md with Claude-specific guidance. Always:
+This supplements PROJECT.md with AI assistant-specific guidance. Always:
 - Refer to PROJECT.md for project structure
 - Follow project conventions in pyproject.toml
 - Update .ai/tasks/current.yaml when completing tasks

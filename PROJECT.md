@@ -84,4 +84,6 @@ For a deeper understanding of the system architecture and key design decisions, 
 
 For AI assistants working on this project:
 
-- **Claude-specific instructions:** See `.ai/claude-instructions.md` for detailed guidance tailored to the developer's experience level and learning goals
+- **Detailed Instructions:** See `.ai/ai-instructions.md` for comprehensive guidance tailored to the developer's experience level and learning goals
+- **Quick Reference:** See `.ai/ai-quick-reference.md` for a condensed reference guide
+- **Note:** This project is built with assistance from AI coding agents (Claude, GPT-4, Gemini, etc.) - the instructions apply to all AI assistants
