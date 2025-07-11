@@ -79,3 +79,9 @@ For a deeper understanding of the system architecture and key design decisions, 
 ```
 
 **Never forget step 3** - both systems must be updated or the task is not truly complete.
+
+## 10. AI Assistant Instructions
+
+For AI assistants working on this project:
+
+- **Claude-specific instructions:** See `.ai/claude-instructions.md` for detailed guidance tailored to the developer's experience level and learning goals
