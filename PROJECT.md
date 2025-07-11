@@ -79,3 +79,11 @@ For a deeper understanding of the system architecture and key design decisions, 
 ```
 
 **Never forget step 3** - both systems must be updated or the task is not truly complete.
+
+## 10. AI Assistant Instructions
+
+For AI assistants working on this project:
+
+- **Detailed Instructions:** See `.ai/ai-instructions.md` for comprehensive guidance tailored to the developer's experience level and learning goals
+- **Quick Reference:** See `.ai/ai-quick-reference.md` for a condensed reference guide
+- **Note:** This project is built with assistance from AI coding agents (Claude, GPT-4, Gemini, etc.) - the instructions apply to all AI assistants
