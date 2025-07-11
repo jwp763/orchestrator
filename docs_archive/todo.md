@@ -114,7 +114,7 @@
 ## Notes 📝
 
 - This TODO list represents the MVP plan itself - we're dogfooding!
-- Each task has detailed specifications in `docs/mvp_plan.md`
+- Each task has detailed specifications in `mvp_plan.md`
 - All tasks should be created in the system once Phase 1 is complete
 - Regular sync meetings scheduled to review progress
 

@@ -564,4 +564,4 @@ git commit --no-verify
 - [Development Setup](../development/setup.md)
 - [Testing Guide](../testing/overview.md)
 - [Deployment Guide](../deployment/guide.md)
-- [CLAUDE.md](../../CLAUDE.md) - Workflow commands
+- [PROJECT.md](../../PROJECT.md) - Workflow commands
