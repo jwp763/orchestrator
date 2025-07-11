@@ -12,43 +12,15 @@ Tests API-001 acceptance criteria:
 import pytest
 from datetime import datetime, timedelta
 from fastapi.testclient import TestClient
-from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker
 
 from src.api.main import app
-from src.storage.sql_models import Base
-from src.storage.sql_implementation import SQLStorage
+from .test_database_isolation import TestDatabaseIsolation
 
 
-class TestCRUDIntegrationLifecycles:
+class TestCRUDIntegrationLifecycles(TestDatabaseIsolation):
     """Integration tests for complete CRUD lifecycles."""
 
-    @pytest.fixture
-    def test_engine(self):
-        """Create test database engine."""
-        engine = create_engine("sqlite:///:memory:", echo=False)
-        Base.metadata.create_all(engine)
-        return engine
-
-    @pytest.fixture
-    def test_session(self, test_engine):
-        """Create test database session."""
-        Session = sessionmaker(bind=test_engine)
-        session = Session()
-        yield session
-        session.close()
-
-    @pytest.fixture
-    def storage(self, test_session):
-        """Create storage instance for testing."""
-        return SQLStorage()
-
-    @pytest.fixture
-    def client(self):
-        """Create test client with real storage."""
-        return TestClient(app)
-
-    def test_project_complete_lifecycle(self, client):
+    def test_project_complete_lifecycle(self, isolated_client):
         """Test complete project lifecycle from creation to deletion."""
         # 1. Create project
         project_data = {
@@ -60,7 +32,7 @@ class TestCRUDIntegrationLifecycles:
             "created_by": "lifecycle_user"
         }
         
-        create_response = client.post("/api/projects", json=project_data)
+        create_response = isolated_client.post("/api/projects", json=project_data)
         assert create_response.status_code == 201
         created_project = create_response.json()
         project_id = created_project["id"]
@@ -74,7 +46,7 @@ class TestCRUDIntegrationLifecycles:
         assert created_project["completed_task_count"] == 0
         
         # 2. Read project
-        get_response = client.get(f"/api/projects/{project_id}")
+        get_response = isolated_client.get(f"/api/projects/{project_id}")
         assert get_response.status_code == 200
         retrieved_project = get_response.json()
         assert retrieved_project["id"] == project_id
@@ -88,7 +60,7 @@ class TestCRUDIntegrationLifecycles:
             "tags": ["lifecycle", "integration", "test", "updated"]
         }
         
-        update_response_1 = client.put(f"/api/projects/{project_id}", json=update_data_1)
+        update_response_1 = isolated_client.put(f"/api/projects/{project_id}", json=update_data_1)
         assert update_response_1.status_code == 200
         updated_project_1 = update_response_1.json()
         assert updated_project_1["description"] == "Updated description - phase 1"
@@ -101,7 +73,7 @@ class TestCRUDIntegrationLifecycles:
             "status": "completed"
         }
         
-        update_response_2 = client.put(f"/api/projects/{project_id}", json=update_data_2)
+        update_response_2 = isolated_client.put(f"/api/projects/{project_id}", json=update_data_2)
         assert update_response_2.status_code == 200
         updated_project_2 = update_response_2.json()
         assert updated_project_2["name"] == "Lifecycle Test Project - Final"
@@ -109,7 +81,7 @@ class TestCRUDIntegrationLifecycles:
         assert updated_project_2["status"] == "completed"
         
         # 4. Verify project appears in listings
-        list_response = client.get("/api/projects")
+        list_response = isolated_client.get("/api/projects")
         assert list_response.status_code == 200
         projects_list = list_response.json()
         our_project = next((p for p in projects_list["projects"] if p["id"] == project_id), None)
@@ -117,21 +89,21 @@ class TestCRUDIntegrationLifecycles:
         assert our_project["name"] == "Lifecycle Test Project - Final"
         
         # 5. Delete project
-        delete_response = client.delete(f"/api/projects/{project_id}")
+        delete_response = isolated_client.delete(f"/api/projects/{project_id}")
         assert delete_response.status_code == 204
         
         # 6. Verify deletion
-        get_deleted_response = client.get(f"/api/projects/{project_id}")
+        get_deleted_response = isolated_client.get(f"/api/projects/{project_id}")
         assert get_deleted_response.status_code == 404
         
         # Verify project no longer appears in listings
-        list_after_delete = client.get("/api/projects")
+        list_after_delete = isolated_client.get("/api/projects")
         assert list_after_delete.status_code == 200
         projects_after_delete = list_after_delete.json()
         deleted_project = next((p for p in projects_after_delete["projects"] if p["id"] == project_id), None)
         assert deleted_project is None
 
-    def test_task_complete_lifecycle(self, client):
+    def test_task_complete_lifecycle(self, isolated_client):
         """Test complete task lifecycle from creation to deletion."""
         # First create a project for the task
         project_data = {
@@ -142,7 +114,7 @@ class TestCRUDIntegrationLifecycles:
             "created_by": "task_lifecycle_user"
         }
         
-        project_response = client.post("/api/projects", json=project_data)
+        project_response = isolated_client.post("/api/projects", json=project_data)
         assert project_response.status_code == 201
         project = project_response.json()
         project_id = project["id"]
@@ -160,7 +132,7 @@ class TestCRUDIntegrationLifecycles:
             "created_by": "task_lifecycle_user"
         }
         
-        create_response = client.post("/api/tasks", json=task_data)
+        create_response = isolated_client.post("/api/tasks", json=task_data)
         assert create_response.status_code == 201
         created_task = create_response.json()
         task_id = created_task["id"]
@@ -175,7 +147,7 @@ class TestCRUDIntegrationLifecycles:
         assert created_task["assignee"] == "task_lifecycle_user"
         
         # 2. Read task with subtasks
-        get_response = client.get(f"/api/tasks/{task_id}")
+        get_response = isolated_client.get(f"/api/tasks/{task_id}")
         assert get_response.status_code == 200
         retrieved_task = get_response.json()
         assert retrieved_task["id"] == task_id
@@ -190,7 +162,7 @@ class TestCRUDIntegrationLifecycles:
             "tags": ["lifecycle", "integration", "in_progress"]
         }
         
-        update_response_1 = client.put(f"/api/tasks/{task_id}", json=update_data_1)
+        update_response_1 = isolated_client.put(f"/api/tasks/{task_id}", json=update_data_1)
         assert update_response_1.status_code == 200
         updated_task_1 = update_response_1.json()
         assert updated_task_1["description"] == "Updated description - phase 1"
@@ -205,7 +177,7 @@ class TestCRUDIntegrationLifecycles:
             "estimated_minutes": 100
         }
         
-        update_response_2 = client.put(f"/api/tasks/{task_id}", json=update_data_2)
+        update_response_2 = isolated_client.put(f"/api/tasks/{task_id}", json=update_data_2)
         assert update_response_2.status_code == 200
         updated_task_2 = update_response_2.json()
         assert updated_task_2["title"] == "Lifecycle Test Task - Final"
@@ -215,7 +187,7 @@ class TestCRUDIntegrationLifecycles:
         assert updated_task_2["estimated_minutes"] == 100
         
         # 4. Verify task appears in listings
-        list_response = client.get("/api/tasks")
+        list_response = isolated_client.get("/api/tasks")
         assert list_response.status_code == 200
         tasks_list = list_response.json()
         our_task = next((t for t in tasks_list["tasks"] if t["id"] == task_id), None)
@@ -223,21 +195,21 @@ class TestCRUDIntegrationLifecycles:
         assert our_task["title"] == "Lifecycle Test Task - Final"
         
         # 5. Delete task
-        delete_response = client.delete(f"/api/tasks/{task_id}")
+        delete_response = isolated_client.delete(f"/api/tasks/{task_id}")
         assert delete_response.status_code == 204
         
         # 6. Verify deletion
-        get_deleted_response = client.get(f"/api/tasks/{task_id}")
+        get_deleted_response = isolated_client.get(f"/api/tasks/{task_id}")
         assert get_deleted_response.status_code == 404
         
         # Verify task no longer appears in listings
-        list_after_delete = client.get("/api/tasks")
+        list_after_delete = isolated_client.get("/api/tasks")
         assert list_after_delete.status_code == 200
         tasks_after_delete = list_after_delete.json()
         deleted_task = next((t for t in tasks_after_delete["tasks"] if t["id"] == task_id), None)
         assert deleted_task is None
 
-    def test_project_task_relationship_lifecycle(self, client):
+    def test_project_task_relationship_lifecycle(self, isolated_client):
         """Test complete lifecycle of project-task relationships."""
         # 1. Create project
         project_data = {
@@ -248,7 +220,7 @@ class TestCRUDIntegrationLifecycles:
             "created_by": "relationship_user"
         }
         
-        project_response = client.post("/api/projects", json=project_data)
+        project_response = isolated_client.post("/api/projects", json=project_data)
         assert project_response.status_code == 201
         project = project_response.json()
         project_id = project["id"]
@@ -286,12 +258,12 @@ class TestCRUDIntegrationLifecycles:
         
         created_tasks = []
         for task_data in task_data_list:
-            task_response = client.post("/api/tasks", json=task_data)
+            task_response = isolated_client.post("/api/tasks", json=task_data)
             assert task_response.status_code == 201
             created_tasks.append(task_response.json())
         
         # 3. Verify project shows tasks
-        get_project_response = client.get(f"/api/projects/{project_id}")
+        get_project_response = isolated_client.get(f"/api/projects/{project_id}")
         assert get_project_response.status_code == 200
         project_with_tasks = get_project_response.json()
         assert len(project_with_tasks["tasks"]) == 3
@@ -303,7 +275,7 @@ class TestCRUDIntegrationLifecycles:
         assert "Task 3" in task_titles
         
         # 4. Verify project tasks endpoint
-        project_tasks_response = client.get(f"/api/projects/{project_id}/tasks")
+        project_tasks_response = isolated_client.get(f"/api/projects/{project_id}/tasks")
         assert project_tasks_response.status_code == 200
         project_tasks = project_tasks_response.json()
         assert len(project_tasks) == 3
@@ -314,30 +286,30 @@ class TestCRUDIntegrationLifecycles:
             "status": "active"
         }
         
-        update_response = client.put(f"/api/projects/{project_id}", json=update_data)
+        update_response = isolated_client.put(f"/api/projects/{project_id}", json=update_data)
         assert update_response.status_code == 200
         
         # Verify tasks are still linked after project update
-        updated_project_response = client.get(f"/api/projects/{project_id}")
+        updated_project_response = isolated_client.get(f"/api/projects/{project_id}")
         assert updated_project_response.status_code == 200
         updated_project = updated_project_response.json()
         assert len(updated_project["tasks"]) == 3
         
         # 6. Delete individual tasks and verify project updates
         task_to_delete = created_tasks[0]
-        delete_task_response = client.delete(f"/api/tasks/{task_to_delete['id']}")
+        delete_task_response = isolated_client.delete(f"/api/tasks/{task_to_delete['id']}")
         assert delete_task_response.status_code == 204
         
         # Verify task is deleted
-        get_deleted_task_response = client.get(f"/api/tasks/{task_to_delete['id']}")
+        get_deleted_task_response = isolated_client.get(f"/api/tasks/{task_to_delete['id']}")
         assert get_deleted_task_response.status_code == 404
         
         # 7. Delete project and verify it's deleted
-        delete_project_response = client.delete(f"/api/projects/{project_id}")
+        delete_project_response = isolated_client.delete(f"/api/projects/{project_id}")
         assert delete_project_response.status_code == 204
         
         # Verify project is deleted
-        get_project_response = client.get(f"/api/projects/{project_id}")
+        get_project_response = isolated_client.get(f"/api/projects/{project_id}")
         assert get_project_response.status_code == 404
         
         # Note: Tasks may still exist in the database after project deletion
@@ -345,15 +317,10 @@ class TestCRUDIntegrationLifecycles:
         # For this test, we'll verify that the project is deleted successfully
 
 
-class TestCascadeOperations:
+class TestCascadeOperations(TestDatabaseIsolation):
     """Integration tests for cascade delete operations."""
 
-    @pytest.fixture
-    def client(self):
-        """Create test client with real storage."""
-        return TestClient(app)
-
-    def test_project_cascade_delete_with_tasks(self, client):
+    def test_project_cascade_delete_with_tasks(self, isolated_client):
         """Test that deleting a project works correctly with related tasks."""
         # Create project
         project_data = {
@@ -364,7 +331,7 @@ class TestCascadeOperations:
             "created_by": "cascade_user"
         }
         
-        project_response = client.post("/api/projects", json=project_data)
+        project_response = isolated_client.post("/api/projects", json=project_data)
         assert project_response.status_code == 201
         project = project_response.json()
         project_id = project["id"]
@@ -381,29 +348,29 @@ class TestCascadeOperations:
                 "created_by": "cascade_user"
             }
             
-            task_response = client.post("/api/tasks", json=task_data)
+            task_response = isolated_client.post("/api/tasks", json=task_data)
             assert task_response.status_code == 201
             task_ids.append(task_response.json()["id"])
         
         # Verify all tasks exist
         for task_id in task_ids:
-            get_task_response = client.get(f"/api/tasks/{task_id}")
+            get_task_response = isolated_client.get(f"/api/tasks/{task_id}")
             assert get_task_response.status_code == 200
         
         # Delete tasks first (to avoid foreign key constraints)
         for task_id in task_ids:
-            delete_task_response = client.delete(f"/api/tasks/{task_id}")
+            delete_task_response = isolated_client.delete(f"/api/tasks/{task_id}")
             assert delete_task_response.status_code == 204
         
         # Delete project
-        delete_response = client.delete(f"/api/projects/{project_id}")
+        delete_response = isolated_client.delete(f"/api/projects/{project_id}")
         assert delete_response.status_code == 204
         
         # Verify project is deleted
-        get_project_response = client.get(f"/api/projects/{project_id}")
+        get_project_response = isolated_client.get(f"/api/projects/{project_id}")
         assert get_project_response.status_code == 404
 
-    def test_task_cascade_delete_with_subtasks(self, client):
+    def test_task_cascade_delete_with_subtasks(self, isolated_client):
         """Test that deleting a parent task cascades to delete all its subtasks."""
         # Create project
         project_data = {
@@ -414,7 +381,7 @@ class TestCascadeOperations:
             "created_by": "subtask_user"
         }
         
-        project_response = client.post("/api/projects", json=project_data)
+        project_response = isolated_client.post("/api/projects", json=project_data)
         assert project_response.status_code == 201
         project = project_response.json()
         project_id = project["id"]
@@ -429,7 +396,7 @@ class TestCascadeOperations:
             "created_by": "subtask_user"
         }
         
-        parent_response = client.post("/api/tasks", json=parent_task_data)
+        parent_response = isolated_client.post("/api/tasks", json=parent_task_data)
         assert parent_response.status_code == 201
         parent_task = parent_response.json()
         parent_task_id = parent_task["id"]
@@ -447,34 +414,34 @@ class TestCascadeOperations:
                 "created_by": "subtask_user"
             }
             
-            subtask_response = client.post("/api/tasks", json=subtask_data)
+            subtask_response = isolated_client.post("/api/tasks", json=subtask_data)
             assert subtask_response.status_code == 201
             subtask_ids.append(subtask_response.json()["id"])
         
         # Verify parent task shows subtasks
-        get_parent_response = client.get(f"/api/tasks/{parent_task_id}")
+        get_parent_response = isolated_client.get(f"/api/tasks/{parent_task_id}")
         assert get_parent_response.status_code == 200
         parent_with_subtasks = get_parent_response.json()
         assert len(parent_with_subtasks["subtasks"]) == 3
         
         # Verify all subtasks exist
         for subtask_id in subtask_ids:
-            get_subtask_response = client.get(f"/api/tasks/{subtask_id}")
+            get_subtask_response = isolated_client.get(f"/api/tasks/{subtask_id}")
             assert get_subtask_response.status_code == 200
         
         # Delete parent task
-        delete_response = client.delete(f"/api/tasks/{parent_task_id}")
+        delete_response = isolated_client.delete(f"/api/tasks/{parent_task_id}")
         assert delete_response.status_code == 204
         
         # Verify parent task is deleted
-        get_parent_response = client.get(f"/api/tasks/{parent_task_id}")
+        get_parent_response = isolated_client.get(f"/api/tasks/{parent_task_id}")
         assert get_parent_response.status_code == 404
         
         # Note: Subtask cascade deletion depends on the implementation
         # For this test, we'll verify that the parent task is deleted successfully
         # In a real system, you might implement cascade delete logic in the service layer
 
-    def test_deep_hierarchy_cascade_delete(self, client):
+    def test_deep_hierarchy_cascade_delete(self, isolated_client):
         """Test cascade delete with deep task hierarchy."""
         # Create project
         project_data = {
@@ -485,7 +452,7 @@ class TestCascadeOperations:
             "created_by": "hierarchy_user"
         }
         
-        project_response = client.post("/api/projects", json=project_data)
+        project_response = isolated_client.post("/api/projects", json=project_data)
         assert project_response.status_code == 201
         project = project_response.json()
         project_id = project["id"]
@@ -500,7 +467,7 @@ class TestCascadeOperations:
             "created_by": "hierarchy_user"
         }
         
-        parent_response = client.post("/api/tasks", json=parent_data)
+        parent_response = isolated_client.post("/api/tasks", json=parent_data)
         assert parent_response.status_code == 201
         parent_id = parent_response.json()["id"]
         
@@ -514,7 +481,7 @@ class TestCascadeOperations:
             "created_by": "hierarchy_user"
         }
         
-        child_response = client.post("/api/tasks", json=child_data)
+        child_response = isolated_client.post("/api/tasks", json=child_data)
         assert child_response.status_code == 201
         child_id = child_response.json()["id"]
         
@@ -528,25 +495,25 @@ class TestCascadeOperations:
             "created_by": "hierarchy_user"
         }
         
-        grandchild_response = client.post("/api/tasks", json=grandchild_data)
+        grandchild_response = isolated_client.post("/api/tasks", json=grandchild_data)
         assert grandchild_response.status_code == 201
         grandchild_id = grandchild_response.json()["id"]
         
         # Verify hierarchy exists
-        get_parent_response = client.get(f"/api/tasks/{parent_id}")
+        get_parent_response = isolated_client.get(f"/api/tasks/{parent_id}")
         assert get_parent_response.status_code == 200
         parent_with_children = get_parent_response.json()
         assert len(parent_with_children["subtasks"]) == 1
         assert parent_with_children["subtasks"][0]["id"] == child_id
         
-        get_child_response = client.get(f"/api/tasks/{child_id}")
+        get_child_response = isolated_client.get(f"/api/tasks/{child_id}")
         assert get_child_response.status_code == 200
         child_with_grandchildren = get_child_response.json()
         assert len(child_with_grandchildren["subtasks"]) == 1
         assert child_with_grandchildren["subtasks"][0]["id"] == grandchild_id
         
         # Delete parent task
-        delete_response = client.delete(f"/api/tasks/{parent_id}")
+        delete_response = isolated_client.delete(f"/api/tasks/{parent_id}")
         assert delete_response.status_code == 204
         
         # Note: Task hierarchy cascade deletion depends on the implementation
@@ -554,16 +521,11 @@ class TestCascadeOperations:
         # In a real system, you might implement cascade delete logic in the service layer
 
 
-class TestFilteringAndPagination:
+class TestFilteringAndPagination(TestDatabaseIsolation):
     """Integration tests for filtering and pagination."""
 
     @pytest.fixture
-    def client(self):
-        """Create test client with real storage."""
-        return TestClient(app)
-
-    @pytest.fixture
-    def sample_projects(self, client):
+    def sample_projects(self, isolated_client):
         """Create sample projects for filtering tests."""
         projects_data = [
             {
@@ -602,14 +564,14 @@ class TestFilteringAndPagination:
         
         created_projects = []
         for project_data in projects_data:
-            response = client.post("/api/projects", json=project_data)
+            response = isolated_client.post("/api/projects", json=project_data)
             assert response.status_code == 201
             created_projects.append(response.json())
         
         return created_projects
 
     @pytest.fixture
-    def sample_tasks(self, client, sample_projects):
+    def sample_tasks(self, isolated_client, sample_projects):
         """Create sample tasks for filtering tests."""
         tasks_data = []
         
@@ -655,16 +617,16 @@ class TestFilteringAndPagination:
                     "created_by": task_config["assignee"]
                 }
                 
-                response = client.post("/api/tasks", json=task_data)
+                response = isolated_client.post("/api/tasks", json=task_data)
                 assert response.status_code == 201
                 tasks_data.append(response.json())
         
         return tasks_data
 
-    def test_project_filtering_comprehensive(self, client, sample_projects):
+    def test_project_filtering_comprehensive(self, isolated_client, sample_projects):
         """Test comprehensive project filtering scenarios."""
         # Test filter by status
-        response = client.get("/api/projects?status=planning")
+        response = isolated_client.get("/api/projects?status=planning")
         assert response.status_code == 200
         data = response.json()
         planning_projects = [p for p in data["projects"] if p["status"] == "planning"]
@@ -674,7 +636,7 @@ class TestFilteringAndPagination:
         assert our_planning_project is not None
         
         # Test filter by priority
-        response = client.get("/api/projects?priority=high")
+        response = isolated_client.get("/api/projects?priority=high")
         assert response.status_code == 200
         data = response.json()
         high_priority_projects = [p for p in data["projects"] if p["priority"] == "high"]
@@ -685,7 +647,7 @@ class TestFilteringAndPagination:
         assert "Another High Priority Project" in our_high_priority_names
         
         # Test combined filters
-        response = client.get("/api/projects?status=active&priority=high")
+        response = isolated_client.get("/api/projects?status=active&priority=high")
         assert response.status_code == 200
         data = response.json()
         filtered_projects = [p for p in data["projects"] 
@@ -695,31 +657,31 @@ class TestFilteringAndPagination:
         our_filtered_project = next((p for p in filtered_projects if p["name"] == "Another High Priority Project"), None)
         assert our_filtered_project is not None
 
-    def test_task_filtering_comprehensive(self, client, sample_tasks):
+    def test_task_filtering_comprehensive(self, isolated_client, sample_tasks):
         """Test comprehensive task filtering scenarios."""
         # Test filter by status
-        response = client.get("/api/tasks?status=todo")
+        response = isolated_client.get("/api/tasks?status=todo")
         assert response.status_code == 200
         data = response.json()
         todo_tasks = [t for t in data["tasks"] if t["status"] == "todo"]
         assert len(todo_tasks) >= 4  # At least 1 per project
         
         # Test filter by priority
-        response = client.get("/api/tasks?priority=medium")
+        response = isolated_client.get("/api/tasks?priority=medium")
         assert response.status_code == 200
         data = response.json()
         medium_tasks = [t for t in data["tasks"] if t["priority"] == "medium"]
         assert len(medium_tasks) >= 4  # At least 1 per project
         
         # Test filter by assignee
-        response = client.get("/api/tasks?assignee=user1")
+        response = isolated_client.get("/api/tasks?assignee=user1")
         assert response.status_code == 200
         data = response.json()
         user1_tasks = [t for t in data["tasks"] if t["assignee"] == "user1"]
         assert len(user1_tasks) >= 8  # At least 2 per project (tasks 1 and 3)
         
         # Test combined filters
-        response = client.get("/api/tasks?status=in_progress&priority=medium")
+        response = isolated_client.get("/api/tasks?status=in_progress&priority=medium")
         assert response.status_code == 200
         data = response.json()
         filtered_tasks = [t for t in data["tasks"] 
@@ -728,16 +690,16 @@ class TestFilteringAndPagination:
         
         # Test project-specific filtering
         project_id = sample_tasks[0]["project_id"]
-        response = client.get(f"/api/tasks?project_id={project_id}")
+        response = isolated_client.get(f"/api/tasks?project_id={project_id}")
         assert response.status_code == 200
         data = response.json()
         project_tasks = [t for t in data["tasks"] if t["project_id"] == project_id]
         assert len(project_tasks) >= 3  # At least 3 tasks for this project
 
-    def test_pagination_projects(self, client, sample_projects):
+    def test_pagination_projects(self, isolated_client, sample_projects):
         """Test pagination for project listings."""
         # Test first page
-        response = client.get("/api/projects?skip=0&limit=2")
+        response = isolated_client.get("/api/projects?skip=0&limit=2")
         assert response.status_code == 200
         data = response.json()
         assert len(data["projects"]) <= 2  # May be fewer if no existing data
@@ -747,17 +709,17 @@ class TestFilteringAndPagination:
         
         # Test that we can navigate pages
         if data["has_next"]:
-            response = client.get("/api/projects?skip=2&limit=2")
+            response = isolated_client.get("/api/projects?skip=2&limit=2")
             assert response.status_code == 200
             data = response.json()
             assert data["page"] == 2
             assert data["per_page"] == 2
             assert data["has_prev"] is True
 
-    def test_pagination_tasks(self, client, sample_tasks):
+    def test_pagination_tasks(self, isolated_client, sample_tasks):
         """Test pagination for task listings."""
         # Test first page
-        response = client.get("/api/tasks?skip=0&limit=5")
+        response = isolated_client.get("/api/tasks?skip=0&limit=5")
         assert response.status_code == 200
         data = response.json()
         assert len(data["tasks"]) <= 5  # May be fewer if no existing data
@@ -767,17 +729,17 @@ class TestFilteringAndPagination:
         
         # Test that we can navigate pages if there are enough tasks
         if data["has_next"]:
-            response = client.get("/api/tasks?skip=5&limit=5")
+            response = isolated_client.get("/api/tasks?skip=5&limit=5")
             assert response.status_code == 200
             data = response.json()
             assert data["page"] == 2
             assert data["per_page"] == 5
             assert data["has_prev"] is True
 
-    def test_filtering_with_pagination(self, client, sample_tasks):
+    def test_filtering_with_pagination(self, isolated_client, sample_tasks):
         """Test filtering combined with pagination."""
         # Filter by status and paginate
-        response = client.get("/api/tasks?status=todo&skip=0&limit=2")
+        response = isolated_client.get("/api/tasks?status=todo&skip=0&limit=2")
         assert response.status_code == 200
         data = response.json()
         assert len(data["tasks"]) <= 2  # May be fewer
@@ -786,7 +748,7 @@ class TestFilteringAndPagination:
         
         # Test navigation if there are more pages
         if data["has_next"]:
-            response = client.get("/api/tasks?status=todo&skip=2&limit=2")
+            response = isolated_client.get("/api/tasks?status=todo&skip=2&limit=2")
             assert response.status_code == 200
             data = response.json()
             assert all(t["status"] == "todo" for t in data["tasks"])
@@ -794,15 +756,10 @@ class TestFilteringAndPagination:
             assert data["has_prev"] is True
 
 
-class TestTransactionHandling:
+class TestTransactionHandling(TestDatabaseIsolation):
     """Integration tests for database transactions and rollback scenarios."""
 
-    @pytest.fixture
-    def client(self):
-        """Create test client with real storage."""
-        return TestClient(app)
-
-    def test_project_creation_validation_rollback(self, client):
+    def test_project_creation_validation_rollback(self, isolated_client):
         """Test that invalid project data doesn't create partial records."""
         # Try to create project with invalid data
         invalid_data = {
@@ -813,17 +770,17 @@ class TestTransactionHandling:
             "created_by": "test_user"
         }
         
-        response = client.post("/api/projects", json=invalid_data)
+        response = isolated_client.post("/api/projects", json=invalid_data)
         assert response.status_code == 422
         
         # Verify no project was created
-        list_response = client.get("/api/projects")
+        list_response = isolated_client.get("/api/projects")
         assert list_response.status_code == 200
         projects = list_response.json()
         # Should not find any projects with empty name or invalid status
         assert all(p["name"] != "" for p in projects["projects"])
 
-    def test_task_creation_validation_rollback(self, client):
+    def test_task_creation_validation_rollback(self, isolated_client):
         """Test that invalid task data doesn't create partial records."""
         # First create a valid project
         project_data = {
@@ -834,7 +791,7 @@ class TestTransactionHandling:
             "created_by": "test_user"
         }
         
-        project_response = client.post("/api/projects", json=project_data)
+        project_response = isolated_client.post("/api/projects", json=project_data)
         assert project_response.status_code == 201
         project_id = project_response.json()["id"]
         
@@ -848,17 +805,17 @@ class TestTransactionHandling:
             "created_by": "test_user"
         }
         
-        response = client.post("/api/tasks", json=invalid_task_data)
+        response = isolated_client.post("/api/tasks", json=invalid_task_data)
         assert response.status_code == 422
         
         # Verify no task was created
-        list_response = client.get("/api/tasks")
+        list_response = isolated_client.get("/api/tasks")
         assert list_response.status_code == 200
         tasks = list_response.json()
         # Should not find any tasks with empty title
         assert all(t["title"] != "" for t in tasks["tasks"])
 
-    def test_task_parent_validation_consistency(self, client):
+    def test_task_parent_validation_consistency(self, isolated_client):
         """Test that parent task validation maintains consistency."""
         # Create project
         project_data = {
@@ -869,7 +826,7 @@ class TestTransactionHandling:
             "created_by": "test_user"
         }
         
-        project_response = client.post("/api/projects", json=project_data)
+        project_response = isolated_client.post("/api/projects", json=project_data)
         assert project_response.status_code == 201
         project_id = project_response.json()["id"]
         
@@ -884,17 +841,17 @@ class TestTransactionHandling:
             "created_by": "test_user"
         }
         
-        response = client.post("/api/tasks", json=invalid_task_data)
+        response = isolated_client.post("/api/tasks", json=invalid_task_data)
         assert response.status_code == 404
         
         # Verify task was not created
-        list_response = client.get("/api/tasks")
+        list_response = isolated_client.get("/api/tasks")
         assert list_response.status_code == 200
         tasks = list_response.json()
         task_titles = [t["title"] for t in tasks["tasks"]]
         assert "Invalid Parent Task" not in task_titles
 
-    def test_project_update_partial_failure_handling(self, client):
+    def test_project_update_partial_failure_handling(self, isolated_client):
         """Test handling of partial failures during project updates."""
         # Create project
         project_data = {
@@ -905,7 +862,7 @@ class TestTransactionHandling:
             "created_by": "test_user"
         }
         
-        project_response = client.post("/api/projects", json=project_data)
+        project_response = isolated_client.post("/api/projects", json=project_data)
         assert project_response.status_code == 201
         project = project_response.json()
         project_id = project["id"]
@@ -917,11 +874,11 @@ class TestTransactionHandling:
             "priority": "high"  # Valid
         }
         
-        response = client.put(f"/api/projects/{project_id}", json=invalid_update)
+        response = isolated_client.put(f"/api/projects/{project_id}", json=invalid_update)
         assert response.status_code == 422
         
         # Verify original project data is unchanged
-        get_response = client.get(f"/api/projects/{project_id}")
+        get_response = isolated_client.get(f"/api/projects/{project_id}")
         assert get_response.status_code == 200
         unchanged_project = get_response.json()
         assert unchanged_project["name"] == "Update Test Project"  # Original name
