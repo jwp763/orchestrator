@@ -460,5 +460,5 @@ export default defineConfig({
 ## Related Documentation
 
 - [Frontend Testing Guide](../testing/frontend-guide.md)
-- [Component Library](../reference/components.md)
-- [API Integration Guide](../development/api-integration.md)
+- [API Documentation](../api/README.md)
+- [Architecture Overview](../architecture/overview.md)

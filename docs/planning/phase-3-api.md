@@ -483,4 +483,3 @@ With the API layer complete, Phase 4 focuses on building the frontend interface 
 
 - [Phase 4: Frontend](phase-4-frontend.md)
 - [API Reference](../api/README.md)
-- [OpenAPI Specification](../api/openapi.json)

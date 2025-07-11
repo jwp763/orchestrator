@@ -171,11 +171,22 @@ The databricks_orchestrator project has achieved significant implementation prog
 
 ## Next Steps
 
-1. **Complete API Layer**: FastAPI endpoints for all operations
-2. **Frontend Integration**: Connect React components to API
-3. **Complete Integrations**: Linear, GitLab, Notion
-4. **Authentication**: Implement user auth system
-5. **Deployment**: Docker containers and CI/CD
+**Live task tracking**: See `.ai/tasks/current.yaml` for real-time status
+
+### High Priority Tasks
+1. **DEL-002**: Fix cascade delete issue (4 hours)
+2. **TEST-API-002**: Service layer testing (6 hours)
+3. **TEST-UI-007**: Frontend-backend integration (8 hours)
+
+### Medium Priority 
+4. **SEC-001**: Authentication implementation (12 hours)
+5. **DOC-001**: API documentation generation (3 hours)
+6. **INT-001**: AI provider integration tests (6 hours)
+
+### Remaining Work
+- 15 pending tasks
+- 105 estimated hours
+- See `.ai/tasks/current.yaml` for complete list
 
 ## Success Indicators
 

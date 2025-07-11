@@ -258,7 +258,7 @@ Response ← API ← PatchApplication ← PlannerAgent
 
 ## Related Documentation
 
-- [Testing Architecture](../testing_architecture.md)
+- [Testing Documentation](../testing.md)
 - [API Documentation](../api/README.md)
 - [Data Models](../reference/data-models.md)
 - [Development Setup](../development/setup.md)

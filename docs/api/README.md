@@ -99,21 +99,22 @@ GET /api/tasks?status=active&priority=high&sort=created_at:desc
 ## API Endpoints
 
 ### Projects
-- [Project Endpoints](endpoints/projects.md) - CRUD operations for projects
-- [Project Soft Delete](endpoints/projects-delete.md) - Soft delete and restore
+- **CRUD Operations** - Create, read, update, delete projects
+- **Soft Delete** - Soft delete and restore capabilities
 
 ### Tasks
-- [Task Endpoints](endpoints/tasks.md) - CRUD operations for tasks
-- [Task Hierarchies](endpoints/tasks-hierarchy.md) - Subtask management
-- [Task Filtering](endpoints/tasks-filtering.md) - Advanced filtering
+- **CRUD Operations** - Create, read, update, delete tasks
+- **Task Hierarchies** - Subtask management and nesting
+- **Advanced Filtering** - Filter by status, priority, assignee, etc.
 
 ### AI Planning
-- [Planner Endpoints](endpoints/planner.md) - AI-powered project planning
-- [Agent Configuration](endpoints/agents.md) - AI agent settings
+- **Project Planning** - AI-powered project breakdown
+- **Task Decomposition** - Intelligent task splitting
+- **Natural Language Editing** - Edit via conversation
 
 ### System
-- [Health Check](endpoints/health.md) - System status
-- [Version Info](endpoints/version.md) - API version information
+- **Health Check** - `/health` endpoint for system status
+- **API Documentation** - `/docs` for interactive documentation
 
 ## Quick Reference
 

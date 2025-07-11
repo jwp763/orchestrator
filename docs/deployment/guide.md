@@ -2,6 +2,21 @@
 
 *Last Updated: 2025-01-11*
 
+## Table of Contents
+
+- [Overview](#overview)
+- [Prerequisites](#prerequisites)
+- [Environment Configuration](#environment-configuration)
+- [Local Development](#local-development)
+- [Production Deployment](#production-deployment)
+- [Cloud Deployments](#cloud-deployments)
+- [Kubernetes Deployment](#kubernetes-deployment)
+- [Monitoring & Logging](#monitoring--logging)
+- [Security Hardening](#security-hardening)
+- [Backup & Recovery](#backup--recovery)
+- [Deployment Checklist](#deployment-checklist)
+- [Rollback Procedures](#rollback-procedures)
+
 ## Overview
 
 This guide covers deploying the Databricks Orchestrator to various environments, from local development to production cloud infrastructure.
@@ -707,7 +722,7 @@ aws s3 sync s3://orchestrator-frontend-previous/ s3://orchestrator-frontend-curr
 
 ## Related Documentation
 
-- [Infrastructure as Code](../infrastructure/terraform.md)
-- [CI/CD Pipeline](../ci-cd/pipeline.md)
-- [Monitoring Guide](../monitoring/guide.md)
-- [Security Best Practices](../security/best-practices.md)
+- [Architecture Overview](../architecture/overview.md)
+- [API Documentation](../api/README.md)
+- [Testing Documentation](../testing.md)
+- [Development Setup](../development/setup.md)

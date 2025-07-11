@@ -232,4 +232,4 @@ With the solid data foundation in place, Phase 2 focuses on building the AI agen
 
 - [Phase 2: AI Agents](phase-2-agents.md)
 - [Data Models Reference](../reference/data-models.md)
-- [Storage Architecture](../architecture/storage.md)
+- [Architecture Overview](../architecture/overview.md)

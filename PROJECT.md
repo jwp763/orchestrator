@@ -135,7 +135,7 @@ npm run test:ui                       # Vitest UI
 
 ### Documentation References
 
-- **Testing Strategy**: `docs/testing_architecture.md`
+- **Testing Overview**: `docs/testing.md`
 - **Backend Testing**: `docs/testing/backend-guide.md`
 - **Frontend Testing**: `docs/testing/frontend-guide.md`
 - **Troubleshooting**: `docs/testing/troubleshooting.md`
@@ -144,13 +144,13 @@ npm run test:ui                       # Vitest UI
 
 - **Active Sprint**: See [Current Sprint Focus](#current-sprint-focus)
 - **Full Task List**: `.ai/tasks/current.yaml`
-- **MVP Plan**: `docs/mvp_plan.md`
+- **MVP Overview**: `docs/planning/mvp-overview.md`
 
 ## 7. Architecture & Design
 
-- **Testing Architecture**: `docs/testing_architecture.md`
+- **Architecture Overview**: `docs/architecture/overview.md`
 - **Architecture Decision Records**: `docs/decisions/`
-- **MVP Plan**: `docs/mvp_plan.md`
+- **MVP Planning**: `docs/planning/`
 
 ## 8. Agent-Hints & Constraints
 
@@ -212,7 +212,7 @@ npm run test:ui                       # Vitest UI
 ```
 1. Start task → Update TodoWrite (status: "in_progress")
 2. Work on task → Keep TodoWrite updated
-3. Finish task → Update TodoWrite (status: "completed") 
+3. Finish task → Update TodoWrite (status: "completed")
                  AND update .ai/tasks/current.yaml (status: "completed")
 ```
 
@@ -223,7 +223,7 @@ npm run test:ui                       # Vitest UI
 - **Testing Guides**: Update when adding new patterns or fixtures
   - Backend: `docs/testing/backend-guide.md`
   - Frontend: `docs/testing/frontend-guide.md`
-- **Architecture**: Update `docs/testing_architecture.md` for structural changes
+- **Architecture**: Update `docs/architecture/overview.md` for structural changes
 - **API Changes**: Update documentation when modifying endpoints
 - **Decision Records**: Create ADRs in `docs/decisions/` for significant decisions
 
@@ -233,4 +233,4 @@ For AI assistants working on this project:
 
 - **Detailed Instructions**: See `docs/development/ai-instructions.md`
 - **Quick Reference**: See `.ai/ai-quick-reference.md`
-- **Note**: This project is built with AI coding assistants (Claude, GPT-4, Gemini, etc.)
+- **Note**: This project is built with AI coding assistants (Claude, Codex, Gemini, etc.)

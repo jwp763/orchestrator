@@ -290,5 +290,5 @@ With the AI agents operational, Phase 3 focuses on exposing these capabilities t
 ## Related Documentation
 
 - [Phase 3: API Layer](phase-3-api.md)
-- [Agent Architecture](../architecture/agents.md)
+- [Architecture Overview](../architecture/overview.md)
 - [PlannerAgent Documentation](../agents/planner_agent.md)

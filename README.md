@@ -60,17 +60,17 @@ npm run dev
 ### Development
 - [Detailed Setup Guide](docs/development/setup.md) - Complete setup instructions
 - [AI Instructions](docs/development/ai-instructions.md) - Guidelines for AI assistants
-- [Architecture Overview](docs/testing_architecture.md) - System architecture
+- [Architecture Overview](docs/architecture/overview.md) - System architecture
 
 ### Testing
-- [Testing Strategy](docs/testing_architecture.md) - Comprehensive testing overview
+- [Testing Overview](docs/testing.md) - Comprehensive testing documentation
 - [Backend Testing](docs/testing/backend-guide.md) - Backend test patterns
 - [Frontend Testing](docs/testing/frontend-guide.md) - Frontend test patterns
 - [Troubleshooting](docs/testing/troubleshooting.md) - Common issues and solutions
 
 ### Project Management
 - [Current Tasks](PROJECT.md) - Active development tasks and sprint focus
-- [MVP Plan](docs/mvp_plan.md) - Product roadmap
+- [MVP Overview](docs/planning/mvp-overview.md) - Product roadmap and vision
 - [Task Details](.ai/tasks/current.yaml) - Machine-readable task tracking
 
 ## 🧪 Testing

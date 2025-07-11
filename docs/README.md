@@ -10,8 +10,8 @@ Welcome to the comprehensive documentation for the Databricks Orchestrator proje
 
 | Category | Description | Links |
 |----------|-------------|-------|
-| **Getting Started** | Setup and development workflow | • [Development Setup](development/setup.md)<br>• [Development Workflow](development/workflow.md)<br>• [Contributing Guide](../CONTRIBUTING.md) |
-| **Architecture** | System design and patterns | • [Architecture Overview](architecture/overview.md)<br>• [Testing Architecture](testing_architecture.md)<br>• [API Design](api/README.md) |
+| **Getting Started** | Setup and development workflow | • [Development Setup](development/setup.md)<br>• [Contributing Guide](../CONTRIBUTING.md) |
+| **Architecture** | System design and patterns | • [Architecture Overview](architecture/overview.md)<br>• [Testing Architecture](testing.md)<br>• [API Design](api/README.md) |
 | **Testing** | Testing strategies and guides | • [Testing Overview](testing/overview.md)<br>• [Backend Testing](testing/backend-guide.md)<br>• [Frontend Testing](testing/frontend-guide.md) |
 | **Reference** | Quick references and lookups | • [Data Models](reference/data-models.md)<br>• [CLI Commands](reference/commands.md)<br>• [Error Codes](reference/error-codes.md) |
 
@@ -35,14 +35,13 @@ Welcome to the comprehensive documentation for the Databricks Orchestrator proje
 ### 🏗️ Architecture & Design
 
 - [System Architecture Overview](architecture/overview.md) - High-level system design
-- [Testing Architecture](testing_architecture.md) - Comprehensive testing infrastructure
+- [Testing Architecture](testing.md) - Comprehensive testing infrastructure
 - [Data Models Reference](reference/data-models.md) - Pydantic schemas and database models
 - [API Design](api/README.md) - RESTful API patterns and conventions
 
 ### 🔧 Development
 
 - [Development Setup](development/setup.md) - Complete environment setup
-- [Development Workflow](development/workflow.md) - Git workflow and best practices
 - [AI Instructions](development/ai-instructions.md) - Guidelines for AI-assisted development
 - [Contributing](../CONTRIBUTING.md) - How to contribute to the project
 
@@ -57,7 +56,6 @@ Welcome to the comprehensive documentation for the Databricks Orchestrator proje
 ### 🚀 API & Integration
 
 - [API Documentation](api/README.md) - Complete API reference
-- [API Endpoints](api/endpoints/) - Detailed endpoint documentation
 - [API Examples](api/examples.md) - Usage examples and patterns
 - [Quick Reference](api/quick-ref.md) - API endpoint tables
 

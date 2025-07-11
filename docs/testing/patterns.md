@@ -501,5 +501,5 @@ describe('ProjectCard', () => {
 
 - [Backend Testing Guide](backend-guide.md)
 - [Frontend Testing Guide](frontend-guide.md)
-- [Testing Architecture](../testing_architecture.md)
+- [Testing Overview](../testing.md)
 - [Troubleshooting](troubleshooting.md)

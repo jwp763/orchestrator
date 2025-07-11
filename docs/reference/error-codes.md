@@ -463,5 +463,5 @@ alerts:
 ## Related Documentation
 
 - [API Reference](../api/README.md)
-- [Testing Error Scenarios](../testing/error-testing.md)
-- [Monitoring Guide](../monitoring/guide.md)
+- [Testing Documentation](../testing.md)
+- [Troubleshooting Guide](../testing/troubleshooting.md)

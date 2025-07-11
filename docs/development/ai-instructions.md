@@ -2,6 +2,18 @@
 
 > **Note:** These instructions apply to ALL AI coding assistants (Claude, GPT-4, Gemini, Copilot, etc.) working on this project.
 
+## Table of Contents
+
+- [User Profile & Learning Context](#user-profile--learning-context)
+- [Core Principles for AI Assistants](#core-principles-for-ai-assistants)
+- [Communication Style Guide](#communication-style-guide)
+- [Testing Philosophy](#testing-philosophy)
+- [Code Review Checklist](#code-review-checklist)
+- [Common Python → Web Dev Gotchas](#common-python--web-dev-gotchas)
+- [Project-Specific Patterns](#project-specific-patterns)
+- [Debugging Strategies](#debugging-strategies)
+- [AI Response Examples](#ai-response-examples)
+
 ## User Profile & Learning Context
 
 You are working with a developer who:
@@ -259,4 +271,4 @@ This supplements PROJECT.md with AI assistant-specific guidance. Always:
 - Follow project conventions in pyproject.toml
 - Update .ai/tasks/current.yaml when completing tasks
 - Use the TodoWrite tool for task tracking
-- Consider the MVP plan in docs/mvp_plan.md
+- Consider the MVP plan in docs/planning/mvp-overview.md
