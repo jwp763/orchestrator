@@ -2,175 +2,91 @@ import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import App from './App'
 
+// Mock the hooks and services
+vi.mock('./hooks/useProjectManagement', () => ({
+  useProjectManagement: () => ({
+    projects: [],
+    tasks: [],
+    selectedProject: null,
+    selectedTask: null,
+    isProjectCollapsed: false,
+    isLoading: false,
+    projectsLoading: false,
+    tasksLoading: false,
+    error: null,
+    handleProjectSelect: vi.fn(),
+    handleTaskSelect: vi.fn(),
+    handleNewProject: vi.fn(),
+    handleUpdateProject: vi.fn(),
+    handleNewTask: vi.fn(),
+    handleUpdateTask: vi.fn(),
+    handleApplyChanges: vi.fn(),
+    handleToggleProjectCollapse: vi.fn(),
+    clearError: vi.fn(),
+    getTasksForProject: vi.fn(() => []),
+  }),
+}))
+
 describe('App', () => {
   beforeEach(() => {
     vi.clearAllMocks()
-    // Clear localStorage mock
-    Object.defineProperty(window, 'localStorage', {
-      value: {
-        getItem: vi.fn(),
-        setItem: vi.fn(),
-        removeItem: vi.fn(),
-        clear: vi.fn(),
-      },
-      writable: true,
-    })
   })
 
   test('renders without crashing', () => {
     render(<App />)
-    expect(screen.getByText('Orchestrator')).toBeInTheDocument()
+    expect(screen.getByText('Tasks')).toBeInTheDocument()
   })
 
-  test('displays the correct title and subtitle', () => {
+  test('displays the main interface sections', () => {
     render(<App />)
-    expect(screen.getByText('Orchestrator')).toBeInTheDocument()
-    expect(screen.getByText('AI-Powered Project Planning & Task Management')).toBeInTheDocument()
+    expect(screen.getByText('Tasks')).toBeInTheDocument()
+    expect(screen.getByText('Add Task')).toBeInTheDocument()
   })
 
-  test('renders project idea form', () => {
+  test('renders empty state when no tasks', () => {
     render(<App />)
-    expect(screen.getByLabelText('Project Idea')).toBeInTheDocument()
-    expect(screen.getByPlaceholderText('Describe your project idea here...')).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: 'Generate Project Plan' })).toBeInTheDocument()
+    expect(screen.getByText('No tasks found for this project.')).toBeInTheDocument()
+    expect(screen.getByText('Click "Add Task" to create your first task.')).toBeInTheDocument()
   })
 
-  test('displays default provider and model', () => {
+  test('has add task button disabled when no project selected', () => {
     render(<App />)
-    expect(screen.getByText('Using openai - o3')).toBeInTheDocument()
+    const addTaskButton = screen.getByText('Add Task')
+    expect(addTaskButton).toBeDisabled()
   })
 
-  test('updates project idea when user types', async () => {
-    const user = userEvent.setup()
+  test('renders natural language editor', () => {
     render(<App />)
-    
-    const textarea = screen.getByLabelText('Project Idea')
-    await user.type(textarea, 'Build a todo app')
-    
-    expect(textarea).toHaveValue('Build a todo app')
+    expect(screen.getByPlaceholderText(/describe changes to make/i)).toBeInTheDocument()
+    expect(screen.getByText('Generate Changes')).toBeInTheDocument()
   })
 
-  test('prevents form submission when project idea is empty', async () => {
-    const user = userEvent.setup()
+  test('generate changes button is disabled by default', () => {
     render(<App />)
-    
-    const submitButton = screen.getByRole('button', { name: 'Generate Project Plan' })
-    await user.click(submitButton)
-    
-    // The form should not submit due to required attribute
-    const textarea = screen.getByLabelText('Project Idea')
-    expect(textarea).toBeInvalid()
+    const generateButton = screen.getByText('Generate Changes')
+    expect(generateButton).toBeDisabled()
   })
 
-  test('handles form submission with valid input', async () => {
-    const user = userEvent.setup()
-    const consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => {})
-    
+  test('renders project sidebar', () => {
     render(<App />)
-    
-    const textarea = screen.getByLabelText('Project Idea')
-    const submitButton = screen.getByRole('button', { name: 'Generate Project Plan' })
-    
-    await user.type(textarea, 'Build a todo app')
-    await user.click(submitButton)
-    
-    expect(consoleSpy).toHaveBeenCalledWith('Generating project for:', 'Build a todo app')
-    
-    consoleSpy.mockRestore()
+    // The ProjectSidebar component should be rendered
+    // Since we're mocking with empty projects, we should see an empty state
+    expect(document.querySelector('.h-screen')).toBeInTheDocument()
   })
 
-  test('persists user preferences in localStorage', () => {
-    const mockLocalStorage = {
-      getItem: vi.fn(),
-      setItem: vi.fn(),
-    }
-    
-    Object.defineProperty(window, 'localStorage', {
-      value: mockLocalStorage,
-      writable: true,
-    })
-    
+  test('does not show loading overlay when projects are not loading', () => {
     render(<App />)
-    
-    expect(mockLocalStorage.getItem).toHaveBeenCalledWith('orchestrator-preferences')
+    expect(screen.queryByText('Loading projects...')).not.toBeInTheDocument()
   })
 
-  test('loads preferences from localStorage when available', () => {
-    const mockPreferences = {
-      lastConfig: {
-        provider: 'anthropic',
-        model: 'claude-3-sonnet',
-        max_retries: 3,
-        create_milestones: false,
-        max_milestones: 8,
-        temperature: 0.5,
-        max_tokens: 1000,
-      },
-      theme: 'dark',
-      autoSave: false,
-    }
-    
-    const mockLocalStorage = {
-      getItem: vi.fn().mockReturnValue(JSON.stringify(mockPreferences)),
-      setItem: vi.fn(),
-    }
-    
-    Object.defineProperty(window, 'localStorage', {
-      value: mockLocalStorage,
-      writable: true,
-    })
-    
+  test('does not show error when no error exists', () => {
     render(<App />)
-    
-    expect(screen.getByText('Using anthropic - claude-3-sonnet')).toBeInTheDocument()
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument()
   })
 
-  test('handles localStorage errors gracefully', () => {
-    const mockLocalStorage = {
-      getItem: vi.fn().mockImplementation(() => {
-        throw new Error('Storage error')
-      }),
-      setItem: vi.fn(),
-    }
-    
-    Object.defineProperty(window, 'localStorage', {
-      value: mockLocalStorage,
-      writable: true,
-    })
-    
-    const consoleSpy = vi.spyOn(console, 'warn').mockImplementation(() => {})
-    
+  test('renders example commands in natural language editor', () => {
     render(<App />)
-    
-    // Should still render with default values
-    expect(screen.getByText('Using openai - o3')).toBeInTheDocument()
-    expect(consoleSpy).toHaveBeenCalledWith(
-      'Error reading localStorage key "orchestrator-preferences":',
-      expect.any(Error)
-    )
-    
-    consoleSpy.mockRestore()
-  })
-
-  test('has proper accessibility attributes', () => {
-    render(<App />)
-    
-    const textarea = screen.getByLabelText('Project Idea')
-    const submitButton = screen.getByRole('button', { name: 'Generate Project Plan' })
-    
-    expect(textarea).toHaveAttribute('id', 'project-idea')
-    expect(textarea).toHaveAttribute('required')
-    expect(submitButton).toHaveAttribute('type', 'submit')
-  })
-
-  test('has proper form structure', () => {
-    render(<App />)
-    
-    const form = screen.getByRole('main').querySelector('form')
-    const textarea = screen.getByLabelText('Project Idea')
-    const submitButton = screen.getByRole('button', { name: 'Generate Project Plan' })
-    
-    expect(form).toContainElement(textarea)
-    expect(form).toContainElement(submitButton)
+    expect(screen.getByText('Example Commands:')).toBeInTheDocument()
+    expect(screen.getByText('• "Set priority to high and due next Friday"')).toBeInTheDocument()
   })
 })

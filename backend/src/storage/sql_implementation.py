@@ -186,8 +186,15 @@ class SQLStorage(StorageInterface):
 
     def create_project(self, project: Project) -> Project:
         """Create a new project."""
-        # Always create a new session for each operation to avoid concurrency issues
-        # Use SessionLocal if available, otherwise use the engine directly
+        # Check if we have an injected session (for transactions and testing)
+        if self._session is not None:
+            # Use the injected session - don't commit, just flush
+            sql_project = self._convert_pydantic_project_to_sql(project)
+            self._session.add(sql_project)
+            self._session.flush()  # Flush to get ID but don't commit
+            return self._convert_sql_project_to_pydantic(sql_project)
+        
+        # For standalone operations, create a new session and commit
         if self.SessionLocal is not None:
             with self.SessionLocal() as session:
                 sql_project = self._convert_pydantic_project_to_sql(project)
