@@ -122,9 +122,15 @@ class TestTaskRouteHandlers:
             updated_at=datetime.now()
         )
         
-        # Mock the case where we get all projects and their tasks
-        mock_storage.get_projects.return_value = [mock_project_data]
-        mock_storage.get_tasks_by_project.return_value = [task_instance]
+        # Mock the list_tasks method to return the expected dictionary format
+        mock_storage.list_tasks.return_value = {
+            "tasks": [task_instance],
+            "total": 1,
+            "page": 1,
+            "per_page": 20,
+            "has_next": False,
+            "has_prev": False
+        }
         
         response = client_with_mock_storage.get("/api/tasks")
         
@@ -156,7 +162,15 @@ class TestTaskRouteHandlers:
             updated_at=datetime.now()
         )
         
-        mock_storage.get_tasks_by_project.return_value = [task_instance]
+        # Mock the list_tasks method to return the expected dictionary format
+        mock_storage.list_tasks.return_value = {
+            "tasks": [task_instance],
+            "total": 1,
+            "page": 1,
+            "per_page": 20,
+            "has_next": False,
+            "has_prev": False
+        }
         
         response = client_with_mock_storage.get("/api/tasks?project_id=test-project-1&status=todo&priority=high")
         

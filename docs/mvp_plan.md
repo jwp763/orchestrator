@@ -222,6 +222,9 @@ The databricks_orchestrator project has achieved significant implementation prog
 - Model validation tests for all core schemas
 - Integration testing for storage operations
 - Mock-based testing for external services
+- **Testing Overview**: See `testing_overview.md` for detailed testing strategy and current statistics
+- **Testing Guidelines**: See `backend/tests/README.md` and `frontend/tests/README.md` for specific testing patterns
+- **Troubleshooting**: See `TESTING_TROUBLESHOOTING.md` for resolving common test issues
 
 **Development Tools** (`pyproject.toml`):
 - Black code formatting with 120-character line length

@@ -17,19 +17,35 @@ from src.models.patch import Patch, ProjectPatch, TaskPatch, Op
 class SQLStorage(StorageInterface):
     """SQL implementation of the storage interface using SQLAlchemy."""
 
-    def __init__(self, database_url: str = "sqlite:///orchestrator.db"):
+    def __init__(self, database_url: str = "sqlite:///orchestrator.db", session: Optional[Session] = None):
         """Initialize the SQL storage with database URL."""
-        self.engine = create_engine(database_url, echo=False)
-        self.SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=self.engine)
-        self._session: Optional[Session] = None
+        if session is not None:
+            # Use provided session (for dependency injection)
+            self._session = session
+            self.engine = session.bind
+            self.SessionLocal = None
+        else:
+            # Create our own session (for testing and direct usage)
+            self.engine = create_engine(
+                database_url, 
+                echo=False,
+                # Enable connection pooling and thread safety
+                poolclass=None,  # Use default pool for SQLite
+                connect_args={"check_same_thread": False} if "sqlite" in database_url else {}
+            )
+            self.SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=self.engine)
+            self._session = None
 
-        # Create tables
-        Base.metadata.create_all(bind=self.engine)
+        # Create tables if we own the engine
+        if session is None:
+            Base.metadata.create_all(bind=self.engine)
 
     @property
     def session(self) -> Session:
         """Get the current session, creating one if needed."""
         if self._session is None:
+            if self.SessionLocal is None:
+                raise RuntimeError("No session available and no SessionLocal factory")
             self._session = self.SessionLocal()
         return self._session
 
@@ -39,6 +55,20 @@ class SQLStorage(StorageInterface):
         if self._session is not None:
             self._session.close()
         self._session = value
+        # Update the engine and SessionLocal to match the injected session
+        if value is not None:
+            self.engine = value.bind
+            self.SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=self.engine)
+    
+    def close_session(self) -> None:
+        """Close the current session if it exists."""
+        if self._session is not None:
+            try:
+                self._session.close()
+            except Exception:
+                pass  # Ignore close errors
+            finally:
+                self._session = None
 
     def _convert_sql_project_to_pydantic(self, sql_project: SQLProject) -> Project:
         """Convert SQLAlchemy Project to Pydantic Project."""
@@ -153,10 +183,22 @@ class SQLStorage(StorageInterface):
 
     def create_project(self, project: Project) -> Project:
         """Create a new project."""
-        sql_project = self._convert_pydantic_project_to_sql(project)
-        self.session.add(sql_project)
-        self.session.commit()  # Commit to persist the changes
-        return self._convert_sql_project_to_pydantic(sql_project)
+        # Use existing session if available (for transactions), otherwise create new one
+        if self._session is not None:
+            # We're in a transaction or have an injected session
+            sql_project = self._convert_pydantic_project_to_sql(project)
+            self.session.add(sql_project)
+            self.session.flush()  # Flush but don't commit (let transaction handle it)
+            return self._convert_sql_project_to_pydantic(sql_project)
+        else:
+            # Create a new session for this operation
+            with self.SessionLocal() as session:
+                sql_project = self._convert_pydantic_project_to_sql(project)
+                session.add(sql_project)
+                session.commit()
+                # Refresh to get the committed state
+                session.refresh(sql_project)
+                return self._convert_sql_project_to_pydantic(sql_project)
 
     def update_project(self, project_id: str, project: Project) -> Optional[Project]:
         """Update an existing project."""
@@ -175,7 +217,11 @@ class SQLStorage(StorageInterface):
             sql_project.start_date = project.start_date
             sql_project.updated_at = datetime.now()
 
-            self.session.commit()
+            # Only flush if we have an injected session, otherwise commit won't work
+            if self._session is not None:
+                self.session.flush()
+            else:
+                self.session.commit()
             return self._convert_sql_project_to_pydantic(sql_project)
         except SQLAlchemyError:
             return None
@@ -185,8 +231,18 @@ class SQLStorage(StorageInterface):
         try:
             sql_project = self.session.query(SQLProject).filter(SQLProject.id == project_id).first()
             if sql_project:
+                # First, delete all associated tasks (cascade delete)
+                sql_tasks = self.session.query(SQLTask).filter(SQLTask.project_id == project_id).all()
+                for task in sql_tasks:
+                    self.session.delete(task)
+                
+                # Then delete the project
                 self.session.delete(sql_project)
-                self.session.commit()
+                # Only flush if we have an injected session, otherwise commit won't work
+                if self._session is not None:
+                    self.session.flush()
+                else:
+                    self.session.commit()
                 return True
             return False
         except SQLAlchemyError:
@@ -395,7 +451,7 @@ class SQLStorage(StorageInterface):
                 if not patch.name:
                     raise ValueError("name is required for project creation")
 
-                # Create new project
+                # Create new project directly in transaction
                 project = Project(
                     name=patch.name,
                     description=patch.description,
@@ -406,7 +462,10 @@ class SQLStorage(StorageInterface):
                     start_date=patch.start_date,
                     created_by="system",  # TODO: Get from context
                 )
-                return self.create_project(project)
+                sql_project = self._convert_pydantic_project_to_sql(project)
+                self.session.add(sql_project)
+                self.session.flush()  # Flush to get ID but don't commit yet
+                return self._convert_sql_project_to_pydantic(sql_project)
 
             elif patch.op == Op.UPDATE:
                 if not patch.project_id:
@@ -454,7 +513,7 @@ class SQLStorage(StorageInterface):
                 if not patch.title:
                     raise ValueError("title is required for task creation")
 
-                # Create new task
+                # Create new task directly in transaction
                 task = Task(
                     project_id=patch.project_id,
                     title=patch.title,
@@ -471,7 +530,10 @@ class SQLStorage(StorageInterface):
                     metadata=patch.metadata or {},
                     created_by="system",  # TODO: Get from context
                 )
-                return self.create_task(task)
+                sql_task = self._convert_pydantic_task_to_sql(task)
+                self.session.add(sql_task)
+                self.session.flush()  # Flush to get ID but don't commit yet
+                return self._convert_sql_task_to_pydantic(sql_task)
 
             elif patch.op == Op.UPDATE:
                 if not patch.task_id:
