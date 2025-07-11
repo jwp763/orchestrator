@@ -31,10 +31,17 @@ backend/
    - `test_planner_agent.py` - Planning agent logic
    - `test_planner_integration.py` - Integration testing
 
-3. **Core Tests**:
+3. **Schema Model Tests** (`tests/test_schema_models/`):
+   - `test_task_models.py` - Task model validation and behavior
+   - `test_project_models.py` - Project model testing
+   - `test_patch_models.py` - Patch model testing
+   - `test_model_integration.py` - Cross-model integration tests
+
+4. **Core Tests**:
    - `test_storage.py` - Data storage functionality
    - `test_soft_delete_models.py` - Soft delete features
    - `test_soft_delete_performance.py` - Performance of soft delete
+   - `test_soft_delete_migration.py` - Migration testing
 
 ### Testing Features
 - **Coverage Reporting**: HTML and terminal coverage reports
@@ -174,3 +181,32 @@ The project includes extensive testing documentation in the `docs_archive/` dire
 - Integration testing plans
 
 This testing setup demonstrates a mature, production-ready approach with comprehensive coverage across both backend and frontend components.
+
+## Current Test Statistics (Updated)
+
+### Backend Test Files
+- **Total Test Files**: 107+ files across the project
+- **Organized Test Directory**: 25 Python test files in `backend/tests/`
+- **Root Level Tests**: 6 additional test files in `backend/` root
+- **Test Categories**: 
+  - API Tests (10 files)
+  - Agent Tests (4 files)
+  - Schema Model Tests (4 files)
+  - Core Functionality Tests (7 files)
+
+### Frontend Test Files
+- **Total Test Files**: 12 test files
+- **Component Tests**: 4 component test files
+- **Hook Tests**: 2 custom hook test files
+- **Utility Tests**: 2 utility test files
+- **Type Tests**: 1 API type test file
+- **App Tests**: 1 main application test file
+
+### Test Coverage Areas
+- **Backend**: API endpoints, business logic, data models, agents, storage, migrations
+- **Frontend**: React components, custom hooks, utilities, types, user interactions
+- **Integration**: Cross-system integration testing
+- **Performance**: Load testing and performance benchmarks
+- **Security**: Security-focused testing for APIs and data handling
+
+The testing infrastructure continues to evolve with comprehensive coverage ensuring code quality and reliability across all system components.
