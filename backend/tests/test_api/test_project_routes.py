@@ -13,6 +13,7 @@ from unittest.mock import Mock, patch, MagicMock
 from datetime import datetime
 from fastapi.testclient import TestClient
 from fastapi import HTTPException
+from .test_database_isolation import TestDatabaseIsolation
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
@@ -444,35 +445,12 @@ class TestProjectRequestResponseModels:
         assert json_data["completed_task_count"] == 2
 
 
-class TestProjectRoutesIntegration:
+class TestProjectRoutesIntegration(TestDatabaseIsolation):
     """Integration tests for project routes with real database."""
 
-    @pytest.fixture
-    def test_engine(self):
-        """Create test database engine."""
-        engine = create_engine("sqlite:///:memory:", echo=False)
-        Base.metadata.create_all(engine)
-        return engine
+    # Remove custom fixtures - using TestDatabaseIsolation
 
-    @pytest.fixture
-    def test_session(self, test_engine):
-        """Create test database session."""
-        Session = sessionmaker(bind=test_engine)
-        session = Session()
-        yield session
-        session.close()
-
-    @pytest.fixture
-    def storage(self, test_session):
-        """Create storage instance for testing."""
-        return SQLStorage()
-
-    @pytest.fixture
-    def client(self):
-        """Create test client with real storage."""
-        return TestClient(app)
-
-    def test_project_crud_lifecycle(self, client):
+    def test_project_crud_lifecycle(self, isolated_client):
         """Test complete project CRUD lifecycle."""
         # Create project
         project_data = {
@@ -484,13 +462,13 @@ class TestProjectRoutesIntegration:
             "created_by": "integration_user"
         }
         
-        create_response = client.post("/api/projects", json=project_data)
+        create_response = isolated_client.post("/api/projects", json=project_data)
         assert create_response.status_code == 201
         created_project = create_response.json()
         project_id = created_project["id"]
         
         # Read project
-        get_response = client.get(f"/api/projects/{project_id}")
+        get_response = isolated_client.get(f"/api/projects/{project_id}")
         assert get_response.status_code == 200
         retrieved_project = get_response.json()
         assert retrieved_project["name"] == "Integration Test Project"
@@ -502,14 +480,14 @@ class TestProjectRoutesIntegration:
             "status": "active"
         }
         
-        update_response = client.put(f"/api/projects/{project_id}", json=update_data)
+        update_response = isolated_client.put(f"/api/projects/{project_id}", json=update_data)
         assert update_response.status_code == 200
         updated_project = update_response.json()
         assert updated_project["name"] == "Updated Integration Project"
         assert updated_project["status"] == "active"
         
         # List projects
-        list_response = client.get("/api/projects")
+        list_response = isolated_client.get("/api/projects")
         assert list_response.status_code == 200
         projects_list = list_response.json()
         assert len(projects_list["projects"]) >= 1
@@ -519,14 +497,14 @@ class TestProjectRoutesIntegration:
         assert our_project["name"] == "Updated Integration Project"
         
         # Delete project
-        delete_response = client.delete(f"/api/projects/{project_id}")
+        delete_response = isolated_client.delete(f"/api/projects/{project_id}")
         assert delete_response.status_code == 204
         
         # Verify deletion
-        get_deleted_response = client.get(f"/api/projects/{project_id}")
+        get_deleted_response = isolated_client.get(f"/api/projects/{project_id}")
         assert get_deleted_response.status_code == 404
 
-    def test_project_list_filtering(self, client):
+    def test_project_list_filtering(self, isolated_client):
         """Test project list filtering functionality."""
         # Create multiple projects
         projects_data = [
@@ -547,11 +525,11 @@ class TestProjectRoutesIntegration:
         ]
         
         for project_data in projects_data:
-            create_response = client.post("/api/projects", json=project_data)
+            create_response = isolated_client.post("/api/projects", json=project_data)
             assert create_response.status_code == 201
         
         # Test filtering by status
-        response = client.get("/api/projects?status=planning")
+        response = isolated_client.get("/api/projects?status=planning")
         assert response.status_code == 200
         filtered_projects = response.json()
         planning_projects = [p for p in filtered_projects["projects"] if p["status"] == "planning"]
@@ -559,21 +537,21 @@ class TestProjectRoutesIntegration:
         assert any(p["name"] == "High Priority Project" for p in planning_projects)
         
         # Test filtering by priority
-        response = client.get("/api/projects?priority=low")
+        response = isolated_client.get("/api/projects?priority=low")
         assert response.status_code == 200
         filtered_projects = response.json()
         low_priority_projects = [p for p in filtered_projects["projects"] if p["priority"] == "low"]
         assert len(low_priority_projects) >= 1
         assert any(p["name"] == "Low Priority Project" for p in low_priority_projects)
 
-    def test_project_validation_errors(self, client):
+    def test_project_validation_errors(self, isolated_client):
         """Test validation errors are properly handled."""
         # Test missing required fields
         invalid_data = {
             "description": "Missing name and created_by"
         }
         
-        response = client.post("/api/projects", json=invalid_data)
+        response = isolated_client.post("/api/projects", json=invalid_data)
         assert response.status_code == 422
         error_detail = response.json()
         assert "detail" in error_detail
@@ -586,26 +564,26 @@ class TestProjectRoutesIntegration:
             "created_by": "test_user"
         }
         
-        response = client.post("/api/projects", json=invalid_data)
+        response = isolated_client.post("/api/projects", json=invalid_data)
         assert response.status_code == 422
 
-    def test_project_not_found_errors(self, client):
+    def test_project_not_found_errors(self, isolated_client):
         """Test 404 errors for non-existent projects."""
         # Test get non-existent project
-        response = client.get("/api/projects/nonexistent-id")
+        response = isolated_client.get("/api/projects/nonexistent-id")
         assert response.status_code == 404
         
         # Test update non-existent project
         update_data = {"name": "Updated Name"}
-        response = client.put("/api/projects/nonexistent-id", json=update_data)
+        response = isolated_client.put("/api/projects/nonexistent-id", json=update_data)
         assert response.status_code == 404
         
         # Test delete non-existent project
-        response = client.delete("/api/projects/nonexistent-id")
+        response = isolated_client.delete("/api/projects/nonexistent-id")
         assert response.status_code == 404
         
         # Test get tasks for non-existent project
-        response = client.get("/api/projects/nonexistent-id/tasks")
+        response = isolated_client.get("/api/projects/nonexistent-id/tasks")
         assert response.status_code == 404
 
 
@@ -617,7 +595,7 @@ class TestProjectRoutesErrorHandling:
         """Create test client."""
         return TestClient(app)
 
-    def test_service_error_handling(self, client):
+    def test_service_error_handling(self, isolated_client):
         """Test proper error handling when service raises exceptions."""
         from src.api.project_routes import get_project_service
         
@@ -638,12 +616,12 @@ class TestProjectRoutesErrorHandling:
         
         app.dependency_overrides.clear()
 
-    def test_validation_error_handling(self, client):
+    def test_validation_error_handling(self, isolated_client):
         """Test validation error handling."""
         # Test malformed JSON
-        response = client.post("/api/projects", content="invalid json")
+        response = isolated_client.post("/api/projects", content="invalid json")
         assert response.status_code == 422
         
         # Test wrong content type
-        response = client.post("/api/projects", data="not json")
+        response = isolated_client.post("/api/projects", data="not json")
         assert response.status_code == 422

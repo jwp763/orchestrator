@@ -55,7 +55,7 @@ class TestSQLStorageUnit:
         assert result is None
 
     def test_create_project_calls_session_add(self, storage: SQLStorage, mock_session: Mock) -> None:
-        """Test that create_project calls session.add."""
+        """Test that create_project calls session.add with injected session."""
         project = Project(name="Test Project", created_by="test_user")
 
         with mock_patch.object(storage, "_convert_pydantic_project_to_sql") as mock_convert:
@@ -109,20 +109,25 @@ class TestSQLStorageUnit:
         mock_session.flush.assert_called_once()
         assert result is True
 
-    def test_apply_project_patch_create_operation(self, storage: SQLStorage) -> None:
+    def test_apply_project_patch_create_operation(self, storage: SQLStorage, mock_session: Mock) -> None:
         """Test apply_project_patch handles create operation correctly."""
         patch = ProjectPatch(
             op=Op.CREATE, name="New Project", description="Test description", priority=ProjectPriority.MEDIUM
         )
 
-        with mock_patch.object(storage, "create_project") as mock_create:
-            expected_project = Project(name="New Project", created_by="system")
-            mock_create.return_value = expected_project
+        with mock_patch.object(storage, "_convert_pydantic_project_to_sql") as mock_convert:
+            mock_sql_project = Mock()
+            mock_convert.return_value = mock_sql_project
 
-            result = storage.apply_project_patch(patch)
+            with mock_patch.object(storage, "_convert_sql_project_to_pydantic") as mock_convert_back:
+                expected_project = Project(name="New Project", created_by="system")
+                mock_convert_back.return_value = expected_project
 
-            mock_create.assert_called_once()
-            assert result == expected_project
+                result = storage.apply_project_patch(patch)
+
+                mock_session.add.assert_called_once_with(mock_sql_project)
+                mock_session.flush.assert_called_once()
+                assert result == expected_project
 
     def test_apply_project_patch_update_operation(self, storage: SQLStorage) -> None:
         """Test apply_project_patch handles update operation correctly."""
@@ -158,19 +163,24 @@ class TestSQLStorageUnit:
             assert result is not None
             assert result.id == project_id
 
-    def test_apply_task_patch_create_operation(self, storage: SQLStorage) -> None:
+    def test_apply_task_patch_create_operation(self, storage: SQLStorage, mock_session: Mock) -> None:
         """Test apply_task_patch handles create operation correctly."""
         project_id = str(uuid4())
         patch = TaskPatch(op=Op.CREATE, project_id=project_id, title="New Task")
 
-        with mock_patch.object(storage, "create_task") as mock_create:
-            expected_task = Task(project_id=project_id, title="New Task", created_by="system")
-            mock_create.return_value = expected_task
+        with mock_patch.object(storage, "_convert_pydantic_task_to_sql") as mock_convert:
+            mock_sql_task = Mock()
+            mock_convert.return_value = mock_sql_task
 
-            result = storage.apply_task_patch(patch)
+            with mock_patch.object(storage, "_convert_sql_task_to_pydantic") as mock_convert_back:
+                expected_task = Task(project_id=project_id, title="New Task", created_by="system")
+                mock_convert_back.return_value = expected_task
 
-            mock_create.assert_called_once()
-            assert result == expected_task
+                result = storage.apply_task_patch(patch)
+
+                mock_session.add.assert_called_once_with(mock_sql_task)
+                mock_session.flush.assert_called_once()
+                assert result == expected_task
 
     def test_apply_task_patch_update_operation(self, storage: SQLStorage) -> None:
         """Test apply_task_patch handles update operation correctly."""
