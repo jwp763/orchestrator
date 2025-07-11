@@ -45,13 +45,17 @@ class LinkUpdater:
         # Directories to skip
         skip_dirs = {'.git', 'node_modules', '__pycache__', '.pytest_cache', 'venv', '.venv'}
         
-        for root, dirs, files in os.walk(root_dir):
+        for root, dirs, files in os.walk(root_dir, followlinks=False):
             # Remove directories we want to skip
             dirs[:] = [d for d in dirs if d not in skip_dirs]
             
             for file in files:
                 if file.endswith('.md'):
-                    markdown_files.append(Path(root) / file)
+                    file_path = Path(root) / file
+                    # Skip broken symlinks
+                    if file_path.is_symlink() and not file_path.exists():
+                        continue
+                    markdown_files.append(file_path)
                     
         return sorted(markdown_files)
     
