@@ -2,6 +2,23 @@
 
 *Last Updated: 2025-01-11*
 
+## Table of Contents
+
+- [Overview](#overview)
+- [Development Commands](#development-commands)
+- [Testing Commands](#testing-commands)
+- [Code Quality Commands](#code-quality-commands)
+- [Git Commands](#git-commands)
+- [Build & Deployment Commands](#build--deployment-commands)
+- [Database Management](#database-management)
+- [Monitoring Commands](#monitoring-commands)
+- [Utility Commands](#utility-commands)
+- [AI Development Commands](#ai-development-commands)
+- [Makefile Shortcuts](#makefile-shortcuts)
+- [Environment Variables](#environment-variables)
+- [Troubleshooting Commands](#troubleshooting-commands)
+- [CI/CD Commands](#cicd-commands)
+
 ## Overview
 
 This document provides a comprehensive reference for all commands used in the Databricks Orchestrator project, including development, testing, deployment, and maintenance commands.

@@ -2,6 +2,21 @@
 
 *Last Updated: 2025-01-11*
 
+## Table of Contents
+
+- [Overview](#overview)
+- [Prerequisites](#prerequisites)
+- [Environment Configuration](#environment-configuration)
+- [Local Development](#local-development)
+- [Production Deployment](#production-deployment)
+- [Cloud Deployments](#cloud-deployments)
+- [Kubernetes Deployment](#kubernetes-deployment)
+- [Monitoring & Logging](#monitoring--logging)
+- [Security Hardening](#security-hardening)
+- [Backup & Recovery](#backup--recovery)
+- [Deployment Checklist](#deployment-checklist)
+- [Rollback Procedures](#rollback-procedures)
+
 ## Overview
 
 This guide covers deploying the Databricks Orchestrator to various environments, from local development to production cloud infrastructure.
