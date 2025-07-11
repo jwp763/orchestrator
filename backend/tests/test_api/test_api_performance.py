@@ -297,7 +297,7 @@ class TestAPIPerformance(TestDatabaseIsolation):
         
         # Test task listing performance
         start_time = time.time()
-        response = isolated_client.get("/api/tasks")
+        response = isolated_client.get("/api/tasks?limit=100")  # Increase limit to get all tasks
         end_time = time.time()
         
         assert response.status_code == 200
@@ -436,7 +436,10 @@ class TestAPIPerformance(TestDatabaseIsolation):
     
     def test_memory_usage_performance(self, isolated_client):
         """Test memory usage doesn't grow excessively during operations."""
-        import psutil
+        try:
+            import psutil
+        except ImportError:
+            pytest.skip("psutil not available")
         import os
         
         process = psutil.Process(os.getpid())
