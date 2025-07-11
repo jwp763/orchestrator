@@ -416,5 +416,5 @@ def upgrade():
 ## Related Documentation
 
 - [API Reference](../api/README.md)
-- [Storage Architecture](../architecture/storage.md)
-- [Database Schema](../database/schema.sql)
+- [Architecture Overview](../architecture/overview.md)
+- [Testing Documentation](../testing.md)

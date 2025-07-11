@@ -432,4 +432,3 @@ await waitFor(() => {
 - [Architecture Overview](architecture/overview.md)
 - [API Reference](api/README.md)
 - [Development Setup](development/setup.md)
-- [CI/CD Configuration](.github/workflows/)

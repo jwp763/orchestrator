@@ -1,6 +1,6 @@
 # AI Assistant Documentation
 
-This directory contains configuration and context for AI assistants working with the Databricks Orchestrator project.
+This directory contains configuration and context for AI assistants working with the Orchestrator project.
 
 ## Quick Links to AI-Specific Documentation
 

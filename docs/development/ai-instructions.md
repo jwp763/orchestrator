@@ -271,4 +271,4 @@ This supplements PROJECT.md with AI assistant-specific guidance. Always:
 - Follow project conventions in pyproject.toml
 - Update .ai/tasks/current.yaml when completing tasks
 - Use the TodoWrite tool for task tracking
-- Consider the MVP plan in docs/mvp_plan.md
+- Consider the MVP plan in docs/planning/mvp-overview.md

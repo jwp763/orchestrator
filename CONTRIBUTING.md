@@ -187,7 +187,7 @@ Your PR will be reviewed for:
 - [FastAPI Documentation](https://fastapi.tiangolo.com/)
 - [React Documentation](https://react.dev/)
 - [TypeScript Handbook](https://www.typescriptlang.org/docs/handbook/intro.html)
-- [Testing Best Practices](docs/testing_architecture.md)
+- [Testing Best Practices](docs/testing.md)
 
 ## ❓ Questions?
 
