@@ -5,6 +5,8 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
+    "dev:staging": "vite --port 5175",
+    "dev:prod": "vite --port 5176",
     "build": "tsc -b && vite build",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
@@ -13,7 +15,9 @@
     "test": "vitest",
     "test:run": "vitest run",
     "test:coverage": "vitest run --coverage",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "preview:staging": "vite preview --port 5175",
+    "preview:prod": "vite preview --port 5176"
   },
   "dependencies": {
     "lucide-react": "^0.525.0",

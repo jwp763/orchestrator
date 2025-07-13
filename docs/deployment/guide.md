@@ -39,25 +39,59 @@ npm install -g pm2
 
 ## Environment Configuration
 
+### Pre-configured Environments
+
+The project includes three pre-configured environments with isolated databases and ports:
+
+| Environment | Backend Port | Frontend Port | Database | Configuration File |
+|-------------|--------------|---------------|-----------|-----------------|
+| Development | 8000 | 5174 | orchestrator_dev.db | .env.dev |
+| Staging | 8001 | 5175 | orchestrator_staging.db | .env.staging |
+| Production | 8002 | 5176 | orchestrator_prod.db | .env.prod |
+
 ### Environment Variables
 
-Create `.env` files for each environment:
+Each environment has its own configuration file:
 
 ```bash
-# .env.development
-DATABASE_URL=sqlite:///./dev.db
-AI_PROVIDER=openai
-AI_API_KEY=sk-dev-...
-CORS_ORIGINS=http://localhost:3000
+# .env.dev - Development
+DATABASE_URL=sqlite:///backend/orchestrator_dev.db
+API_PORT=8000
+FRONTEND_PORT=5174
+ENVIRONMENT=development
+BACKUP_ENABLED=false
+DEBUG=true
 LOG_LEVEL=DEBUG
+RELOAD=true
 
-# .env.production
-DATABASE_URL=postgresql://user:pass@host:5432/orchestrator
-AI_PROVIDER=anthropic
-AI_API_KEY=sk-prod-...
-CORS_ORIGINS=https://orchestrator.example.com
+# .env.staging - Staging
+DATABASE_URL=sqlite:///backend/orchestrator_staging.db
+API_PORT=8001
+FRONTEND_PORT=5175
+ENVIRONMENT=staging
+BACKUP_ENABLED=true
+DEBUG=false
 LOG_LEVEL=INFO
-SECRET_KEY=generate-strong-secret-key
+RELOAD=true
+
+# .env.prod - Production
+DATABASE_URL=sqlite:///backend/orchestrator_prod.db
+API_PORT=8002
+FRONTEND_PORT=5176
+ENVIRONMENT=production
+BACKUP_ENABLED=true
+DEBUG=false
+LOG_LEVEL=WARNING
+RELOAD=false
+```
+
+### Switching to PostgreSQL (Production)
+
+For production deployments with PostgreSQL:
+
+```bash
+# Update .env.prod
+DATABASE_URL=postgresql://user:pass@host:5432/orchestrator_prod
 ```
 
 ### Configuration Files
@@ -86,15 +120,30 @@ security:
 ## Local Development
 
 ### Quick Start
+
+#### Using Environment Scripts (Recommended)
+```bash
+# Development environment (hot-reload enabled)
+npm run start:dev
+
+# Staging environment (production builds)
+npm run start:staging
+
+# Production environment (optimized)
+npm run start:prod
+```
+
+#### Manual Setup
 ```bash
 # Backend
 cd backend
 python -m venv venv
 source venv/bin/activate
-pip install -e ".[dev]"
-uvicorn src.main:app --reload
+pip install -r requirements.txt
+export $(cat ../.env.dev | grep -v '^#' | xargs)
+uvicorn src.main:app --reload --port $API_PORT
 
-# Frontend
+# Frontend (new terminal)
 cd frontend
 npm install
 npm run dev
@@ -193,6 +242,7 @@ User=orchestrator
 Group=orchestrator
 WorkingDirectory=/opt/orchestrator/backend
 Environment="PATH=/opt/orchestrator/venv/bin"
+EnvironmentFile=/opt/orchestrator/.env.prod
 ExecStart=/opt/orchestrator/venv/bin/gunicorn src.main:app \
   --workers 4 \
   --worker-class uvicorn.workers.UvicornWorker \
@@ -622,10 +672,37 @@ async def generate_plan(request: Request):
 
 ## Backup & Recovery
 
+### Automated Backup Scripts
+
+The project includes built-in backup scripts:
+
+```bash
+# Backup production database
+npm run db:backup
+# Or: ./scripts/backup-prod.sh
+
+# Features:
+# - Timestamped backups in backups/ directory
+# - Automatic retention (keeps last 10 backups)
+# - Size reporting
+# - Backup verification
+```
+
 ### Database Backups
+
+#### SQLite Backup (Default)
 ```bash
 #!/bin/bash
-# backup.sh
+# Built into ./scripts/backup-prod.sh
+TIMESTAMP=$(date +"%Y%m%d_%H%M%S")
+BACKUP_FILE="backups/orchestrator_prod_backup_${TIMESTAMP}.db"
+cp backend/orchestrator_prod.db "$BACKUP_FILE"
+```
+
+#### PostgreSQL Backup
+```bash
+#!/bin/bash
+# backup-postgres.sh
 TIMESTAMP=$(date +%Y%m%d_%H%M%S)
 BACKUP_DIR="/backups"
 
@@ -641,6 +718,16 @@ aws s3 cp $BACKUP_DIR/orchestrator_$TIMESTAMP.sql.gz.gpg s3://orchestrator-backu
 
 # Cleanup old backups
 find $BACKUP_DIR -name "*.sql.gz.gpg" -mtime +7 -delete
+```
+
+### Environment Management
+
+```bash
+# Copy production to staging for testing
+npm run db:copy-prod-to-staging
+
+# Reset development database
+npm run db:reset-dev
 ```
 
 ### Disaster Recovery

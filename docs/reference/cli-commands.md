@@ -54,4 +54,22 @@ pip install databricks-orchestrator
 | `ORCHESTRATOR_API_URL` | API endpoint URL | `http://localhost:8000` |
 | `ORCHESTRATOR_CONFIG` | Config file path | `~/.orchestrator/config.yaml` |
 | `ORCHESTRATOR_LOG_LEVEL` | Logging level | `INFO` |
+| `ENVIRONMENT` | Environment name | `development` |
+| `DATABASE_URL` | Database connection URL | `sqlite:///backend/orchestrator_dev.db` |
+| `API_PORT` | Backend API port | `8000` |
+| `FRONTEND_PORT` | Frontend dev server port | `5174` |
+| `BACKUP_ENABLED` | Enable automated backups | `false` |
+
+### Development Scripts
+
+| Command | Description | Example |
+|---------|-------------|---------|
+| `npm run start:dev` | Start development environment | `npm run start:dev` |
+| `npm run start:staging` | Start staging environment | `npm run start:staging` |
+| `npm run start:prod` | Start production environment | `npm run start:prod` |
+| `npm run db:backup` | Backup production database | `npm run db:backup` |
+| `npm run db:copy-prod-to-staging` | Copy prod to staging | `npm run db:copy-prod-to-staging` |
+| `npm run db:reset-dev` | Reset development database | `npm run db:reset-dev` |
+| `npm run test:all` | Run all tests | `npm run test:all` |
+| `npm run lint:all` | Lint all code | `npm run lint:all` |
 

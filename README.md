@@ -25,14 +25,15 @@ A modern AI-powered project planning and task management system that intelligent
 git clone <repository-url>
 cd databricks_orchestrator
 
+# Install all dependencies
+npm run install:all  # Installs both backend and frontend dependencies
+
+# Or manually:
 # Backend setup
 cd backend
 python -m venv venv
 source venv/bin/activate  # On Windows: venv\Scripts\activate
 pip install -r requirements.txt
-
-# Initialize database
-python -c "from src.storage.sql_models import Base; from sqlalchemy import create_engine; engine = create_engine('sqlite:///orchestrator.db'); Base.metadata.create_all(engine)"
 
 # Frontend setup (new terminal)
 cd frontend
@@ -41,19 +42,36 @@ npm install
 
 ### Running the Application
 
+#### Quick Start (Development)
 ```bash
-# Terminal 1 - Backend
-cd backend
-python -m uvicorn src.api.main:app --reload --port 8000
-
-# Terminal 2 - Frontend
-cd frontend
-npm run dev
+# From project root - starts both frontend and backend
+npm run start:dev
 ```
 
-- **Frontend**: http://localhost:5173
-- **API Docs**: http://localhost:8000/api/docs
-- **Health Check**: http://localhost:8000/health
+#### Multi-Environment Support
+The project supports three isolated environments:
+
+| Environment | Backend Port | Frontend Port | Database |
+|-------------|--------------|---------------|----------|
+| Development | 8000 | 5174 | orchestrator_dev.db |
+| Staging | 8001 | 5175 | orchestrator_staging.db |
+| Production | 8002 | 5176 | orchestrator_prod.db |
+
+```bash
+# Start specific environments
+npm run start:dev      # Development with hot-reload
+npm run start:staging  # Staging with production builds
+npm run start:prod     # Production without reload
+
+# Or use scripts directly
+./scripts/start-dev.sh
+./scripts/start-staging.sh
+./scripts/start-prod.sh
+```
+
+- **Frontend**: http://localhost:5174 (dev) / 5175 (staging) / 5176 (prod)
+- **API Docs**: http://localhost:8000/api/docs (adjust port per environment)
+- **Health Check**: http://localhost:8000/health (adjust port per environment)
 
 ## 📖 Documentation
 
@@ -76,16 +94,21 @@ npm run dev
 ## 🧪 Testing
 
 ```bash
+# Run all tests (backend + frontend)
+npm run test:all
+
 # Backend tests
 cd backend && pytest              # Run all tests
 cd backend && pytest --cov=src    # With coverage
 
 # Frontend tests  
-npm test                          # Run all tests
-npm run test:coverage             # With coverage
+cd frontend && npm test           # Run all tests
+cd frontend && npm run test:coverage  # With coverage
 ```
 
 **Current Status**: 672 tests (Backend: 516, Frontend: 156) with 99.6% success rate
+
+**Note**: Tests use in-memory databases and are isolated from development/staging/production databases.
 
 ## 🏗️ Project Structure
 
@@ -97,9 +120,16 @@ databricks_orchestrator/
 ├── frontend/            # React frontend
 │   ├── src/             # React components
 │   └── tests/           # Frontend tests
+├── scripts/             # Environment management scripts
+│   ├── start-*.sh      # Environment startup scripts
+│   ├── backup-prod.sh  # Production backup script
+│   └── reset-dev.sh    # Development reset script
 ├── docs/                # Documentation
 ├── notebooks/           # Databricks notebooks
-└── .ai/                # AI configurations
+├── .ai/                # AI configurations
+├── .env.dev            # Development environment config
+├── .env.staging        # Staging environment config
+└── .env.prod          # Production environment config
 ```
 
 ## 🔧 Development
@@ -107,13 +137,23 @@ databricks_orchestrator/
 ### Common Commands
 
 ```bash
-# Backend
-black .                  # Format Python code
-mypy .                   # Type checking
+# Database Management
+npm run db:backup               # Backup production database
+npm run db:copy-prod-to-staging # Copy prod data to staging
+npm run db:reset-dev            # Reset development database
 
-# Frontend
-npm run format           # Format TypeScript code
-npm run lint            # Lint code
+# Code Quality (from root)
+npm run lint:all                # Lint all code
+npm run lint:backend            # Python linting
+npm run lint:frontend           # TypeScript linting
+
+# Backend (from backend/)
+black .                         # Format Python code
+mypy .                          # Type checking
+
+# Frontend (from frontend/)
+npm run format                  # Format TypeScript code
+npm run lint                    # Lint code
 ```
 
 ### Making Changes

@@ -526,6 +526,15 @@ class TestProjectManagement(TestDatabaseIsolation):
 
 ## Running Tests
 
+### Environment Configuration
+
+The project supports multiple environments with isolated databases:
+- **Development**: `orchestrator_dev.db` (ports 8000/5174)
+- **Staging**: `orchestrator_staging.db` (ports 8001/5175)
+- **Production**: `orchestrator_prod.db` (ports 8002/5176)
+
+**Note**: Tests always use in-memory SQLite databases for isolation, regardless of the environment configuration.
+
 ### Running All Tests
 
 ```bash
@@ -546,6 +555,9 @@ pytest tests/test_api/test_task_pagination.py::TestTaskPagination
 
 # Run specific test method
 pytest tests/test_api/test_task_pagination.py::TestTaskPagination::test_newly_created_task_appears_first
+
+# Run tests with specific environment variables (tests still use in-memory DB)
+export $(cat .env.staging | grep -v '^#' | xargs) && pytest
 ```
 
 ### Running by Category

@@ -49,35 +49,65 @@ pip install -r requirements-dev.txt
 
 ### 3. Database Initialization
 
-```bash
-# Initialize SQLite database
-python -c "
-from src.storage.sql_models import Base
-from sqlalchemy import create_engine
-engine = create_engine('sqlite:///orchestrator.db')
-Base.metadata.create_all(engine)
-print('Database initialized successfully')
-"
-```
+The project uses environment-specific databases:
+- **Development**: `orchestrator_dev.db`
+- **Staging**: `orchestrator_staging.db`
+- **Production**: `orchestrator_prod.db`
+
+Databases are automatically created when you start each environment for the first time.
 
 ### 4. Environment Configuration
 
-```bash
-# Copy example environment file
-cp .env.example .env
+The project includes pre-configured environment files:
 
-# Edit .env with your configuration
-# Add your AI provider API keys (optional)
+```bash
+# .env.dev - Development configuration
+# - Ports: Backend 8000, Frontend 5174
+# - Debug mode enabled, hot-reload active
+# - Database: orchestrator_dev.db
+
+# .env.staging - Staging configuration  
+# - Ports: Backend 8001, Frontend 5175
+# - Production-like settings for testing
+# - Database: orchestrator_staging.db
+
+# .env.prod - Production configuration
+# - Ports: Backend 8002, Frontend 5176  
+# - Minimal logging, no reload
+# - Database: orchestrator_prod.db
+```
+
+To customize, edit the appropriate `.env.*` file:
+```bash
+# Add your AI provider API keys
+ANTHROPIC_API_KEY=your-key-here
+OPENAI_API_KEY=your-key-here
+# ... etc
 ```
 
 ### 5. Run Backend Server
 
+#### Option 1: Using Environment Scripts (Recommended)
 ```bash
-# Start the FastAPI server with auto-reload
-python -m uvicorn src.api.main:app --reload --port 8000
+# From project root - starts both frontend and backend
+npm run start:dev      # Development
+npm run start:staging  # Staging
+npm run start:prod     # Production
+
+# Or use scripts directly
+./scripts/start-dev.sh
+```
+
+#### Option 2: Manual Start
+```bash
+# Load environment variables
+export $(cat .env.dev | grep -v '^#' | xargs)
+
+# Start the FastAPI server
+python -m uvicorn src.api.main:app --reload --port $API_PORT
 
 # Alternative: Run with custom host
-python -m uvicorn src.api.main:app --reload --host 0.0.0.0 --port 8000
+python -m uvicorn src.api.main:app --reload --host 0.0.0.0 --port $API_PORT
 ```
 
 ### 6. Verify Backend
@@ -115,8 +145,12 @@ echo "VITE_API_URL=http://localhost:8000" > .env
 ### 3. Run Development Server
 
 ```bash
-# Start Vite development server
+# Default development server (port 5174)
 npm run dev
+
+# Environment-specific ports
+npm run dev:staging   # Port 5175
+npm run dev:prod      # Port 5176
 
 # Alternative: Use yarn
 yarn dev
@@ -131,6 +165,35 @@ npm run build
 # Preview production build
 npm run preview
 ```
+
+## Multi-Environment Workflow
+
+### Running Multiple Environments
+
+You can run development, staging, and production environments simultaneously:
+
+```bash
+# Terminal 1: Development
+npm run start:dev
+# Backend: http://localhost:8000
+# Frontend: http://localhost:5174
+
+# Terminal 2: Staging (in new terminal)
+npm run start:staging
+# Backend: http://localhost:8001
+# Frontend: http://localhost:5175
+
+# Terminal 3: Production (in new terminal)
+npm run start:prod
+# Backend: http://localhost:8002
+# Frontend: http://localhost:5176
+```
+
+### Environment Use Cases
+
+- **Development**: Active development with hot-reload, debug logging
+- **Staging**: Test production builds, verify deployment process
+- **Production**: Real usage, stable data, minimal logging
 
 ## Development Workflow
 
@@ -201,12 +264,37 @@ npm run test:ui
 
 ### Database Management
 
-#### Reset Database
+#### Environment-Specific Commands
+
+```bash
+# Reset development database
+npm run db:reset-dev
+# Or: ./scripts/reset-dev.sh
+
+# Backup production database
+npm run db:backup
+# Or: ./scripts/backup-prod.sh
+
+# Copy production data to staging
+npm run db:copy-prod-to-staging
+# Or: ./scripts/copy-prod-to-staging.sh
+```
+
+#### Manual Database Reset
 
 ```bash
 cd backend
-rm orchestrator.db
-python -c "from src.storage.sql_models import Base; from sqlalchemy import create_engine; engine = create_engine('sqlite:///orchestrator.db'); Base.metadata.create_all(engine)"
+
+# For development
+rm orchestrator_dev.db
+# Database will be recreated on next server start
+
+# For staging
+rm orchestrator_staging.db
+
+# For production (be careful!)
+# Always backup first: ./scripts/backup-prod.sh
+rm orchestrator_prod.db
 ```
 
 #### Database Migrations

@@ -41,21 +41,58 @@ pip install -e ".[dev]"
 ```
 
 #### Run Development Server
+
+##### Using Environment Scripts (Recommended)
 ```bash
+# Start full development environment (frontend + backend)
+npm run start:dev      # Port 8000/5174
+npm run start:staging  # Port 8001/5175
+npm run start:prod     # Port 8002/5176
+
+# Or use scripts directly
+./scripts/start-dev.sh
+./scripts/start-staging.sh
+./scripts/start-prod.sh
+```
+
+##### Manual Start
+```bash
+# Load environment variables
+export $(cat .env.dev | grep -v '^#' | xargs)
+
 # Start FastAPI development server
 cd backend
-uvicorn src.main:app --reload --host 0.0.0.0 --port 8000
-
-# With custom settings
-ENVIRONMENT=development uvicorn src.main:app --reload
+uvicorn src.main:app --reload --host 0.0.0.0 --port $API_PORT
 
 # With debugging
 python -m debugpy --listen 5678 -m uvicorn src.main:app --reload
 ```
 
 #### Database Commands
+
+##### Environment-Specific Database Management
 ```bash
-# Initialize database
+# Reset development database
+npm run db:reset-dev
+# Or: ./scripts/reset-dev.sh
+
+# Backup production database
+npm run db:backup
+# Or: ./scripts/backup-prod.sh
+
+# Copy production to staging
+npm run db:copy-prod-to-staging
+# Or: ./scripts/copy-prod-to-staging.sh
+```
+
+##### Manual Database Operations
+```bash
+# Databases are environment-specific:
+# - Development: orchestrator_dev.db
+# - Staging: orchestrator_staging.db  
+# - Production: orchestrator_prod.db
+
+# Initialize database (auto-created on first run)
 python -m src.scripts.init_db
 
 # Run migrations
@@ -66,9 +103,6 @@ alembic revision --autogenerate -m "Add user table"
 
 # Rollback migration
 alembic downgrade -1
-
-# Reset database
-python -m src.scripts.reset_db --confirm
 ```
 
 ### Frontend Development
@@ -86,8 +120,12 @@ npm install -D package-name  # Dev dependency
 
 #### Development Server
 ```bash
-# Start development server
+# Start development server (default port 5174)
 npm run dev
+
+# Environment-specific ports
+npm run dev:staging   # Port 5175
+npm run dev:prod      # Port 5176
 
 # With custom port
 npm run dev -- --port 3001
@@ -332,12 +370,30 @@ make rollback VERSION=1.2.3
 ## Database Management
 
 ### Backup & Restore
+
+#### Automated Scripts
 ```bash
-# Backup database
-python -m src.scripts.backup_db --output backups/
+# Backup production database (with retention)
+npm run db:backup
+# Creates timestamped backup in backups/
+# Keeps last 10 backups automatically
+
+# Copy production to staging
+npm run db:copy-prod-to-staging
+# Backs up staging before overwriting
+
+# Reset development database
+npm run db:reset-dev
+# Creates backup before reset
+```
+
+#### Manual Operations
+```bash
+# Backup specific database
+cp backend/orchestrator_prod.db backups/manual_backup_$(date +%Y%m%d).db
 
 # Restore database
-python -m src.scripts.restore_db --input backups/backup-2025-01-11.sql
+cp backups/backup-2025-01-11.db backend/orchestrator_dev.db
 
 # Export data
 python -m src.scripts.export_data --format json --output data.json
@@ -348,14 +404,19 @@ python -m src.scripts.import_data --input data.json
 
 ### Maintenance
 ```bash
-# Vacuum database (SQLite)
-sqlite3 orchestrator.db "VACUUM;"
+# Vacuum database (SQLite) - specify environment
+sqlite3 backend/orchestrator_dev.db "VACUUM;"
+sqlite3 backend/orchestrator_staging.db "VACUUM;"
+sqlite3 backend/orchestrator_prod.db "VACUUM;"
 
 # Analyze query performance
 python -m src.scripts.analyze_queries
 
 # Clean old data
 python -m src.scripts.cleanup --days 90
+
+# List database sizes
+ls -lah backend/*.db
 ```
 
 ## Monitoring Commands
@@ -454,6 +515,11 @@ python -m src.scripts.export_prompts --format yaml
 ## Makefile Shortcuts
 
 ```makefile
+# Environment Management
+make dev          # Start development environment
+make staging      # Start staging environment
+make prod         # Start production environment
+
 # Common shortcuts
 make install      # Install all dependencies
 make test         # Run all tests
@@ -462,29 +528,55 @@ make format       # Format all code
 make build        # Build for production
 make clean        # Clean build artifacts
 
+# Database Management
+make db-backup    # Backup production database
+make db-reset-dev # Reset development database
+make db-copy-staging # Copy prod to staging
+
 # Development
-make dev          # Start development servers
 make shell        # Python shell with context
 make db-shell     # Database shell
 
 # Deployment
 make deploy       # Deploy to production
-make staging      # Deploy to staging
 make rollback     # Rollback deployment
 ```
 
 ## Environment Variables
 
 ### Required Variables
+
+#### Environment-Specific Configuration
 ```bash
-# Backend
-export DATABASE_URL="sqlite:///./orchestrator.db"
+# Development (.env.dev)
+export DATABASE_URL="sqlite:///backend/orchestrator_dev.db"
+export API_PORT=8000
+export FRONTEND_PORT=5174
+export ENVIRONMENT=development
+export BACKUP_ENABLED=false
+
+# Staging (.env.staging)
+export DATABASE_URL="sqlite:///backend/orchestrator_staging.db"
+export API_PORT=8001
+export FRONTEND_PORT=5175
+export ENVIRONMENT=staging
+export BACKUP_ENABLED=true
+
+# Production (.env.prod)
+export DATABASE_URL="sqlite:///backend/orchestrator_prod.db"
+export API_PORT=8002
+export FRONTEND_PORT=5176
+export ENVIRONMENT=production
+export BACKUP_ENABLED=true
+```
+
+#### AI Provider Configuration
+```bash
+# Common to all environments
 export AI_PROVIDER="openai"
 export AI_API_KEY="sk-..."
-
-# Frontend
-export VITE_API_URL="http://localhost:8000"
-export VITE_WS_URL="ws://localhost:8000"
+export ANTHROPIC_API_KEY="sk-ant-..."
+export OPENAI_API_KEY="sk-..."
 ```
 
 ### Development Overrides
