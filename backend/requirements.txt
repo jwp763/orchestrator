@@ -1,9 +1,10 @@
-# Core dependencies
-pydantic>=2.0.0
-pydantic-ai>=0.3.0
-databricks-sdk>=0.8.0
-pyyaml>=6.0
-sqlalchemy>=2.0.0
+# Core dependencies - pinned for faster resolution
+pydantic==2.11.7
+pydantic-core==2.33.2
+pydantic-ai==0.4.2
+databricks-sdk==0.58.0
+pyyaml==6.0.2
+sqlalchemy==2.0.41
 
 # FastAPI and related dependencies
 fastapi==0.104.1
@@ -16,10 +17,11 @@ pydantic-settings==2.1.0
 # Optional: For better JSON serialization
 orjson==3.9.10
 
-# Testing dependencies
-pytest>=8.2.2
-pytest-cov>=4.0.0
-pytest-asyncio>=0.21.0
+# Testing dependencies - pinned for faster resolution
+pytest==8.4.1
+pytest-cov==6.2.1
+pytest-asyncio==1.0.0
+pluggy==1.5.0
 
 # Code quality tools
 black>=23.0.0
@@ -27,8 +29,10 @@ flake8>=6.0.0
 isort>=5.12.0
 mypy>=1.10.0
 
-# HTTP client for testing
-httpx>=0.24.0
+# HTTP client for testing - pinned to avoid backtracking
+httpx==0.28.1
+httpcore==1.0.7
+h11==0.13.0
 
 # Additional testing utilities
 pytest-mock>=3.12.0
