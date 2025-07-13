@@ -173,6 +173,14 @@ The databricks_orchestrator project has achieved significant implementation prog
 
 **Live task tracking**: See `.ai/tasks/current.yaml` for real-time status
 
+**Task Management**: All tasks use automatic datetime tracking with system time:
+- CRITICAL: AI agents must use `date -Iseconds` command (internal AI date is often wrong)
+- Tasks are created with `created_date` using `date -Iseconds` command
+- Status changes to "in_progress" set `start_date` using system datetime
+- Status changes to "completed" set `completion_date` using system datetime
+- ALL tasks must include comprehensive test requirements (unit, integration, performance, security)
+- See `.ai/templates/task-template.yaml` for proper task structure with test specifications
+
 ### High Priority Tasks
 1. **DEL-002**: Fix cascade delete issue (4 hours)
 2. **TEST-API-002**: Service layer testing (6 hours)

@@ -187,7 +187,8 @@ npm run install:all                   # Install all dependencies
 ## 6. Current Tasks
 
 - **Active Sprint**: See [Current Sprint Focus](#current-sprint-focus)
-- **Full Task List**: `.ai/tasks/current.yaml`
+- **Full Task List**: `.ai/tasks/current.yaml` (with automatic datetime tracking using system time)
+- **Task Template**: `.ai/templates/task-template.yaml` (ALWAYS use `date -Iseconds` for timestamps, includes test requirements)
 - **MVP Overview**: `docs/planning/mvp-overview.md`
 
 ## 7. Architecture & Design
@@ -203,7 +204,7 @@ npm run install:all                   # Install all dependencies
 - **Transactions**: Use proper transaction boundaries for multi-system operations
 - **Test Execution**: Always run tests from backend directory: `cd backend && pytest`
 - **Session Management**: SQLStorage uses flush() for transactions, commit() for standalone
-- **Date/Time**: Use `date` command to get current system date - AI assistants' internal date perception may be incorrect
+- **Date/Time**: CRITICAL - AI assistants' internal date perception is often WRONG. ALWAYS use `date -Iseconds` command to get system datetime for task timestamps
 - **Multi-Environment**: Separate databases and ports for dev/staging/prod isolation
 - **Environment Variables**: Use .env.dev, .env.staging, or .env.prod for configuration
 
@@ -258,9 +259,13 @@ npm run install:all                   # Install all dependencies
 
 ```
 1. Start task → Update TodoWrite (status: "in_progress")
+                AND set start_date in current.yaml using `date -Iseconds` command
 2. Work on task → Keep TodoWrite updated
+                  AND implement all test requirements from task specification
 3. Finish task → Update TodoWrite (status: "completed")
                  AND update .ai/tasks/current.yaml (status: "completed")
+                 AND set completion_date using `date -Iseconds` command
+                 AND verify all tests are passing (unit, integration, performance, security)
 ```
 
 ## 11. Documentation Maintenance

@@ -89,8 +89,15 @@ Welcome to the comprehensive documentation for the Databricks Orchestrator proje
 - [CONTRIBUTING](../CONTRIBUTING.md) - Contribution guidelines
 
 ### Task Management
-- [Current Tasks](../.ai/tasks/current.yaml) - Active development tasks
+- [Current Tasks](../.ai/tasks/current.yaml) - Active development tasks with automatic datetime tracking
+- [Task Template](../.ai/templates/task-template.yaml) - Template for creating new tasks
 - [Task Board](../PROJECT.md#current-sprint-focus) - Sprint overview
+
+**Task Management Notes**: 
+- CRITICAL: AI agents must use `date -Iseconds` command for datetime (AI internal date is often wrong)
+- All tasks use automatic system datetime generation for created_date, start_date, and completion_date fields
+- ALL tasks must include comprehensive test requirements (unit, integration, performance, security)
+- Tasks cannot be marked "completed" until all test requirements are implemented and passing
 
 ### External Resources
 - [FastAPI Documentation](https://fastapi.tiangolo.com/)
