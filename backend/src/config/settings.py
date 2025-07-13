@@ -78,7 +78,19 @@ class Settings(BaseSettings):
     - Nested configuration loading from YAML
     """
 
-    # Database settings
+    # Environment settings
+    environment: str = Field("development", description="Environment name (development, staging, production)")
+    database_url: str = Field("sqlite:///backend/orchestrator_dev.db", description="Database URL for SQLite")
+    api_port: int = Field(8000, description="API server port")
+    frontend_port: int = Field(5174, description="Frontend development server port")
+    backup_enabled: bool = Field(False, description="Enable automated backups")
+    
+    # Application settings
+    debug: bool = Field(True, description="Debug mode")
+    log_level: str = Field("DEBUG", description="Logging level")
+    reload: bool = Field(True, description="Auto-reload on code changes")
+    
+    # Database settings (for Delta/Databricks)
     catalog_name: str = Field("jwp763", description="Delta catalog name")
     schema_name: str = Field("orchestrator", description="Delta schema name")
 
@@ -125,7 +137,10 @@ class Settings(BaseSettings):
     # Security
     encryption_key: Optional[str] = Field(None, description="Encryption key for sensitive data")
 
-    model_config = ConfigDict(env_file=".env", env_file_encoding="utf-8")
+    model_config = ConfigDict(
+        env_file=[".env.dev", ".env.staging", ".env.prod", ".env"], 
+        env_file_encoding="utf-8"
+    )
 
     @property
     def providers(self) -> ProvidersConfig:

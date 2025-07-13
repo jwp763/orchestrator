@@ -45,6 +45,7 @@
 - ✅ **Backend**: 99.4% test success rate (3 acceptable failures)
 - ✅ **Frontend**: 100% test success rate (fixed all 16 critical failures)
 - ✅ **Documentation**: Comprehensive testing architecture and troubleshooting guides
+- ✅ **Multi-Environment Setup**: Complete dev/staging/prod isolation with automated scripts
 
 ### 📋 Task Summary
 
@@ -63,7 +64,10 @@ This project, the Orchestrator, is a personal project and task management system
 - **Language:** Python 3.8+ (Backend), TypeScript (Frontend)
 - **Backend:** FastAPI, SQLAlchemy, Pydantic
 - **Frontend:** React 18, TypeScript, Tailwind CSS, Vite
-- **Database:** SQLite (Development), PostgreSQL (Production ready)
+- **Database:** SQLite with multi-environment support
+  - Development: `orchestrator_dev.db`
+  - Staging: `orchestrator_staging.db`
+  - Production: `orchestrator_prod.db`
 - **Testing:** pytest (Backend), Vitest + React Testing Library (Frontend)
 - **AI Integration:** Multi-provider support (OpenAI, Anthropic, Gemini, XAI)
 - **Version Control:** Git with GitHub
@@ -76,6 +80,7 @@ databricks_orchestrator/
 │   ├── src/          # Core application code
 │   │   ├── agent/    # AI agents (Planner, Decomposer, Editor)
 │   │   ├── api/      # REST API endpoints
+│   │   ├── config/   # Settings and configuration
 │   │   ├── models/   # Pydantic data models
 │   │   ├── orchestration/  # Service layer
 │   │   └── storage/  # Database abstraction
@@ -83,9 +88,20 @@ databricks_orchestrator/
 ├── frontend/         # React frontend application
 │   ├── src/         # React components and hooks
 │   └── tests/       # Frontend test suite
+├── scripts/         # Environment and utility scripts
+│   ├── start-dev.sh     # Start development environment
+│   ├── start-staging.sh # Start staging environment
+│   ├── start-prod.sh    # Start production environment
+│   ├── backup-prod.sh   # Backup production database
+│   ├── copy-prod-to-staging.sh  # Copy prod to staging
+│   └── reset-dev.sh     # Reset development database
 ├── docs/            # Project documentation
 ├── notebooks/       # Databricks notebooks
-└── .ai/            # AI tool configurations
+├── .ai/            # AI tool configurations
+├── .env.dev        # Development environment config
+├── .env.staging    # Staging environment config
+├── .env.prod       # Production environment config
+└── package.json    # Root-level npm scripts
 ```
 
 ## 4. Development Standards
@@ -105,6 +121,25 @@ databricks_orchestrator/
 
 ## 5. Workflow Commands
 
+### Environment Management
+
+```bash
+# Start environments (from project root)
+npm run start:dev                      # Development environment
+npm run start:staging                  # Staging environment
+npm run start:prod                     # Production environment
+
+# Direct script usage
+./scripts/start-dev.sh                 # Development on ports 8000/5174
+./scripts/start-staging.sh             # Staging on ports 8001/5175
+./scripts/start-prod.sh                # Production on ports 8002/5176
+
+# Database management
+npm run db:backup                      # Backup production database
+npm run db:copy-prod-to-staging        # Copy prod data to staging
+npm run db:reset-dev                   # Reset development database
+```
+
 ### Backend Development
 
 ```bash
@@ -123,7 +158,9 @@ mypy .                                 # Type checking
 
 ```bash
 # Development
-npm run dev                           # Start dev server
+npm run dev                           # Start dev server (port 5174)
+npm run dev:staging                   # Dev server on staging port (5175)
+npm run dev:prod                      # Dev server on prod port (5176)
 npm run build                         # Production build
 
 # Testing
@@ -133,12 +170,22 @@ npm run test:coverage                 # With coverage
 npm run test:ui                       # Vitest UI
 ```
 
+### Quick Commands (from root)
+
+```bash
+# Full stack operations
+npm run test:all                      # Run all tests (backend + frontend)
+npm run lint:all                      # Lint all code
+npm run install:all                   # Install all dependencies
+```
+
 ### Documentation References
 
 - **Testing Overview**: `docs/testing.md`
 - **Backend Testing**: `docs/testing/backend-guide.md`
 - **Frontend Testing**: `docs/testing/frontend-guide.md`
 - **Troubleshooting**: `docs/testing/troubleshooting.md`
+- **Environment Setup**: `ENVIRONMENT_SETUP_CHANGES.md`
 
 ## 6. Current Tasks
 
@@ -159,6 +206,8 @@ npm run test:ui                       # Vitest UI
 - **Transactions**: Use proper transaction boundaries for multi-system operations
 - **Test Execution**: Always run tests from backend directory: `cd backend && pytest`
 - **Session Management**: SQLStorage uses flush() for transactions, commit() for standalone
+- **Multi-Environment**: Separate databases and ports for dev/staging/prod isolation
+- **Environment Variables**: Use .env.dev, .env.staging, or .env.prod for configuration
 
 <details>
 <summary><strong>9. Critical Test Troubleshooting</strong> (Click to expand)</summary>

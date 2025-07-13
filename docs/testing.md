@@ -38,6 +38,9 @@ cd backend && pytest --cov=src         # With coverage
 cd frontend && npm test                # Run all tests
 cd frontend && npm run test:watch      # Watch mode
 cd frontend && npm run test:coverage   # With coverage
+
+# Full stack testing (from root)
+npm run test:all                       # Run all backend + frontend tests
 ```
 
 ---
@@ -59,6 +62,7 @@ cd frontend && npm run test:coverage   # With coverage
 │  ├─ Database Isolation (SQLite in-memory)                      │
 │  ├─ Mock Services & API Layers                                 │
 │  ├─ Fixture Management                                          │
+│  ├─ Multi-Environment Support (dev/staging/prod)               │
 │  └─ Continuous Integration                                      │
 └─────────────────────────────────────────────────────────────────┘
 ```
@@ -102,6 +106,8 @@ class TestProjectAPI(TestDatabaseIsolation):
         response = isolated_client.post("/api/projects", json={...})
         assert response.status_code == 201
 ```
+
+**Note**: Tests use in-memory SQLite databases, completely isolated from the development (`orchestrator_dev.db`), staging (`orchestrator_staging.db`), and production (`orchestrator_prod.db`) databases.
 
 ### Key Test Categories
 
@@ -160,6 +166,10 @@ cd backend && pytest tests/test_api/test_task_routes.py::test_list_tasks -vv
 
 # Stop on first failure
 cd backend && pytest -x --tb=short
+
+# Run tests in different environments
+# Note: Tests always use in-memory DB, but you can test with env vars:
+export $(cat .env.staging | grep -v '^#' | xargs) && cd backend && pytest
 ```
 
 ---
@@ -432,3 +442,4 @@ await waitFor(() => {
 - [Architecture Overview](architecture/overview.md)
 - [API Reference](api/README.md)
 - [Development Setup](development/setup.md)
+- [Environment Setup](../ENVIRONMENT_SETUP_CHANGES.md)
