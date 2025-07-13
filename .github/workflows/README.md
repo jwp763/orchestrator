@@ -27,7 +27,7 @@ This directory contains CI/CD workflows for the Databricks Orchestrator project.
 ## Features
 
 ### 🎯 Matrix Testing
-- **Backend**: Tests across Python 3.8-3.12
+- **Backend**: Tests across Python 3.9-3.12
 - **Frontend**: Tests across Node.js 18-22
 - **Cross-platform**: Ubuntu, with optional Windows/macOS
 

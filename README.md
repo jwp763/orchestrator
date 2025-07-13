@@ -14,7 +14,7 @@ A modern AI-powered project planning and task management system that intelligent
 ## 🚀 Quick Start
 
 ### Prerequisites
-- Python 3.8+
+- Python 3.9+
 - Node.js 18+
 - Git
 
