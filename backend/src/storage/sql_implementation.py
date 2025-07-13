@@ -166,20 +166,28 @@ class SQLStorage(StorageInterface):
             created_by=task.created_by,
         )
 
-    def get_project(self, project_id: str) -> Optional[Project]:
+    def get_project(self, project_id: str, include_deleted: bool = False) -> Optional[Project]:
         """Retrieve a project by ID."""
         try:
-            sql_project = self.session.query(SQLProject).filter(SQLProject.id == project_id).first()
+            query = self.session.query(SQLProject).filter(SQLProject.id == project_id)
+            if not include_deleted:
+                query = query.filter(SQLProject.deleted_at.is_(None))
+            
+            sql_project = query.first()
             if sql_project:
                 return self._convert_sql_project_to_pydantic(sql_project)
             return None
         except SQLAlchemyError:
             return None
 
-    def get_projects(self) -> List[Project]:
+    def get_projects(self, include_deleted: bool = False) -> List[Project]:
         """Retrieve all projects."""
         try:
-            sql_projects = self.session.query(SQLProject).all()
+            query = self.session.query(SQLProject)
+            if not include_deleted:
+                query = query.filter(SQLProject.deleted_at.is_(None))
+            
+            sql_projects = query.all()
             return [self._convert_sql_project_to_pydantic(p) for p in sql_projects]
         except SQLAlchemyError:
             return []
@@ -267,10 +275,14 @@ class SQLStorage(StorageInterface):
         except SQLAlchemyError:
             return False
 
-    def get_task(self, task_id: str) -> Optional[Task]:
+    def get_task(self, task_id: str, include_deleted: bool = False) -> Optional[Task]:
         """Retrieve a task by ID."""
         try:
-            sql_task = self.session.query(SQLTask).filter(SQLTask.id == task_id).first()
+            query = self.session.query(SQLTask).filter(SQLTask.id == task_id)
+            if not include_deleted:
+                query = query.filter(SQLTask.deleted_at.is_(None))
+            
+            sql_task = query.first()
             if sql_task:
                 return self._convert_sql_task_to_pydantic(sql_task)
             return None
@@ -299,12 +311,17 @@ class SQLStorage(StorageInterface):
         created_after: Optional[datetime] = None,
         created_before: Optional[datetime] = None,
         sort_by: str = "created_at",
-        sort_order: str = "desc"
+        sort_order: str = "desc",
+        include_deleted: bool = False
     ) -> Dict[str, Any]:
         """List tasks with filtering, pagination, and sorting."""
         try:
             # Build base query
             query = self.session.query(SQLTask)
+            
+            # Apply soft delete filter
+            if not include_deleted:
+                query = query.filter(SQLTask.deleted_at.is_(None))
             
             # Apply filters
             if project_id:
@@ -635,3 +652,238 @@ class SQLStorage(StorageInterface):
         if self._session:
             self._session.close()
             self._session = None
+
+    # Soft Delete Operations
+    
+    def soft_delete_project(self, project_id: str, deleted_by: str, context: Optional[str] = None) -> bool:
+        """Soft delete a project and cascade to all its tasks."""
+        if not deleted_by or not deleted_by.strip():
+            raise ValueError("deleted_by cannot be None or empty")
+        
+        try:
+            # Check if project exists (including already soft-deleted ones)
+            sql_project = self.session.query(SQLProject).filter(
+                SQLProject.id == project_id
+            ).first()
+            
+            if not sql_project:
+                return False
+            
+            # If already soft deleted, return True (idempotent)
+            if sql_project.deleted_at is not None:
+                return True
+            
+            now = datetime.utcnow()
+            
+            # Soft delete all tasks in the project first (cascade)
+            sql_tasks = self.session.query(SQLTask).filter(
+                SQLTask.project_id == project_id,
+                SQLTask.deleted_at.is_(None)
+            ).all()
+            
+            for task in sql_tasks:
+                task.deleted_at = now
+                task.deleted_by = deleted_by
+            
+            # Soft delete the project
+            sql_project.deleted_at = now
+            sql_project.deleted_by = deleted_by
+            
+            if self._session is not None:
+                self.session.flush()
+            else:
+                self.session.commit()
+            
+            return True
+        except SQLAlchemyError:
+            return False
+
+    def soft_delete_task(self, task_id: str, deleted_by: str, context: Optional[str] = None) -> bool:
+        """Soft delete a task and cascade to all its children."""
+        if not deleted_by or not deleted_by.strip():
+            raise ValueError("deleted_by cannot be None or empty")
+        
+        try:
+            # Check if task exists (including already soft-deleted ones)
+            sql_task = self.session.query(SQLTask).filter(
+                SQLTask.id == task_id
+            ).first()
+            
+            if not sql_task:
+                return False
+            
+            # If already soft deleted, return True (idempotent)
+            if sql_task.deleted_at is not None:
+                return True
+            
+            now = datetime.utcnow()
+            
+            # Recursively soft delete all child tasks
+            self._cascade_soft_delete_children(task_id, deleted_by, now)
+            
+            # Soft delete the task itself
+            sql_task.deleted_at = now
+            sql_task.deleted_by = deleted_by
+            
+            if self._session is not None:
+                self.session.flush()
+            else:
+                self.session.commit()
+            
+            return True
+        except SQLAlchemyError:
+            return False
+
+    def _cascade_soft_delete_children(self, parent_id: str, deleted_by: str, timestamp: datetime) -> None:
+        """Recursively soft delete all children of a task."""
+        child_tasks = self.session.query(SQLTask).filter(
+            SQLTask.parent_id == parent_id,
+            SQLTask.deleted_at.is_(None)
+        ).all()
+        
+        for child in child_tasks:
+            # Recursively delete children's children
+            self._cascade_soft_delete_children(child.id, deleted_by, timestamp)
+            
+            # Soft delete this child
+            child.deleted_at = timestamp
+            child.deleted_by = deleted_by
+
+    def restore_project(self, project_id: str, restored_by: str) -> bool:
+        """Restore a soft-deleted project and all its tasks."""
+        if not restored_by or not restored_by.strip():
+            raise ValueError("restored_by cannot be None or empty")
+        
+        try:
+            sql_project = self.session.query(SQLProject).filter(
+                SQLProject.id == project_id,
+                SQLProject.deleted_at.is_not(None)
+            ).first()
+            
+            if not sql_project:
+                return False
+            
+            # Restore all soft-deleted tasks in the project
+            sql_tasks = self.session.query(SQLTask).filter(
+                SQLTask.project_id == project_id,
+                SQLTask.deleted_at.is_not(None)
+            ).all()
+            
+            for task in sql_tasks:
+                task.deleted_at = None
+                task.deleted_by = None
+            
+            # Restore the project
+            sql_project.deleted_at = None
+            sql_project.deleted_by = None
+            
+            if self._session is not None:
+                self.session.flush()
+            else:
+                self.session.commit()
+            
+            return True
+        except SQLAlchemyError:
+            return False
+
+    def restore_task(self, task_id: str, restored_by: str) -> bool:
+        """Restore a soft-deleted task and all its children."""
+        if not restored_by or not restored_by.strip():
+            raise ValueError("restored_by cannot be None or empty")
+        
+        try:
+            sql_task = self.session.query(SQLTask).filter(
+                SQLTask.id == task_id,
+                SQLTask.deleted_at.is_not(None)
+            ).first()
+            
+            if not sql_task:
+                return False
+            
+            # Recursively restore all child tasks
+            self._cascade_restore_children(task_id)
+            
+            # Restore the task itself
+            sql_task.deleted_at = None
+            sql_task.deleted_by = None
+            
+            if self._session is not None:
+                self.session.flush()
+            else:
+                self.session.commit()
+            
+            return True
+        except SQLAlchemyError:
+            return False
+
+    def _cascade_restore_children(self, parent_id: str) -> None:
+        """Recursively restore all children of a task."""
+        child_tasks = self.session.query(SQLTask).filter(
+            SQLTask.parent_id == parent_id,
+            SQLTask.deleted_at.is_not(None)
+        ).all()
+        
+        for child in child_tasks:
+            # Recursively restore children's children
+            self._cascade_restore_children(child.id)
+            
+            # Restore this child
+            child.deleted_at = None
+            child.deleted_by = None
+
+    def list_projects(
+        self,
+        skip: int = 0,
+        limit: int = 20,
+        status: Optional[str] = None,
+        priority: Optional[str] = None,
+        include_deleted: bool = False
+    ) -> Dict[str, Any]:
+        """List projects with filtering, pagination, and sorting."""
+        try:
+            # Build base query
+            query = self.session.query(SQLProject)
+            
+            # Apply soft delete filter
+            if not include_deleted:
+                query = query.filter(SQLProject.deleted_at.is_(None))
+            
+            # Apply filters
+            if status:
+                query = query.filter(SQLProject.status == status)
+            if priority:
+                query = query.filter(SQLProject.priority == priority)
+            
+            # Get total count before pagination
+            total = query.count()
+            
+            # Apply pagination and sorting
+            query = query.order_by(desc(SQLProject.created_at))
+            paginated_projects = query.offset(skip).limit(limit).all()
+            
+            # Convert to Pydantic models
+            projects = [self._convert_sql_project_to_pydantic(p) for p in paginated_projects]
+            
+            # Calculate pagination info
+            page = (skip // limit) + 1 if limit > 0 else 1
+            has_next = (skip + limit) < total
+            has_prev = skip > 0
+            
+            return {
+                "projects": projects,
+                "total": total,
+                "page": page,
+                "per_page": limit,
+                "has_next": has_next,
+                "has_prev": has_prev
+            }
+            
+        except SQLAlchemyError:
+            return {
+                "projects": [],
+                "total": 0,
+                "page": 1,
+                "per_page": limit,
+                "has_next": False,
+                "has_prev": False
+            }

@@ -49,7 +49,10 @@ class TestSQLStorageUnit:
         result = storage.get_project(project_id)
 
         mock_session.query.assert_called_once()
-        mock_query.filter.assert_called_once()
+        # After soft delete implementation, filter is called twice:
+        # 1. Filter by project ID
+        # 2. Filter by deleted_at IS NULL (exclude soft deleted)
+        assert mock_query.filter.call_count == 2
         mock_query.first.assert_called_once()
         assert result is None
 
