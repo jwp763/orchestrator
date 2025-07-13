@@ -133,12 +133,12 @@ class TestTaskPatch:
 
     def test_task_patch_validation_missing_task_id_update(self):
         """Test TaskPatch validation when task_id is missing for update operation."""
-        with pytest.raises(ValueError, match="task_id is required for Op.UPDATE operation"):
+        with pytest.raises(ValueError, match="task_id is required for update operation"):
             TaskPatch(op=Op.UPDATE, title="Updated Task")
 
     def test_task_patch_validation_missing_task_id_delete(self):
         """Test TaskPatch validation when task_id is missing for delete operation."""
-        with pytest.raises(ValueError, match="task_id is required for Op.DELETE operation"):
+        with pytest.raises(ValueError, match="task_id is required for delete operation"):
             TaskPatch(op=Op.DELETE)
 
     def test_task_patch_validation_task_id_not_required_for_create(self):
@@ -328,12 +328,12 @@ class TestProjectPatch:
 
     def test_project_patch_validation_missing_project_id_update(self):
         """Test ProjectPatch validation when project_id is missing for update operation."""
-        with pytest.raises(ValueError, match="project_id is required for Op.UPDATE operation"):
+        with pytest.raises(ValueError, match="project_id is required for update operation"):
             ProjectPatch(op=Op.UPDATE, name="Updated Project")
 
     def test_project_patch_validation_missing_project_id_delete(self):
         """Test ProjectPatch validation when project_id is missing for delete operation."""
-        with pytest.raises(ValueError, match="project_id is required for Op.DELETE operation"):
+        with pytest.raises(ValueError, match="project_id is required for delete operation"):
             ProjectPatch(op=Op.DELETE)
 
     def test_project_patch_validation_project_id_not_required_for_create(self):
@@ -618,11 +618,11 @@ class TestPatch:
     def test_patch_validation_with_invalid_sub_patches(self):
         """Test that Patch validation includes validation of sub-patches."""
         # Invalid task patch (missing task_id for update)
-        with pytest.raises(ValueError, match="task_id is required for Op.UPDATE operation"):
+        with pytest.raises(ValueError, match="task_id is required for update operation"):
             Patch(task_patches=[TaskPatch(op=Op.UPDATE, title="Invalid")])
 
         # Invalid project patch (missing project_id for delete)
-        with pytest.raises(ValueError, match="project_id is required for Op.DELETE operation"):
+        with pytest.raises(ValueError, match="project_id is required for delete operation"):
             Patch(project_patches=[ProjectPatch(op=Op.DELETE)])
 
     def test_patch_round_trip_serialization(self):
