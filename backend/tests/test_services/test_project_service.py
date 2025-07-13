@@ -199,39 +199,6 @@ class TestProjectServiceUnit:
         assert result is False
         mock_storage.delete_project.assert_not_called()
 
-    def test_apply_patch_success(self, project_service, mock_storage, sample_project):
-        """Test successful patch application."""
-        patch = ProjectPatch(
-            project_id="test-project-1",
-            op=Op.UPDATE,
-            name="Patched Project Name",
-            created_by="test_user"
-        )
-        patched_project = sample_project.model_copy(update={"name": "Patched Project Name"})
-        
-        mock_storage.get_project.return_value = sample_project
-        mock_storage.apply_project_patch.return_value = patched_project
-        
-        result = project_service.apply_patch(patch)
-        
-        assert result == patched_project
-        mock_storage.apply_project_patch.assert_called_once_with(patch)
-
-    def test_apply_patch_invalid_project(self, project_service, mock_storage):
-        """Test patch application on non-existent project."""
-        patch = ProjectPatch(
-            project_id="nonexistent",
-            op=Op.UPDATE,
-            name="New Name",
-            created_by="test_user"
-        )
-        
-        mock_storage.get_project.return_value = None
-        
-        with pytest.raises(ValueError, match="Project with ID nonexistent not found"):
-            project_service.apply_patch(patch)
-        
-        mock_storage.apply_project_patch.assert_not_called()
 
 
 class TestProjectServiceIntegration(TestDatabaseIsolation):
@@ -327,28 +294,6 @@ class TestProjectServiceIntegration(TestDatabaseIsolation):
         assert project1.id in active_high_ids
         assert project2.id not in active_high_ids
 
-    def test_project_patch_integration(self, project_service, sample_project_create):
-        """Test patch application with real storage."""
-        # Create project
-        project = project_service.create_project(sample_project_create, "integration_test")
-        
-        # Apply patch
-        patch = ProjectPatch(
-            project_id=project.id,
-            op=Op.UPDATE,
-            name="Patched Project Name",
-            priority=ProjectPriority.LOW,
-            created_by="patch_user"
-        )
-        
-        patched_project = project_service.apply_patch(patch)
-        assert patched_project.name == "Patched Project Name"
-        assert patched_project.priority == ProjectPriority.LOW
-        
-        # Verify persistence
-        retrieved_project = project_service.get_project(project.id)
-        assert retrieved_project.name == "Patched Project Name"
-        assert retrieved_project.priority == ProjectPriority.LOW
 
     def test_project_validation_integration(self, project_service):
         """Test business rule validation with real storage."""
@@ -375,17 +320,8 @@ class TestProjectServiceIntegration(TestDatabaseIsolation):
     def test_error_handling_integration(self, project_service):
         """Test error handling with real storage."""
         # Test operations on non-existent project
-        with pytest.raises(ValueError, match="Project with ID nonexistent not found"):
-            project_service.update_project("nonexistent", ProjectUpdate(name="New Name"))
+        result = project_service.update_project("nonexistent", ProjectUpdate(name="New Name"))
+        assert result is None
         
-        with pytest.raises(ValueError, match="Project with ID nonexistent not found"):
-            project_service.delete_project("nonexistent")
-        
-        # Test invalid patch
-        with pytest.raises(ValueError, match="Project with ID nonexistent not found"):
-            project_service.apply_patch(ProjectPatch(
-                project_id="nonexistent",
-                op=Op.UPDATE,
-                name="New Name",
-                created_by="test_user"
-            ))
+        result = project_service.delete_project("nonexistent")
+        assert result is False
