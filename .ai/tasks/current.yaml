@@ -1,9 +1,9 @@
 version: "1.0"
 project: "databricks-orchestrator"
-updated: "2025-01-11"
+updated: "2025-07-13"
 
 # Active and pending tasks only
-# Completed tasks archived to completed/2025-01.yaml
+# Completed tasks should be moved to the appropriate archive file in completed/ (e.g., completed/2025-07.yaml)
 
 tasks:
   - id: "TEST-API-002"
@@ -73,23 +73,6 @@ tasks:
         description: "Tests for local storage hook"
         status: "pending"
 
-  - id: "DEL-002"
-    title: "Storage Layer Soft Delete Implementation"
-    status: "pending"
-    priority: "high"
-    description: "CRITICAL: Fix Foreign Key Constraint Issue from TEST-API-001. Implement proper cascading soft delete operations in the storage layer, add restoration capabilities with context tracking, and ensure all related tests pass."
-    dependencies: ["TEST-API-001"]
-    estimated_hours: 4
-    notes: "This addresses the critical issue discovered during TEST-API-001 where deleting projects with tasks causes foreign key constraint errors."
-    deliverables:
-      - path: "backend/src/storage/sql_implementation.py"
-        type: "file"
-        description: "Updated delete_project method with cascade logic"
-        status: "pending"
-      - path: "backend/tests/test_storage_cascade.py"
-        type: "file"
-        description: "Tests for cascade delete behavior"
-        status: "pending"
 
   - id: "INT-001"
     title: "AI Provider Integration Tests"
@@ -98,7 +81,7 @@ tasks:
     description: "Implement integration tests for multi-provider AI support, including provider failover, response validation, and error handling."
     dependencies: ["MVP-002"]
     estimated_hours: 6
-    
+
   - id: "DOC-001"
     title: "API Documentation Generation"
     status: "pending"
@@ -106,7 +89,7 @@ tasks:
     description: "Generate OpenAPI/Swagger documentation from FastAPI endpoints and create interactive API documentation."
     dependencies: ["API-001", "API-002"]
     estimated_hours: 3
-    
+
   - id: "PERF-001"
     title: "Database Query Optimization"
     status: "pending"
@@ -114,7 +97,7 @@ tasks:
     description: "Optimize database queries for large datasets, implement proper indexing, and add query performance monitoring."
     dependencies: ["MVP-001"]
     estimated_hours: 6
-    
+
   - id: "SEC-001"
     title: "Authentication Implementation"
     status: "pending"
@@ -122,7 +105,7 @@ tasks:
     description: "Implement JWT-based authentication, user management, and API security middleware."
     dependencies: ["API-001"]
     estimated_hours: 12
-    
+
   - id: "UI-003"
     title: "Advanced UI Features"
     status: "pending"
@@ -130,7 +113,7 @@ tasks:
     description: "Implement drag-and-drop task reordering, keyboard shortcuts, and advanced filtering options."
     dependencies: ["UI-001", "UI-002"]
     estimated_hours: 10
-    
+
   - id: "INTG-001"
     title: "Motion Integration"
     status: "pending"
@@ -138,7 +121,7 @@ tasks:
     description: "Complete Motion integration with bidirectional sync, real-time updates, and conflict resolution."
     dependencies: ["API-001"]
     estimated_hours: 12
-    
+
   - id: "INTG-002"
     title: "GitLab Integration"
     status: "pending"
@@ -146,7 +129,7 @@ tasks:
     description: "Implement GitLab integration for issue tracking and project synchronization."
     dependencies: ["API-001", "INTG-001"]
     estimated_hours: 10
-    
+
   - id: "API-003"
     title: "WebSocket Support"
     status: "pending"
@@ -154,7 +137,7 @@ tasks:
     description: "Add WebSocket support for real-time updates, live collaboration, and push notifications."
     dependencies: ["API-001"]
     estimated_hours: 8
-    
+
   - id: "TEST-PERF-001"
     title: "Load Testing Suite"
     status: "pending"
@@ -162,7 +145,7 @@ tasks:
     description: "Implement comprehensive load testing with Locust, including API endpoint stress tests and concurrent user simulations."
     dependencies: ["API-001", "API-002"]
     estimated_hours: 6
-    
+
   - id: "UI-004"
     title: "Dark Mode Support"
     status: "pending"
@@ -170,7 +153,7 @@ tasks:
     description: "Implement dark mode theme with system preference detection and manual toggle."
     dependencies: ["UI-002"]
     estimated_hours: 4
-    
+
   - id: "DOC-002"
     title: "User Documentation"
     status: "pending"
@@ -185,10 +168,7 @@ summary:
   medium_priority: 7
   low_priority: 5
   total_estimated_hours: 105
-  
+
 next_sprint_recommendations:
-  - "DEL-002: Critical bug fix for cascade deletes"
-  - "TEST-API-002: Service layer testing" 
+  - "TEST-API-002: Service layer testing"
   - "TEST-UI-007: Frontend-backend integration"
-  - "SEC-001: Authentication (if moving to production)"
-  - "DOC-001: API documentation"
