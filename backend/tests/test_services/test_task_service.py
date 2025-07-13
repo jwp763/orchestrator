@@ -79,22 +79,22 @@ class TestTaskServiceUnit:
         service = TaskService(storage=mock_storage)
         assert service.storage is mock_storage
 
-    def test_list_tasks_success(self, task_service, mock_storage, sample_task):
+    def test_list_tasks_success(self, task_service, mock_storage, sample_task, sample_project):
         """Test successful task listing."""
-        mock_storage.list_tasks.return_value = {"tasks": [sample_task], "total": 1, "page": 1}
+        mock_storage.get_projects.return_value = [sample_project]
+        mock_storage.get_tasks_by_project.return_value = [sample_task]
         
         result = task_service.list_tasks()
         
         assert len(result) == 1
         assert result[0] == sample_task
-        mock_storage.list_tasks.assert_called_once_with(
-            skip=0, limit=100, project_id=None, parent_id=None,
-            status=None, priority=None, assignee=None
-        )
+        mock_storage.get_projects.assert_called_once()
+        mock_storage.get_tasks_by_project.assert_called_once_with(sample_project.id)
 
-    def test_list_tasks_with_filters(self, task_service, mock_storage):
+    def test_list_tasks_with_filters(self, task_service, mock_storage, sample_project):
         """Test task listing with various filters."""
-        mock_storage.list_tasks.return_value = {"tasks": [], "total": 0, "page": 1}
+        mock_storage.get_projects.return_value = [sample_project]
+        mock_storage.get_tasks_by_project.return_value = []
         
         task_service.list_tasks(
             skip=10,
@@ -310,7 +310,7 @@ class TestTaskServiceIntegration(TestDatabaseIsolation):
             status=ProjectStatus.ACTIVE,
             priority=ProjectPriority.MEDIUM,
             created_by="test_user"
-        ))
+        ), "test_user")
 
     @pytest.fixture
     def sample_task_create(self, sample_project):

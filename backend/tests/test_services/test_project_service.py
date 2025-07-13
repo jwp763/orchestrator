@@ -174,14 +174,15 @@ class TestProjectServiceUnit:
         update_data = ProjectUpdate(name="Updated Name")
         mock_storage.get_project.return_value = None
         
-        with pytest.raises(ValueError, match="Project with ID test-project-1 not found"):
-            project_service.update_project("test-project-1", update_data)
+        result = project_service.update_project("test-project-1", update_data)
         
+        assert result is None
         mock_storage.update_project.assert_not_called()
 
     def test_delete_project_success(self, project_service, mock_storage, sample_project):
         """Test successful project deletion."""
         mock_storage.get_project.return_value = sample_project
+        mock_storage.get_tasks_by_project.return_value = []  # No associated tasks
         mock_storage.delete_project.return_value = True
         
         result = project_service.delete_project("test-project-1")
@@ -193,18 +194,17 @@ class TestProjectServiceUnit:
         """Test project deletion when project doesn't exist."""
         mock_storage.get_project.return_value = None
         
-        with pytest.raises(ValueError, match="Project with ID test-project-1 not found"):
-            project_service.delete_project("test-project-1")
+        result = project_service.delete_project("test-project-1")
         
+        assert result is False
         mock_storage.delete_project.assert_not_called()
 
     def test_apply_patch_success(self, project_service, mock_storage, sample_project):
         """Test successful patch application."""
         patch = ProjectPatch(
             project_id="test-project-1",
-            operations=[
-                Op(op="replace", path="/name", value="Patched Project Name")
-            ],
+            op=Op.UPDATE,
+            name="Patched Project Name",
             created_by="test_user"
         )
         patched_project = sample_project.model_copy(update={"name": "Patched Project Name"})
@@ -221,7 +221,8 @@ class TestProjectServiceUnit:
         """Test patch application on non-existent project."""
         patch = ProjectPatch(
             project_id="nonexistent",
-            operations=[Op(op="replace", path="/name", value="New Name")],
+            op=Op.UPDATE,
+            name="New Name",
             created_by="test_user"
         )
         
@@ -334,10 +335,9 @@ class TestProjectServiceIntegration(TestDatabaseIsolation):
         # Apply patch
         patch = ProjectPatch(
             project_id=project.id,
-            operations=[
-                Op(op="replace", path="/name", value="Patched Project Name"),
-                Op(op="replace", path="/priority", value="low")
-            ],
+            op=Op.UPDATE,
+            name="Patched Project Name",
+            priority=ProjectPriority.LOW,
             created_by="patch_user"
         )
         
@@ -385,6 +385,7 @@ class TestProjectServiceIntegration(TestDatabaseIsolation):
         with pytest.raises(ValueError, match="Project with ID nonexistent not found"):
             project_service.apply_patch(ProjectPatch(
                 project_id="nonexistent",
-                operations=[Op(op="replace", path="/name", value="New Name")],
+                op=Op.UPDATE,
+                name="New Name",
                 created_by="test_user"
             ))
