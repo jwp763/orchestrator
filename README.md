@@ -59,7 +59,7 @@ npm run dev
 
 ### Development
 - [Detailed Setup Guide](docs/development/setup.md) - Complete setup instructions
-- [AI Instructions](docs/development/ai-instructions.md) - Guidelines for AI assistants
+- [AI Instructions](.ai/ai-instructions.md) - Guidelines for AI assistants
 - [Architecture Overview](docs/architecture/overview.md) - System architecture
 
 ### Testing

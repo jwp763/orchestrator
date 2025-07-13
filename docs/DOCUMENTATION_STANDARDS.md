@@ -26,8 +26,7 @@ docs/
 │   └── data-flow.md
 ├── development/              # Development guides
 │   ├── setup.md
-│   ├── contributing.md
-│   └── ai-instructions.md
+│   └── contributing.md
 ├── testing/                  # Testing documentation
 │   ├── overview.md
 │   ├── backend-guide.md
