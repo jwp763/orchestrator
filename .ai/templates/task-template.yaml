@@ -4,27 +4,27 @@
 # CRITICAL: AI agents must use SYSTEM datetime, not internal date perception
 # ALWAYS use `date -Iseconds` command to get current system datetime
 
-- id: "CATEGORY-###"  # e.g., API-003, TEST-UI-008, FIX-002
+- id: "CATEGORY-###" # e.g., API-003, TEST-UI-008, FIX-002
   title: "Brief descriptive title"
-  status: "pending"  # pending | in_progress | completed | blocked
-  priority: "medium"  # low | medium | high | critical
-  
+  status: "pending" # pending | in_progress | completed | blocked
+  priority: "medium" # low | medium | high | critical
+
   # Automatic datetime tracking (ALWAYS use `date -Iseconds` command for system time)
-  created_date: "YYYY-MM-DDTHH:MM:SS+00:00"  # Run `date -Iseconds` when creating task
-  start_date: null  # Run `date -Iseconds` when status changes to "in_progress"
-  completion_date: null  # Run `date -Iseconds` when status changes to "completed"
-  
+  created_date: "YYYY-MM-DDTHH:MM:SS+00:00" # Run `date -Iseconds` when creating task
+  start_date: null # Run `date -Iseconds` when status changes to "in_progress"
+  completion_date: null # Run `date -Iseconds` when status changes to "completed"
+
   # Estimates and tracking
-  estimated_hours: 0
-  actual_hours: 0  # Update when completed
-  
+  estimated_minutes: 0
+  actual_minutes: 0 # Update when completed
+
   # Task details
   description: |
     Detailed description of what needs to be done.
     Include context, requirements, and success criteria.
-    
-  dependencies: []  # List of task IDs this depends on, e.g., ["API-001", "UI-002"]
-  
+
+  dependencies: [] # List of task IDs this depends on, e.g., ["API-001", "UI-002"]
+
   # Test Requirements (REQUIRED for all tasks)
   test_requirements:
     unit_tests:
@@ -49,18 +49,18 @@
       - description: "Test security requirements (if applicable)"
         files: ["path/to/test_security.py"]
         scope: "Input validation, auth checks"
-  
+
   # Optional fields
-  assignee: null  # GitHub username if assigned
-  tags: []  # e.g., ["backend", "testing", "bug-fix"]
-  
+  assignee: null # GitHub username if assigned
+  tags: [] # e.g., ["backend", "testing", "bug-fix"]
+
   # Deliverables (optional but recommended)
   deliverables:
     - path: "path/to/file.py"
-      type: "file"  # file | feature | documentation | test
+      type: "file" # file | feature | documentation | test
       description: "What this deliverable provides"
-      status: "pending"  # pending | in_progress | completed
-      
+      status: "pending" # pending | in_progress | completed
+
   # Notes (optional)
   notes: |
     Any additional context, decisions, or considerations.
@@ -80,7 +80,7 @@
 
 # Priority Guidelines:
 # - critical: Blocking other work or breaking production
-# - high: Important for current sprint/milestone  
+# - high: Important for current sprint/milestone
 # - medium: Should be done soon but not blocking
 # - low: Nice to have, can be deferred
 
@@ -93,8 +93,8 @@
 # CRITICAL FOR AI AGENTS: When updating task status, ALWAYS:
 # 1. Run `date -Iseconds` command to get SYSTEM datetime (AI internal date is often wrong)
 # 2. Set start_date when changing status to "in_progress" using system datetime
-# 3. Set completion_date when changing status to "completed" using system datetime  
-# 4. Update actual_hours when completing a task
+# 3. Set completion_date when changing status to "completed" using system datetime
+# 4. Update actual_minutes when completing a task
 # 5. Ensure all test requirements are met before marking "completed"
 #
 # Testing Requirements:

@@ -19,6 +19,15 @@ class Op(str, Enum):
     DELETE = "delete"
 
 
+class JsonPatchOp(BaseModel):
+    """JSON Patch operation model for fine-grained updates."""
+    
+    op: str  # "add", "remove", "replace", "move", "copy", "test"
+    path: str  # JSON Pointer path like "/title" or "/tags/0"
+    value: Optional[Any] = None  # Value for add/replace operations
+    from_path: Optional[str] = None  # Source path for move/copy operations
+
+
 class TaskPatch(BaseModel):
     """Task patch model for updates."""
 
