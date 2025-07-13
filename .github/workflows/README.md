@@ -10,7 +10,7 @@ This directory contains CI/CD workflows for the Databricks Orchestrator project.
 - **Triggers**: Push/PR to `main`, `master`, `develop`
 - **Jobs**:
   - **Backend Tests**: Python 3.8-3.12, pytest with coverage
-  - **Frontend Tests**: Node.js 16-20, Vitest with coverage
+  - **Frontend Tests**: Node.js 18-22, Vitest with coverage
   - **Integration Tests**: End-to-end API health checks
   - **Test Summary**: Aggregates results and reports
 
@@ -28,7 +28,7 @@ This directory contains CI/CD workflows for the Databricks Orchestrator project.
 
 ### 🎯 Matrix Testing
 - **Backend**: Tests across Python 3.8-3.12
-- **Frontend**: Tests across Node.js 16-20
+- **Frontend**: Tests across Node.js 18-22
 - **Cross-platform**: Ubuntu, with optional Windows/macOS
 
 ### 📊 Coverage Reporting
