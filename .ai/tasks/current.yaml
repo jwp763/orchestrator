@@ -33,59 +33,6 @@ updated: "2025-07-13"
 # =============================================================================
 
 tasks:
-  - id: "TEST-API-002"
-    title: "Test Suite: Orchestration Service Layer"
-    status: "completed"
-    priority: "high"
-    start_date: "2025-07-13T12:11:44-07:00"
-    completion_date: "2025-07-13T12:21:53-07:00"
-    actual_minutes: 10
-    description: "Implement comprehensive test suite for the orchestration service layer (ProjectService, TaskService, AgentService) including unit tests with mocked dependencies, integration tests with real storage and agents, and transaction handling across multiple operations."
-    dependencies: ["API-001", "API-002"]
-    estimated_minutes: 360
-    deliverables:
-      - path: "backend/tests/test_services/test_project_service.py"
-        type: "file"
-        description: "Unit and integration tests for ProjectService"
-        status: "completed"
-      - path: "backend/tests/test_services/test_task_service.py"
-        type: "file"
-        description: "Unit and integration tests for TaskService"
-        status: "completed"
-      - path: "backend/tests/test_services/test_agent_service.py"
-        type: "file"
-        description: "Unit and integration tests for AgentService"
-        status: "completed"
-      - path: "backend/tests/test_services/test_service_transactions.py"
-        type: "file"
-        description: "Transaction and rollback behavior tests"
-        status: "completed"
-      - path: "backend/tests/test_services/test_service_integration_simple.py"
-        type: "file"
-        description: "Simple integration tests demonstrating working service layer"
-        status: "completed"
-
-  - id: "TEST-UI-007"
-    title: "Test Suite: Frontend-Backend Integration"
-    status: "pending"
-    priority: "high"
-    description: "Implement integration tests between frontend and backend, including API service tests with mocked responses, hook tests with proper service mocking, and end-to-end tests for complete user workflows."
-    dependencies: ["UI-001", "UI-002", "API-001"]
-    estimated_minutes: 480
-    deliverables:
-      - path: "frontend/src/services/__tests__"
-        type: "directory"
-        description: "API service layer tests"
-        status: "pending"
-      - path: "frontend/src/hooks/__tests__"
-        type: "directory"
-        description: "Hook integration tests"
-        status: "pending"
-      - path: "frontend/e2e"
-        type: "directory"
-        description: "End-to-end test suite"
-        status: "pending"
-
   - id: "TEST-UI-002"
     title: "Test Suite: React Hook Testing"
     status: "pending"
@@ -197,12 +144,12 @@ tasks:
     estimated_minutes: 480
 
 summary:
-  total_pending: 15
-  high_priority: 3
+  total_pending: 13
+  high_priority: 0
   medium_priority: 7
-  low_priority: 5
-  total_estimated_minutes: 6300
+  low_priority: 6
+  total_estimated_minutes: 5460
 
 next_sprint_recommendations:
-  - "TEST-API-002: Service layer testing"
-  - "TEST-UI-007: Frontend-backend integration"
+  - "TEST-UI-002: React Hook Testing"
+  - "INT-001: AI Provider Integration Tests"
