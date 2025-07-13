@@ -18,7 +18,7 @@ updated: "2025-07-13"
 #
 # STATUS MANAGEMENT:
 # - pending → in_progress: Set start_date using `date -Iseconds` command (NOT AI internal date)
-# - in_progress → completed: Set completion_date using `date -Iseconds` command and update actual_hours
+# - in_progress → completed: Set completion_date using `date -Iseconds` command and update actual_minutes
 # - Any status → blocked: Add notes explaining the blocker
 # - BEFORE marking completed: Ensure ALL test requirements are implemented and passing
 #
@@ -35,28 +35,35 @@ updated: "2025-07-13"
 tasks:
   - id: "TEST-API-002"
     title: "Test Suite: Orchestration Service Layer"
-    status: "pending"
+    status: "completed"
     priority: "high"
+    start_date: "2025-07-13T12:11:44-07:00"
+    completion_date: "2025-07-13T12:21:53-07:00"
+    actual_minutes: 10
     description: "Implement comprehensive test suite for the orchestration service layer (ProjectService, TaskService, AgentService) including unit tests with mocked dependencies, integration tests with real storage and agents, and transaction handling across multiple operations."
     dependencies: ["API-001", "API-002"]
-    estimated_hours: 6
+    estimated_minutes: 360
     deliverables:
       - path: "backend/tests/test_services/test_project_service.py"
         type: "file"
         description: "Unit and integration tests for ProjectService"
-        status: "pending"
+        status: "completed"
       - path: "backend/tests/test_services/test_task_service.py"
         type: "file"
         description: "Unit and integration tests for TaskService"
-        status: "pending"
+        status: "completed"
       - path: "backend/tests/test_services/test_agent_service.py"
         type: "file"
         description: "Unit and integration tests for AgentService"
-        status: "pending"
+        status: "completed"
       - path: "backend/tests/test_services/test_service_transactions.py"
         type: "file"
         description: "Transaction and rollback behavior tests"
-        status: "pending"
+        status: "completed"
+      - path: "backend/tests/test_services/test_service_integration_simple.py"
+        type: "file"
+        description: "Simple integration tests demonstrating working service layer"
+        status: "completed"
 
   - id: "TEST-UI-007"
     title: "Test Suite: Frontend-Backend Integration"
@@ -64,7 +71,7 @@ tasks:
     priority: "high"
     description: "Implement integration tests between frontend and backend, including API service tests with mocked responses, hook tests with proper service mocking, and end-to-end tests for complete user workflows."
     dependencies: ["UI-001", "UI-002", "API-001"]
-    estimated_hours: 8
+    estimated_minutes: 480
     deliverables:
       - path: "frontend/src/services/__tests__"
         type: "directory"
@@ -85,7 +92,7 @@ tasks:
     priority: "medium"
     description: "Implement comprehensive tests for custom React hooks including state management hooks, API integration hooks, and utility hooks."
     dependencies: ["UI-001"]
-    estimated_hours: 4
+    estimated_minutes: 240
     deliverables:
       - path: "frontend/src/hooks/useProjectManagement.test.ts"
         type: "file"
@@ -107,7 +114,7 @@ tasks:
     priority: "medium"
     description: "Implement integration tests for multi-provider AI support, including provider failover, response validation, and error handling."
     dependencies: ["MVP-002"]
-    estimated_hours: 6
+    estimated_minutes: 360
 
   - id: "DOC-001"
     title: "API Documentation Generation"
@@ -115,7 +122,7 @@ tasks:
     priority: "medium"
     description: "Generate OpenAPI/Swagger documentation from FastAPI endpoints and create interactive API documentation."
     dependencies: ["API-001", "API-002"]
-    estimated_hours: 3
+    estimated_minutes: 180
 
   - id: "PERF-001"
     title: "Database Query Optimization"
@@ -123,7 +130,7 @@ tasks:
     priority: "low"
     description: "Optimize database queries for large datasets, implement proper indexing, and add query performance monitoring."
     dependencies: ["MVP-001"]
-    estimated_hours: 6
+    estimated_minutes: 360
 
   - id: "SEC-001"
     title: "Authentication Implementation"
@@ -131,7 +138,7 @@ tasks:
     priority: "medium"
     description: "Implement JWT-based authentication, user management, and API security middleware."
     dependencies: ["API-001"]
-    estimated_hours: 12
+    estimated_minutes: 720
 
   - id: "UI-003"
     title: "Advanced UI Features"
@@ -139,7 +146,7 @@ tasks:
     priority: "low"
     description: "Implement drag-and-drop task reordering, keyboard shortcuts, and advanced filtering options."
     dependencies: ["UI-001", "UI-002"]
-    estimated_hours: 10
+    estimated_minutes: 600
 
   - id: "INTG-001"
     title: "Motion Integration"
@@ -147,7 +154,7 @@ tasks:
     priority: "medium"
     description: "Complete Motion integration with bidirectional sync, real-time updates, and conflict resolution."
     dependencies: ["API-001"]
-    estimated_hours: 12
+    estimated_minutes: 720
 
   - id: "INTG-002"
     title: "GitLab Integration"
@@ -155,7 +162,7 @@ tasks:
     priority: "low"
     description: "Implement GitLab integration for issue tracking and project synchronization."
     dependencies: ["API-001", "INTG-001"]
-    estimated_hours: 10
+    estimated_minutes: 600
 
   - id: "API-003"
     title: "WebSocket Support"
@@ -163,7 +170,7 @@ tasks:
     priority: "medium"
     description: "Add WebSocket support for real-time updates, live collaboration, and push notifications."
     dependencies: ["API-001"]
-    estimated_hours: 8
+    estimated_minutes: 480
 
   - id: "TEST-PERF-001"
     title: "Load Testing Suite"
@@ -171,7 +178,7 @@ tasks:
     priority: "low"
     description: "Implement comprehensive load testing with Locust, including API endpoint stress tests and concurrent user simulations."
     dependencies: ["API-001", "API-002"]
-    estimated_hours: 6
+    estimated_minutes: 360
 
   - id: "UI-004"
     title: "Dark Mode Support"
@@ -179,7 +186,7 @@ tasks:
     priority: "low"
     description: "Implement dark mode theme with system preference detection and manual toggle."
     dependencies: ["UI-002"]
-    estimated_hours: 4
+    estimated_minutes: 240
 
   - id: "DOC-002"
     title: "User Documentation"
@@ -187,14 +194,14 @@ tasks:
     priority: "medium"
     description: "Create end-user documentation including getting started guide, feature tutorials, and video walkthroughs."
     dependencies: ["UI-001", "UI-002", "API-001"]
-    estimated_hours: 8
+    estimated_minutes: 480
 
 summary:
   total_pending: 15
   high_priority: 3
   medium_priority: 7
   low_priority: 5
-  total_estimated_hours: 105
+  total_estimated_minutes: 6300
 
 next_sprint_recommendations:
   - "TEST-API-002: Service layer testing"
