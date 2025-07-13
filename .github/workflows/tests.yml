@@ -1,0 +1,186 @@
+name: Tests
+
+on:
+  push:
+    branches: [ main, master, develop ]
+  pull_request:
+    branches: [ main, master, develop ]
+
+jobs:
+  backend-tests:
+    name: Backend Tests
+    runs-on: ubuntu-latest
+    
+    strategy:
+      matrix:
+        python-version: ['3.8', '3.9', '3.10', '3.11', '3.12']
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v5
+      with:
+        python-version: ${{ matrix.python-version }}
+        
+    - name: Cache pip dependencies
+      uses: actions/cache@v4
+      with:
+        path: ~/.cache/pip
+        key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements*.txt') }}
+        restore-keys: |
+          ${{ runner.os }}-pip-
+          
+    - name: Install dependencies
+      working-directory: ./backend
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+        
+    - name: Run backend tests
+      working-directory: ./backend
+      run: |
+        python -m pytest tests/ --tb=short --cov=src --cov-report=xml --cov-report=html
+        
+    - name: Upload backend coverage to Codecov
+      if: matrix.python-version == '3.11'
+      uses: codecov/codecov-action@v4
+      with:
+        file: ./backend/coverage.xml
+        flags: backend
+        name: backend-coverage
+        fail_ci_if_error: false
+
+  frontend-tests:
+    name: Frontend Tests
+    runs-on: ubuntu-latest
+    
+    strategy:
+      matrix:
+        node-version: ['16', '18', '20']
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Set up Node.js ${{ matrix.node-version }}
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ matrix.node-version }}
+        cache: 'npm'
+        cache-dependency-path: './frontend/package-lock.json'
+        
+    - name: Install dependencies
+      working-directory: ./frontend
+      run: npm ci
+      
+    - name: Run frontend tests
+      working-directory: ./frontend
+      run: |
+        npm test -- --coverage --reporter=verbose
+        
+    - name: Upload frontend coverage to Codecov
+      if: matrix.node-version == '18'
+      uses: codecov/codecov-action@v4
+      with:
+        file: ./frontend/coverage/coverage-final.json
+        flags: frontend
+        name: frontend-coverage
+        fail_ci_if_error: false
+
+  integration-tests:
+    name: Integration Tests
+    runs-on: ubuntu-latest
+    needs: [backend-tests, frontend-tests]
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
+        
+    - name: Set up Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        cache: 'npm'
+        cache-dependency-path: './frontend/package-lock.json'
+        
+    - name: Install backend dependencies
+      working-directory: ./backend
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+        
+    - name: Install frontend dependencies
+      working-directory: ./frontend
+      run: npm ci
+      
+    - name: Build frontend
+      working-directory: ./frontend
+      run: npm run build
+      
+    - name: Start backend server
+      working-directory: ./backend
+      run: |
+        python -m uvicorn src.api.main:app --host 0.0.0.0 --port 8000 &
+        sleep 10
+        
+    - name: Run integration tests
+      run: |
+        # Basic health check
+        curl -f http://localhost:8000/health || exit 1
+        
+        # API endpoint tests
+        curl -f http://localhost:8000/api/projects || exit 1
+        curl -f http://localhost:8000/api/tasks || exit 1
+        
+        echo "✅ Integration tests passed"
+
+  test-summary:
+    name: Test Summary
+    runs-on: ubuntu-latest
+    needs: [backend-tests, frontend-tests, integration-tests]
+    if: always()
+    
+    steps:
+    - name: Check test results
+      run: |
+        echo "## 🧪 Test Results Summary" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        
+        if [[ "${{ needs.backend-tests.result }}" == "success" ]]; then
+          echo "✅ **Backend Tests**: Passed" >> $GITHUB_STEP_SUMMARY
+        else
+          echo "❌ **Backend Tests**: Failed" >> $GITHUB_STEP_SUMMARY
+        fi
+        
+        if [[ "${{ needs.frontend-tests.result }}" == "success" ]]; then
+          echo "✅ **Frontend Tests**: Passed" >> $GITHUB_STEP_SUMMARY
+        else
+          echo "❌ **Frontend Tests**: Failed" >> $GITHUB_STEP_SUMMARY
+        fi
+        
+        if [[ "${{ needs.integration-tests.result }}" == "success" ]]; then
+          echo "✅ **Integration Tests**: Passed" >> $GITHUB_STEP_SUMMARY
+        else
+          echo "❌ **Integration Tests**: Failed" >> $GITHUB_STEP_SUMMARY
+        fi
+        
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "**Workflow**: ${{ github.workflow }}" >> $GITHUB_STEP_SUMMARY
+        echo "**Commit**: ${{ github.sha }}" >> $GITHUB_STEP_SUMMARY
+        echo "**Branch**: ${{ github.ref_name }}" >> $GITHUB_STEP_SUMMARY
+        
+    - name: Fail if any tests failed
+      if: |
+        needs.backend-tests.result != 'success' ||
+        needs.frontend-tests.result != 'success' ||
+        needs.integration-tests.result != 'success'
+      run: |
+        echo "One or more test suites failed"
+        exit 1
