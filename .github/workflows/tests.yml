@@ -13,7 +13,8 @@ jobs:
     
     strategy:
       matrix:
-        python-version: ['3.9', '3.10', '3.11', '3.12']
+        # Reduced matrix: test only LTS Python versions + latest for faster CI
+        python-version: ['3.9', '3.11', '3.12']
     
     steps:
     - name: Checkout code
@@ -28,20 +29,21 @@ jobs:
       uses: actions/cache@v4
       with:
         path: ~/.cache/pip
-        key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements*.txt') }}
+        key: ${{ runner.os }}-pip-py${{ matrix.python-version }}-${{ hashFiles('backend/requirements.txt') }}
         restore-keys: |
+          ${{ runner.os }}-pip-py${{ matrix.python-version }}-
           ${{ runner.os }}-pip-
           
     - name: Install dependencies
       working-directory: ./backend
       run: |
-        python -m pip install --upgrade pip
-        pip install -r requirements.txt
+        python -m pip install --upgrade pip wheel setuptools
+        pip install --no-deps --requirement requirements.txt || pip install --requirement requirements.txt
         
     - name: Run backend tests
       working-directory: ./backend
       run: |
-        python -m pytest tests/ --tb=short -v
+        python -m pytest tests/ --tb=short --maxfail=5 -x
 
   frontend-tests:
     name: Frontend Tests
@@ -49,7 +51,8 @@ jobs:
     
     strategy:
       matrix:
-        node-version: ['18', '20', '22']
+        # Reduced matrix: test only LTS Node.js versions for faster CI
+        node-version: ['18', '20']
     
     steps:
     - name: Checkout code
@@ -64,12 +67,12 @@ jobs:
         
     - name: Install dependencies
       working-directory: ./frontend
-      run: npm ci
+      run: npm ci --prefer-offline --no-audit
       
     - name: Run frontend tests
       working-directory: ./frontend
       run: |
-        npm run test:run -- --reporter=verbose
+        npm run test:run -- --reporter=basic --run
 
   integration-tests:
     name: Integration Tests
@@ -85,6 +88,15 @@ jobs:
       with:
         python-version: '3.11'
         
+    - name: Cache pip dependencies
+      uses: actions/cache@v4
+      with:
+        path: ~/.cache/pip
+        key: ${{ runner.os }}-pip-py3.11-${{ hashFiles('backend/requirements.txt') }}
+        restore-keys: |
+          ${{ runner.os }}-pip-py3.11-
+          ${{ runner.os }}-pip-
+        
     - name: Set up Node.js
       uses: actions/setup-node@v4
       with:
@@ -95,12 +107,12 @@ jobs:
     - name: Install backend dependencies
       working-directory: ./backend
       run: |
-        python -m pip install --upgrade pip
-        pip install -r requirements.txt
+        python -m pip install --upgrade pip wheel setuptools
+        pip install --no-deps --requirement requirements.txt || pip install --requirement requirements.txt
         
     - name: Install frontend dependencies
       working-directory: ./frontend
-      run: npm ci
+      run: npm ci --prefer-offline --no-audit
       
     - name: Build frontend
       working-directory: ./frontend

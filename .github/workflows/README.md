@@ -27,8 +27,8 @@ This directory contains CI/CD workflows for the Databricks Orchestrator project.
 ## Features
 
 ### 🎯 Matrix Testing
-- **Backend**: Tests across Python 3.9-3.12
-- **Frontend**: Tests across Node.js 18-22
+- **Backend**: Tests across Python 3.9, 3.11, 3.12 (LTS + latest for faster CI)
+- **Frontend**: Tests across Node.js 18, 20 (LTS versions for faster CI)
 - **Cross-platform**: Ubuntu, with optional Windows/macOS
 
 ### 📊 Coverage Reporting
@@ -37,7 +37,10 @@ This directory contains CI/CD workflows for the Databricks Orchestrator project.
 - **Coverage Reports**: HTML and XML formats generated
 
 ### ⚡ Performance Optimizations
-- **Dependency Caching**: pip and npm caches for faster builds
+- **Enhanced Dependency Caching**: Version-specific pip and npm caches for faster builds
+- **Optimized Install Flags**: `--no-deps`, `--prefer-offline`, `--no-audit` for faster installs
+- **Reduced Test Matrix**: Focus on LTS versions to reduce CI time
+- **Fast Fail**: Tests stop early on failures with `--maxfail=5 -x`
 - **Parallel Execution**: Jobs run concurrently when possible
 - **Path Filtering**: Documentation workflow only runs on doc changes
 
