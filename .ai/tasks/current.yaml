@@ -2,8 +2,35 @@ version: "1.0"
 project: "databricks-orchestrator"
 updated: "2025-07-13"
 
-# Active and pending tasks only
+# =============================================================================
+# TASK MANAGEMENT INSTRUCTIONS
+# =============================================================================
+#
+# This file contains ACTIVE and PENDING tasks only.
 # Completed tasks should be moved to the appropriate archive file in completed/ (e.g., completed/2025-07.yaml)
+#
+# AUTOMATIC DATETIME GENERATION:
+# CRITICAL FOR AI AGENTS: AI internal date perception is often WRONG - always use system datetime
+# When creating or updating tasks, MUST run `date -Iseconds` command to get system time:
+#   - created_date: Set when task is first created using `date -Iseconds`
+#   - start_date: Set when status changes to "in_progress" using `date -Iseconds`
+#   - completion_date: Set when status changes to "completed" using `date -Iseconds`
+#
+# STATUS MANAGEMENT:
+# - pending → in_progress: Set start_date using `date -Iseconds` command (NOT AI internal date)
+# - in_progress → completed: Set completion_date using `date -Iseconds` command and update actual_hours
+# - Any status → blocked: Add notes explaining the blocker
+# - BEFORE marking completed: Ensure ALL test requirements are implemented and passing
+#
+# TEST REQUIREMENTS:
+# - ALL tasks must include comprehensive test specifications
+# - Unit tests REQUIRED for all code changes (95%+ coverage)
+# - Integration tests REQUIRED for API/database changes
+# - Performance/security tests REQUIRED when applicable
+#
+# TASK TEMPLATE: See .ai/templates/task-template.yaml for creating new tasks
+#
+# =============================================================================
 
 tasks:
   - id: "TEST-API-002"

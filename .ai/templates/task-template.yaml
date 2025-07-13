@@ -1,16 +1,22 @@
 # Task Template for Databricks Orchestrator
 
 # Copy this template when creating new tasks in .ai/tasks/current.yaml
+# CRITICAL: AI agents must use SYSTEM datetime, not internal date perception
+# ALWAYS use `date -Iseconds` command to get current system datetime
 
 - id: "CATEGORY-###"  # e.g., API-003, TEST-UI-008, FIX-002
   title: "Brief descriptive title"
   status: "pending"  # pending | in_progress | completed | blocked
   priority: "medium"  # low | medium | high | critical
   
+  # Automatic datetime tracking (ALWAYS use `date -Iseconds` command for system time)
+  created_date: "YYYY-MM-DDTHH:MM:SS+00:00"  # Run `date -Iseconds` when creating task
+  start_date: null  # Run `date -Iseconds` when status changes to "in_progress"
+  completion_date: null  # Run `date -Iseconds` when status changes to "completed"
+  
   # Estimates and tracking
   estimated_hours: 0
   actual_hours: 0  # Update when completed
-  completion_date: null  # YYYY-MM-DD when completed
   
   # Task details
   description: |
@@ -18,6 +24,31 @@
     Include context, requirements, and success criteria.
     
   dependencies: []  # List of task IDs this depends on, e.g., ["API-001", "UI-002"]
+  
+  # Test Requirements (REQUIRED for all tasks)
+  test_requirements:
+    unit_tests:
+      - description: "Test core functionality in isolation"
+        files: ["path/to/test_module.py"]
+        coverage_target: "95%"
+      - description: "Test error handling and edge cases"
+        files: ["path/to/test_errors.py"]
+        coverage_target: "100%"
+    integration_tests:
+      - description: "Test component interactions"
+        files: ["path/to/test_integration.py"]
+        scope: "API endpoints with database"
+      - description: "Test end-to-end workflows"
+        files: ["path/to/test_e2e.py"]
+        scope: "Complete user scenarios"
+    performance_tests:
+      - description: "Test performance under load (if applicable)"
+        files: ["path/to/test_performance.py"]
+        requirements: "< 200ms response time"
+    security_tests:
+      - description: "Test security requirements (if applicable)"
+        files: ["path/to/test_security.py"]
+        scope: "Input validation, auth checks"
   
   # Optional fields
   assignee: null  # GitHub username if assigned
@@ -53,8 +84,21 @@
 # - medium: Should be done soon but not blocking
 # - low: Nice to have, can be deferred
 
-# Status Definitions:
-# - pending: Not started yet
-# - in_progress: Currently being worked on
-# - completed: Finished and tested
-# - blocked: Waiting on dependency or decision
+# Status Definitions & Automatic Datetime Updates:
+# - pending: Not started yet (created_date set when task is created)
+# - in_progress: Currently being worked on (start_date auto-generated when status changes)
+# - completed: Finished and tested (completion_date auto-generated when status changes)
+# - blocked: Waiting on dependency or decision (no datetime change)
+#
+# CRITICAL FOR AI AGENTS: When updating task status, ALWAYS:
+# 1. Run `date -Iseconds` command to get SYSTEM datetime (AI internal date is often wrong)
+# 2. Set start_date when changing status to "in_progress" using system datetime
+# 3. Set completion_date when changing status to "completed" using system datetime  
+# 4. Update actual_hours when completing a task
+# 5. Ensure all test requirements are met before marking "completed"
+#
+# Testing Requirements:
+# - All tasks MUST include comprehensive test specifications
+# - Unit tests are REQUIRED for all code changes
+# - Integration tests REQUIRED for API/database changes
+# - Performance/security tests REQUIRED when applicable
