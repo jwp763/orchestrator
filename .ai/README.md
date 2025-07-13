@@ -21,13 +21,13 @@ This directory contains configuration and context for AI assistants working with
 
 ### Testing Documentation
 
-3. **[Backend Testing Guide](../backend/tests/README.md)** - Comprehensive backend testing patterns
+3. **[Backend Testing Guide](../docs/testing/backend-guide.md)** - Comprehensive backend testing patterns
    - Database isolation techniques
    - Mock configuration
    - Common error patterns
    - Testing best practices
 
-4. **[Frontend Testing Guide](../frontend/tests/README.md)** - Frontend testing patterns
+4. **[Frontend Testing Guide](../docs/testing/frontend-guide.md)** - Frontend testing patterns
    - React Testing Library usage
    - Component testing strategies
    - Hook testing patterns

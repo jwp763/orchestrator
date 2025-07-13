@@ -14,8 +14,8 @@ A modern AI-powered project planning and task management system that intelligent
 ## 🚀 Quick Start
 
 ### Prerequisites
-- Python 3.8+
-- Node.js 16+
+- Python 3.9+
+- Node.js 18+
 - Git
 
 ### Installation
@@ -59,7 +59,7 @@ npm run dev
 
 ### Development
 - [Detailed Setup Guide](docs/development/setup.md) - Complete setup instructions
-- [AI Instructions](docs/development/ai-instructions.md) - Guidelines for AI assistants
+- [AI Instructions](.ai/ai-instructions.md) - Guidelines for AI assistants
 - [Architecture Overview](docs/architecture/overview.md) - System architecture
 
 ### Testing
@@ -145,3 +145,5 @@ This project is licensed under the MIT License - see [LICENSE](LICENSE) for deta
 ---
 
 Built with ❤️ using AI-assisted development
+
+<!-- CI Test: $(date) -->

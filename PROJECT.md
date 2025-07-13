@@ -231,6 +231,6 @@ npm run test:ui                       # Vitest UI
 
 For AI assistants working on this project:
 
-- **Detailed Instructions**: See `docs/development/ai-instructions.md`
+- **Detailed Instructions**: See `.ai/ai-instructions.md`
 - **Quick Reference**: See `.ai/ai-quick-reference.md`
 - **Note**: This project is built with AI coding assistants (Claude, Codex, Gemini, etc.)

@@ -152,7 +152,7 @@ Include:
 ## 💡 Development Tips
 
 1. **Use the AI Instructions**
-   - See [AI Instructions](docs/development/ai-instructions.md)
+   - See [AI Instructions](.ai/ai-instructions.md)
    - Follow the patterns established in the codebase
 
 2. **Database Changes**

@@ -117,6 +117,8 @@ export interface TaskCreateRequest {
   estimated_minutes?: number;
   due_date?: string;
   assignee?: string;
+  sort_order?: number;
+  completion_percentage?: number;
   dependencies?: string[];
   metadata?: Record<string, any>;
   created_by: string;
@@ -136,8 +138,10 @@ export interface TaskUpdateRequest {
   actual_minutes?: number;
   due_date?: string;
   assignee?: string;
-  parent_id?: string;
+  parent_id?: string | null;
+  completion_percentage?: number;
   dependencies?: string[];
+  notes?: string;
   metadata?: Record<string, any>;
   motion_task_id?: string;
   linear_issue_id?: string;

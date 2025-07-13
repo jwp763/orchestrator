@@ -47,7 +47,7 @@ class TaskPatch(BaseModel):
     @model_validator(mode="after")
     def validate_task_id_for_operation(self) -> Self:
         if self.op in [Op.UPDATE, Op.DELETE] and not self.task_id:
-            raise ValueError(f"task_id is required for {self.op} operation")
+            raise ValueError(f"task_id is required for {self.op.value} operation")
         return self
 
 
@@ -74,7 +74,7 @@ class ProjectPatch(BaseModel):
     @model_validator(mode="after")
     def validate_project_id_for_operation(self) -> Self:
         if self.op in [Op.UPDATE, Op.DELETE] and not self.project_id:
-            raise ValueError(f"project_id is required for {self.op} operation")
+            raise ValueError(f"project_id is required for {self.op.value} operation")
         return self
 
 

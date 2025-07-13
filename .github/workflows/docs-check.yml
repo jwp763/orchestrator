@@ -1,0 +1,138 @@
+name: Documentation Quality Check
+
+on:
+  pull_request:
+    paths:
+      - 'docs/**'
+      - '**.md'
+      - 'scripts/doc-check.sh'
+      - '.github/workflows/docs-check.yml'
+  push:
+    branches:
+      - main
+      - master
+      - develop
+    paths:
+      - 'docs/**'
+      - '**.md'
+
+jobs:
+  check-docs:
+    name: Check Documentation Quality
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+      
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
+        
+    - name: Make scripts executable
+      run: |
+        chmod +x scripts/doc-check.sh
+        chmod +x scripts/generate-refs.sh
+        chmod +x scripts/update-links.py
+        
+    - name: Run documentation checks
+      run: |
+        ./scripts/doc-check.sh
+      continue-on-error: true
+      
+    - name: Check for broken links with lychee
+      uses: lycheeverse/lychee-action@v1
+      with:
+        args: >
+          --verbose
+          --no-progress
+          --exclude '^https?://'
+          --exclude '^#'
+          --exclude '.*\.(jpg|jpeg|png|gif|svg|ico)$'
+          --exclude-path 'docs_archive'
+          'docs/**/*.md'
+          'README.md'
+          'PROJECT.md'
+        fail: true
+        
+    - name: Check markdown formatting
+      uses: DavidAnson/markdownlint-cli2-action@v16
+      with:
+        config: '.markdownlint.json'
+        globs: |
+          docs/**/*.md
+          README.md
+          PROJECT.md
+      continue-on-error: true
+      
+    - name: Spell check
+      uses: streetsidesoftware/cspell-action@v6
+      with:
+        files: |
+          docs/**/*.md
+          README.md
+          PROJECT.md
+        config: '.cspell.json'
+      continue-on-error: true
+      
+    - name: Check file sizes
+      run: |
+        echo "Checking documentation file sizes..."
+        large_files=$(find docs -name "*.md" -type f -size +20k)
+        if [ ! -z "$large_files" ]; then
+          echo "⚠️ Warning: Large documentation files found (>20KB):"
+          echo "$large_files"
+          echo "Consider splitting these files according to documentation standards."
+        fi
+        
+    - name: Generate documentation report
+      if: always()
+      run: |
+        echo "## 📚 Documentation Quality Report" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        
+        # Count statistics
+        total_files=$(find docs -name "*.md" -type f | wc -l)
+        total_size=$(find docs -name "*.md" -type f -exec stat -f%z {} + 2>/dev/null | awk '{s+=$1} END {print s}' || echo "0")
+        total_size_mb=$(echo "scale=2; $total_size / 1048576" | bc)
+        
+        echo "### 📊 Statistics" >> $GITHUB_STEP_SUMMARY
+        echo "- Total documentation files: $total_files" >> $GITHUB_STEP_SUMMARY
+        echo "- Total size: ${total_size_mb}MB" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        
+        # Check results summary
+        echo "### ✅ Check Results" >> $GITHUB_STEP_SUMMARY
+        echo "See individual check outputs above for details." >> $GITHUB_STEP_SUMMARY
+        
+  validate-links-update:
+    name: Validate Link Updates
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+      
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
+        
+    - name: Check for outdated links
+      run: |
+        python scripts/update-links.py --dry-run
+      continue-on-error: true
+        
+    - name: Comment on PR if updates needed
+      uses: actions/github-script@v7
+      if: failure()
+      with:
+        script: |
+          github.rest.issues.createComment({
+            issue_number: context.issue.number,
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            body: '⚠️ **Documentation links need updating**\n\nRun `python scripts/update-links.py` locally to update outdated documentation links.'
+          })

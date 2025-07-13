@@ -108,7 +108,14 @@ export class ProjectService {
       return {
         success: false,
         error: 'Failed to get project data',
-        status: 500
+        status: 500,
+        data: {
+          totalTasks: 0,
+          completedTasks: 0,
+          inProgressTasks: 0,
+          blockedTasks: 0,
+          completionPercentage: 0
+        }
       };
     }
 

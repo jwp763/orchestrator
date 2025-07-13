@@ -19,7 +19,7 @@ Welcome to the comprehensive documentation for the Databricks Orchestrator proje
 
 | Category | Description | Links |
 |----------|-------------|-------|
-| **Instructions** | AI-specific guidelines | • [AI Instructions](development/ai-instructions.md)<br>• [Quick Reference](../.ai/ai-quick-reference.md) |
+| **Instructions** | AI-specific guidelines | • [AI Instructions](../.ai/ai-instructions.md)<br>• [Quick Reference](../.ai/ai-quick-reference.md) |
 | **Context** | Project context and plans | • [Project Overview](../PROJECT.md)<br>• [MVP Plan](planning/mvp-overview.md)<br>• [Current Tasks](../.ai/tasks/current.yaml) |
 | **Patterns** | Code patterns and examples | • [Testing Patterns](testing/patterns.md)<br>• [API Examples](api/examples.md) |
 
@@ -42,7 +42,7 @@ Welcome to the comprehensive documentation for the Databricks Orchestrator proje
 ### 🔧 Development
 
 - [Development Setup](development/setup.md) - Complete environment setup
-- [AI Instructions](development/ai-instructions.md) - Guidelines for AI-assisted development
+- [AI Instructions](../.ai/ai-instructions.md) - Guidelines for AI-assisted development
 - [Contributing](../CONTRIBUTING.md) - How to contribute to the project
 
 ### 🧪 Testing
