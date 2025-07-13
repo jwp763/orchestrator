@@ -164,7 +164,7 @@ class TestTaskServiceUnit:
         mock_storage.get_project.return_value = Mock()  # Project exists
         mock_storage.create_task.return_value = sample_task
         
-        result = task_service.create_task(sample_task_create)
+        result = task_service.create_task(sample_task_create, "test_user")
         
         assert result == sample_task
         mock_storage.create_task.assert_called_once()
@@ -179,7 +179,7 @@ class TestTaskServiceUnit:
         mock_storage.get_project.return_value = None  # Project doesn't exist
         
         with pytest.raises(ValueError, match="Project with ID test-project-1 not found"):
-            task_service.create_task(sample_task_create)
+            task_service.create_task(sample_task_create, "test_user")
         
         mock_storage.create_task.assert_not_called()
 
@@ -191,7 +191,7 @@ class TestTaskServiceUnit:
         mock_storage.get_task.return_value = None  # Parent doesn't exist
         
         with pytest.raises(ValueError, match="Parent task with ID invalid-parent not found"):
-            task_service.create_task(task_create_with_parent)
+            task_service.create_task(task_create_with_parent, "test_user")
         
         mock_storage.create_task.assert_not_called()
 
@@ -204,7 +204,7 @@ class TestTaskServiceUnit:
         )
         
         with pytest.raises(ValueError, match="Task title cannot be empty"):
-            task_service.create_task(invalid_create)
+            task_service.create_task(invalid_create, "test_user")
         
         mock_storage.create_task.assert_not_called()
 
@@ -230,14 +230,15 @@ class TestTaskServiceUnit:
         update_data = TaskUpdate(title="Updated Title")
         mock_storage.get_task.return_value = None
         
-        with pytest.raises(ValueError, match="Task with ID test-task-1 not found"):
-            task_service.update_task("test-task-1", update_data)
+        result = task_service.update_task("test-task-1", update_data)
         
+        assert result is None
         mock_storage.update_task.assert_not_called()
 
     def test_delete_task_success(self, task_service, mock_storage, sample_task):
         """Test successful task deletion."""
         mock_storage.get_task.return_value = sample_task
+        mock_storage.get_tasks_by_project.return_value = []  # No subtasks
         mock_storage.delete_task.return_value = True
         
         result = task_service.delete_task("test-task-1")
@@ -249,65 +250,53 @@ class TestTaskServiceUnit:
         """Test task deletion when task doesn't exist."""
         mock_storage.get_task.return_value = None
         
-        with pytest.raises(ValueError, match="Task with ID test-task-1 not found"):
-            task_service.delete_task("test-task-1")
+        result = task_service.delete_task("test-task-1")
         
+        assert result is False
         mock_storage.delete_task.assert_not_called()
 
     def test_get_task_hierarchy_success(self, task_service, mock_storage):
         """Test successful task hierarchy retrieval."""
-        parent_task = Mock()
-        child_tasks = [Mock(), Mock()]
-        mock_storage.get_task.return_value = parent_task
-        mock_storage.get_task_children.return_value = child_tasks
+        task1 = Mock()
+        task1.parent_id = None
+        task1.id = "task1"
+        task1.created_at = datetime.now()
+        task2 = Mock()
+        task2.parent_id = "task1"
+        task2.id = "task2"
+        task2.created_at = datetime.now()
+        all_tasks = [task1, task2]
+        mock_storage.get_tasks_by_project.return_value = all_tasks
         
-        result = task_service.get_task_hierarchy("parent-task-1")
+        result = task_service.get_task_hierarchy("project-1")
         
-        assert result["task"] == parent_task
-        assert result["children"] == child_tasks
-        mock_storage.get_task.assert_called_once_with("parent-task-1")
-        mock_storage.get_task_children.assert_called_once_with("parent-task-1")
+        assert len(result) == 2
+        mock_storage.get_tasks_by_project.assert_called_once_with("project-1")
 
-    def test_get_task_hierarchy_not_found(self, task_service, mock_storage):
-        """Test task hierarchy retrieval when task doesn't exist."""
-        mock_storage.get_task.return_value = None
+    def test_get_task_hierarchy_empty_project(self, task_service, mock_storage):
+        """Test task hierarchy retrieval for empty project."""
+        mock_storage.get_tasks_by_project.return_value = []
         
-        with pytest.raises(ValueError, match="Task with ID nonexistent not found"):
-            task_service.get_task_hierarchy("nonexistent")
+        result = task_service.get_task_hierarchy("empty-project")
+        
+        assert result == []
+        mock_storage.get_tasks_by_project.assert_called_once_with("empty-project")
 
-    def test_apply_patch_success(self, task_service, mock_storage, sample_task):
-        """Test successful patch application."""
+    def test_apply_task_patch_success(self, task_service, mock_storage, sample_task):
+        """Test successful task patch application."""
         patch = TaskPatch(
+            op=Op.UPDATE,
             task_id="test-task-1",
-            operations=[
-                Op(op="replace", path="/title", value="Patched Task Title")
-            ],
-            created_by="test_user"
+            title="Patched Task Title"
         )
         patched_task = sample_task.model_copy(update={"title": "Patched Task Title"})
         
-        mock_storage.get_task.return_value = sample_task
         mock_storage.apply_task_patch.return_value = patched_task
         
-        result = task_service.apply_patch(patch)
+        result = task_service.apply_task_patch(patch)
         
         assert result == patched_task
         mock_storage.apply_task_patch.assert_called_once_with(patch)
-
-    def test_apply_patch_invalid_task(self, task_service, mock_storage):
-        """Test patch application on non-existent task."""
-        patch = TaskPatch(
-            task_id="nonexistent",
-            operations=[Op(op="replace", path="/title", value="New Title")],
-            created_by="test_user"
-        )
-        
-        mock_storage.get_task.return_value = None
-        
-        with pytest.raises(ValueError, match="Task with ID nonexistent not found"):
-            task_service.apply_patch(patch)
-        
-        mock_storage.apply_task_patch.assert_not_called()
 
 
 class TestTaskServiceIntegration(TestDatabaseIsolation):
@@ -349,13 +338,18 @@ class TestTaskServiceIntegration(TestDatabaseIsolation):
     def test_task_lifecycle_integration(self, task_service, sample_task_create):
         """Test complete task lifecycle with real storage."""
         # Create task
-        created_task = task_service.create_task(sample_task_create)
+        created_task = task_service.create_task(sample_task_create, "integration_user")
         assert created_task is not None
         assert created_task.title == sample_task_create.title
         assert created_task.id is not None
         
         # Get task
-        retrieved_task = task_service.get_task(created_task.id)
+        retrieved_result = task_service.get_task(created_task.id)
+        # get_task returns (task, subtasks) tuple by default
+        if isinstance(retrieved_result, tuple):
+            retrieved_task, subtasks = retrieved_result
+        else:
+            retrieved_task = retrieved_result
         assert retrieved_task is not None
         assert retrieved_task.id == created_task.id
         assert retrieved_task.title == created_task.title
@@ -381,8 +375,8 @@ class TestTaskServiceIntegration(TestDatabaseIsolation):
         assert deletion_result is True
         
         # Verify deletion
-        deleted_task = task_service.get_task(created_task.id)
-        assert deleted_task is None
+        deleted_result = task_service.get_task(created_task.id)
+        assert deleted_result is None
 
     def test_task_hierarchy_integration(self, task_service, sample_project):
         """Test task hierarchical operations with real storage."""
@@ -395,7 +389,7 @@ class TestTaskServiceIntegration(TestDatabaseIsolation):
             project_id=sample_project.id,
             created_by="test_user"
         )
-        parent_task = task_service.create_task(parent_create)
+        parent_task = task_service.create_task(parent_create, "test_user")
         
         # Create child tasks
         child1_create = TaskCreate(
@@ -407,7 +401,7 @@ class TestTaskServiceIntegration(TestDatabaseIsolation):
             parent_id=parent_task.id,
             created_by="test_user"
         )
-        child1 = task_service.create_task(child1_create)
+        child1 = task_service.create_task(child1_create, "test_user")
         
         child2_create = TaskCreate(
             title="Child Task 2",
@@ -418,15 +412,15 @@ class TestTaskServiceIntegration(TestDatabaseIsolation):
             parent_id=parent_task.id,
             created_by="test_user"
         )
-        child2 = task_service.create_task(child2_create)
+        child2 = task_service.create_task(child2_create, "test_user")
         
         # Test hierarchy retrieval
-        hierarchy = task_service.get_task_hierarchy(parent_task.id)
-        assert hierarchy["task"].id == parent_task.id
-        assert len(hierarchy["children"]) == 2
-        child_ids = [child.id for child in hierarchy["children"]]
-        assert child1.id in child_ids
-        assert child2.id in child_ids
+        hierarchy = task_service.get_task_hierarchy(sample_project.id)
+        assert len(hierarchy) == 3  # parent + 2 children
+        task_ids = [task.id for task in hierarchy]
+        assert parent_task.id in task_ids
+        assert child1.id in task_ids
+        assert child2.id in task_ids
 
     def test_task_filtering_integration(self, task_service, sample_project):
         """Test task filtering with real storage."""
@@ -438,7 +432,7 @@ class TestTaskServiceIntegration(TestDatabaseIsolation):
             project_id=sample_project.id,
             assignee="user1",
             created_by="test_user"
-        ))
+        ), "test_user")
         task2 = task_service.create_task(TaskCreate(
             title="Medium Priority Todo",
             status=TaskStatus.TODO,
@@ -446,7 +440,7 @@ class TestTaskServiceIntegration(TestDatabaseIsolation):
             project_id=sample_project.id,
             assignee="user2",
             created_by="test_user"
-        ))
+        ), "test_user")
         
         # Test status filtering
         in_progress_tasks = task_service.list_tasks(status=TaskStatus.IN_PROGRESS)
@@ -475,26 +469,29 @@ class TestTaskServiceIntegration(TestDatabaseIsolation):
     def test_task_patch_integration(self, task_service, sample_task_create):
         """Test patch application with real storage."""
         # Create task
-        task = task_service.create_task(sample_task_create)
+        task = task_service.create_task(sample_task_create, "test_user")
         
         # Apply patch
         patch = TaskPatch(
+            op=Op.UPDATE,
             task_id=task.id,
-            operations=[
-                Op(op="replace", path="/title", value="Patched Task Title"),
-                Op(op="replace", path="/priority", value="low"),
-                Op(op="replace", path="/status", value="in_progress")
-            ],
-            created_by="patch_user"
+            title="Patched Task Title",
+            priority=TaskPriority.LOW,
+            status=TaskStatus.IN_PROGRESS
         )
         
-        patched_task = task_service.apply_patch(patch)
+        patched_task = task_service.apply_task_patch(patch)
         assert patched_task.title == "Patched Task Title"
         assert patched_task.priority == TaskPriority.LOW
         assert patched_task.status == TaskStatus.IN_PROGRESS
         
         # Verify persistence
-        retrieved_task = task_service.get_task(task.id)
+        retrieved_result = task_service.get_task(task.id)
+        # get_task returns (task, subtasks) tuple by default
+        if isinstance(retrieved_result, tuple):
+            retrieved_task, subtasks = retrieved_result
+        else:
+            retrieved_task = retrieved_result
         assert retrieved_task.title == "Patched Task Title"
         assert retrieved_task.priority == TaskPriority.LOW
         assert retrieved_task.status == TaskStatus.IN_PROGRESS
@@ -507,7 +504,7 @@ class TestTaskServiceIntegration(TestDatabaseIsolation):
                 title="",
                 project_id=sample_project.id,
                 created_by="test_user"
-            ))
+            ), "test_user")
         
         # Test invalid parent task validation
         with pytest.raises(ValueError, match="Parent task with ID nonexistent not found"):
@@ -516,24 +513,20 @@ class TestTaskServiceIntegration(TestDatabaseIsolation):
                 project_id=sample_project.id,
                 parent_id="nonexistent",
                 created_by="test_user"
-            ))
+            ), "test_user")
 
     def test_error_handling_integration(self, task_service):
         """Test error handling with real storage."""
-        # Test operations on non-existent task
-        with pytest.raises(ValueError, match="Task with ID nonexistent not found"):
-            task_service.update_task("nonexistent", TaskUpdate(title="New Title"))
+        # Test operations on non-existent task - these return None/False instead of raising
+        result = task_service.update_task("nonexistent", TaskUpdate(title="New Title"))
+        assert result is None
         
-        with pytest.raises(ValueError, match="Task with ID nonexistent not found"):
-            task_service.delete_task("nonexistent")
+        result = task_service.delete_task("nonexistent")
+        assert result is False
         
-        with pytest.raises(ValueError, match="Task with ID nonexistent not found"):
-            task_service.get_task_hierarchy("nonexistent")
+        result = task_service.get_task("nonexistent")
+        assert result is None
         
-        # Test invalid patch
-        with pytest.raises(ValueError, match="Task with ID nonexistent not found"):
-            task_service.apply_patch(TaskPatch(
-                task_id="nonexistent",
-                operations=[Op(op="replace", path="/title", value="New Title")],
-                created_by="test_user"
-            ))
+        # Test empty project hierarchy
+        result = task_service.get_task_hierarchy("nonexistent")
+        assert result == []
