@@ -41,16 +41,7 @@ jobs:
     - name: Run backend tests
       working-directory: ./backend
       run: |
-        python -m pytest tests/ --tb=short --cov=src --cov-report=xml --cov-report=html
-        
-    - name: Upload backend coverage to Codecov
-      if: matrix.python-version == '3.11'
-      uses: codecov/codecov-action@v4
-      with:
-        file: ./backend/coverage.xml
-        flags: backend
-        name: backend-coverage
-        fail_ci_if_error: false
+        python -m pytest tests/ --tb=short -v
 
   frontend-tests:
     name: Frontend Tests
@@ -78,16 +69,7 @@ jobs:
     - name: Run frontend tests
       working-directory: ./frontend
       run: |
-        npm test -- --coverage --reporter=verbose
-        
-    - name: Upload frontend coverage to Codecov
-      if: matrix.node-version == '18'
-      uses: codecov/codecov-action@v4
-      with:
-        file: ./frontend/coverage/coverage-final.json
-        flags: frontend
-        name: frontend-coverage
-        fail_ci_if_error: false
+        npm run test:run -- --reporter=verbose
 
   integration-tests:
     name: Integration Tests
