@@ -1,15 +1,15 @@
 # Core dependencies - pinned for faster resolution
 pydantic==2.11.7
 pydantic-core==2.33.2
-pydantic-ai==0.4.2
+pydantic-ai-slim==0.4.2
 databricks-sdk==0.58.0
 pyyaml==6.0.2
 sqlalchemy==2.0.41
 
-# FastAPI and related dependencies
-fastapi==0.104.1
-uvicorn[standard]==0.24.0
-python-multipart==0.0.6
+# FastAPI and related dependencies - updated for anyio compatibility
+fastapi==0.115.9
+uvicorn[standard]==0.34.0
+python-multipart==0.0.12
 
 # Additional dependencies for API functionality
 pydantic-settings==2.1.0
