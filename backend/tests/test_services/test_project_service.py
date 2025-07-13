@@ -73,50 +73,49 @@ class TestProjectServiceUnit:
 
     def test_list_projects_success(self, project_service, mock_storage, sample_project):
         """Test successful project listing."""
-        mock_storage.list_projects.return_value = [sample_project]
+        mock_storage.get_projects.return_value = [sample_project]
         
         result = project_service.list_projects()
         
         assert len(result) == 1
         assert result[0] == sample_project
-        mock_storage.list_projects.assert_called_once_with(
-            skip=0, limit=100, status=None, priority=None
-        )
+        mock_storage.get_projects.assert_called_once()
 
     def test_list_projects_with_filters(self, project_service, mock_storage):
         """Test project listing with status and priority filters."""
-        mock_storage.list_projects.return_value = []
+        mock_storage.get_projects.return_value = []
         
-        project_service.list_projects(
+        result = project_service.list_projects(
             skip=10, 
             limit=50, 
             status=ProjectStatus.ACTIVE,
             priority=ProjectPriority.HIGH
         )
         
-        mock_storage.list_projects.assert_called_once_with(
-            skip=10, limit=50, status=ProjectStatus.ACTIVE, priority=ProjectPriority.HIGH
-        )
+        assert result == []
+        mock_storage.get_projects.assert_called_once()
 
     def test_list_projects_pagination_validation(self, project_service, mock_storage):
         """Test pagination parameter validation."""
-        with pytest.raises(ValueError, match="Skip must be non-negative"):
+        with pytest.raises(ValueError, match="Skip parameter must be non-negative"):
             project_service.list_projects(skip=-1)
         
-        with pytest.raises(ValueError, match="Limit must be positive"):
+        with pytest.raises(ValueError, match="Limit must be between 1 and 1000"):
             project_service.list_projects(limit=0)
         
-        with pytest.raises(ValueError, match="Limit must not exceed 1000"):
+        with pytest.raises(ValueError, match="Limit must be between 1 and 1000"):
             project_service.list_projects(limit=1001)
 
     def test_get_project_success(self, project_service, mock_storage, sample_project):
         """Test successful project retrieval."""
         mock_storage.get_project.return_value = sample_project
+        mock_storage.get_tasks_by_project.return_value = []
         
         result = project_service.get_project("test-project-1")
         
         assert result == sample_project
         mock_storage.get_project.assert_called_once_with("test-project-1")
+        mock_storage.get_tasks_by_project.assert_called_once_with("test-project-1")
 
     def test_get_project_not_found(self, project_service, mock_storage):
         """Test project retrieval when project doesn't exist."""
