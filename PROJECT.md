@@ -185,7 +185,7 @@ npm run install:all                   # Install all dependencies
 - **Backend Testing**: `docs/testing/backend-guide.md`
 - **Frontend Testing**: `docs/testing/frontend-guide.md`
 - **Troubleshooting**: `docs/testing/troubleshooting.md`
-- **Environment Setup**: `ENVIRONMENT_SETUP_CHANGES.md`
+- **Development Setup**: `docs/development/setup.md`
 
 ## 6. Current Tasks
 

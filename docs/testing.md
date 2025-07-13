@@ -442,4 +442,3 @@ await waitFor(() => {
 - [Architecture Overview](architecture/overview.md)
 - [API Reference](api/README.md)
 - [Development Setup](development/setup.md)
-- [Environment Setup](../ENVIRONMENT_SETUP_CHANGES.md)
