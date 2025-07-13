@@ -1,0 +1,584 @@
+# Security Analysis Tasks - July 2025
+# Comprehensive security issues identified from multi-dimensional code analysis
+# All tasks derived from security audit findings requiring immediate to medium-term fixes
+
+# CRITICAL SECURITY ISSUES (Priority 1 - Immediate)
+
+- id: "SEC-001"
+  title: "Fix CORS Configuration - Remove Wildcard Origins"
+  status: "pending"
+  priority: "critical"
+
+  created_date: "2025-07-13T14:20:47-07:00"
+  start_date: null
+  completion_date: null
+
+  estimated_minutes: 60
+  actual_minutes: 0
+
+  description: |
+    Fix critical CORS misconfiguration that allows all origins access to the API.
+    Currently set to allow_origins=["*"] which exposes the API to cross-origin attacks.
+    
+    Location: backend/src/api/main.py:44
+    Risk Level: HIGH - Cross-Origin Resource Sharing attacks
+    Impact: Allows any domain to access API endpoints
+    
+    Requirements:
+    - Replace wildcard with specific allowed origins
+    - Configure for different environments (dev/staging/prod)
+    - Add environment-specific CORS settings
+    - Update documentation with security best practices
+
+  dependencies: []
+
+  test_requirements:
+    unit_tests:
+      - description: "Test CORS configuration with valid origins"
+        files: ["backend/tests/test_api/test_cors_security.py"]
+        coverage_target: "100%"
+      - description: "Test CORS rejection of invalid origins"
+        files: ["backend/tests/test_api/test_cors_security.py"]
+        coverage_target: "100%"
+    integration_tests:
+      - description: "Test CORS behavior in different environments"
+        files: ["backend/tests/test_api/test_cors_integration.py"]
+        scope: "API endpoints with CORS headers"
+    security_tests:
+      - description: "Test CORS security compliance"
+        files: ["backend/tests/test_api/test_cors_security.py"]
+        scope: "Cross-origin request validation"
+
+  tags: ["security", "critical", "backend", "cors"]
+
+  deliverables:
+    - path: "backend/src/api/main.py"
+      type: "file"
+      description: "Updated CORS configuration with restricted origins"
+      status: "pending"
+    - path: "backend/tests/test_api/test_cors_security.py"
+      type: "test"
+      description: "CORS security test suite"
+      status: "pending"
+
+  notes: |
+    Environment-specific origins should be:
+    - Development: ["http://localhost:5174", "http://localhost:3000"]
+    - Staging: ["https://staging.example.com"]
+    - Production: ["https://app.example.com"]
+
+- id: "SEC-002"
+  title: "Implement JWT Authentication System"
+  status: "pending"
+  priority: "critical"
+
+  created_date: "2025-07-13T14:20:47-07:00"
+  start_date: null
+  completion_date: null
+
+  estimated_minutes: 480
+  actual_minutes: 0
+
+  description: |
+    Implement comprehensive JWT-based authentication system for all API endpoints.
+    Currently NO authentication exists, allowing unauthorized access to all data.
+    
+    Risk Level: CRITICAL - Complete lack of access controls
+    Impact: Unauthorized access to all endpoints and data
+    
+    Requirements:
+    - JWT token generation and validation
+    - User registration and login endpoints
+    - Protected route middleware
+    - Token refresh mechanism
+    - Role-based access control (RBAC)
+    - Secure token storage in frontend
+
+  dependencies: []
+
+  test_requirements:
+    unit_tests:
+      - description: "Test JWT token generation and validation"
+        files: ["backend/tests/test_auth/test_jwt_tokens.py"]
+        coverage_target: "100%"
+      - description: "Test authentication middleware"
+        files: ["backend/tests/test_auth/test_auth_middleware.py"]
+        coverage_target: "100%"
+      - description: "Test user registration and login"
+        files: ["backend/tests/test_auth/test_user_auth.py"]
+        coverage_target: "95%"
+    integration_tests:
+      - description: "Test protected endpoints with authentication"
+        files: ["backend/tests/test_api/test_auth_integration.py"]
+        scope: "All API endpoints with auth protection"
+      - description: "Test frontend authentication flow"
+        files: ["frontend/src/services/__tests__/auth.test.ts"]
+        scope: "Login, logout, token refresh workflows"
+    security_tests:
+      - description: "Test authentication security measures"
+        files: ["backend/tests/test_auth/test_auth_security.py"]
+        scope: "Token validation, unauthorized access prevention"
+    performance_tests:
+      - description: "Test authentication performance under load"
+        files: ["backend/tests/test_auth/test_auth_performance.py"]
+        requirements: "< 100ms token validation time"
+
+  tags: ["security", "critical", "backend", "frontend", "auth"]
+
+  deliverables:
+    - path: "backend/src/auth/"
+      type: "feature"
+      description: "Complete authentication module"
+      status: "pending"
+    - path: "backend/src/api/auth_routes.py"
+      type: "file"
+      description: "Authentication API endpoints"
+      status: "pending"
+    - path: "frontend/src/services/authService.ts"
+      type: "file"
+      description: "Frontend authentication service"
+      status: "pending"
+    - path: "frontend/src/hooks/useAuth.ts"
+      type: "file"
+      description: "Authentication React hook"
+      status: "pending"
+
+  notes: |
+    Implementation should include:
+    - bcrypt for password hashing
+    - JWT with RS256 algorithm
+    - Access tokens (15 min) + Refresh tokens (7 days)
+    - Rate limiting on auth endpoints
+    - Audit logging for auth events
+
+- id: "SEC-003"
+  title: "Implement Secure API Key Storage"
+  status: "pending"
+  priority: "high"
+
+  created_date: "2025-07-13T14:20:47-07:00"
+  start_date: null
+  completion_date: null
+
+  estimated_minutes: 240
+  actual_minutes: 0
+
+  description: |
+    Replace plaintext API key storage with encrypted storage or secure vault.
+    Currently API keys are stored in plaintext in settings which risks exposure.
+    
+    Location: backend/src/config/settings.py:122-126
+    Risk Level: HIGH - Credential compromise in logs/memory dumps
+    Impact: Potential exposure of third-party API credentials
+    
+    Requirements:
+    - Encrypt API keys at rest
+    - Use environment variables with encryption
+    - Implement key rotation capability
+    - Add audit logging for key access
+    - Secure key loading and caching
+
+  dependencies: []
+
+  test_requirements:
+    unit_tests:
+      - description: "Test API key encryption and decryption"
+        files: ["backend/tests/test_config/test_key_encryption.py"]
+        coverage_target: "100%"
+      - description: "Test secure key loading from environment"
+        files: ["backend/tests/test_config/test_secure_loading.py"]
+        coverage_target: "95%"
+    integration_tests:
+      - description: "Test encrypted keys work with external APIs"
+        files: ["backend/tests/test_integrations/test_encrypted_keys.py"]
+        scope: "AI provider API calls with encrypted keys"
+    security_tests:
+      - description: "Test key security measures"
+        files: ["backend/tests/test_config/test_key_security.py"]
+        scope: "Encryption strength, key rotation, audit logging"
+
+  tags: ["security", "high", "backend", "encryption"]
+
+  deliverables:
+    - path: "backend/src/config/key_manager.py"
+      type: "file"
+      description: "Secure key management module"
+      status: "pending"
+    - path: "backend/src/config/settings.py"
+      type: "file"
+      description: "Updated settings with secure key loading"
+      status: "pending"
+
+  notes: |
+    Consider using:
+    - Fernet encryption (cryptography library)
+    - Environment variable-based master key
+    - Key derivation function (PBKDF2/scrypt)
+    - Audit trail for key access
+
+- id: "SEC-004"
+  title: "Fix SQL Injection Vulnerability in Search"
+  status: "pending"
+  priority: "high"
+
+  created_date: "2025-07-13T14:20:47-07:00"
+  start_date: null
+  completion_date: null
+
+  estimated_minutes: 120
+  actual_minutes: 0
+
+  description: |
+    Fix potential SQL injection vulnerability in task search functionality.
+    String interpolation used for search patterns instead of parameterized queries.
+    
+    Location: backend/src/storage/sql_implementation.py:338-347
+    Risk Level: MEDIUM - Limited to LIKE queries but still exploitable
+    Impact: Potential SQL injection via search parameter
+    
+    Current vulnerable code:
+    search_pattern = f"%{search}%"
+    query = query.filter(or_(
+        SQLTask.title.ilike(search_pattern),
+        SQLTask.description.ilike(search_pattern)
+    ))
+    
+    Requirements:
+    - Use SQLAlchemy parameterized queries
+    - Add input validation and sanitization
+    - Implement rate limiting on search endpoints
+    - Add logging for suspicious search patterns
+
+  dependencies: []
+
+  test_requirements:
+    unit_tests:
+      - description: "Test search with normal input"
+        files: ["backend/tests/test_storage/test_search_security.py"]
+        coverage_target: "100%"
+      - description: "Test search with malicious SQL injection attempts"
+        files: ["backend/tests/test_storage/test_search_security.py"]
+        coverage_target: "100%"
+    integration_tests:
+      - description: "Test search API endpoints for security"
+        files: ["backend/tests/test_api/test_search_injection.py"]
+        scope: "Task and project search endpoints"
+    security_tests:
+      - description: "Test SQL injection prevention"
+        files: ["backend/tests/test_storage/test_search_security.py"]
+        scope: "Various SQL injection attack vectors"
+
+  tags: ["security", "high", "backend", "sql-injection"]
+
+  deliverables:
+    - path: "backend/src/storage/sql_implementation.py"
+      type: "file"
+      description: "Fixed search implementation with parameterized queries"
+      status: "pending"
+    - path: "backend/tests/test_storage/test_search_security.py"
+      type: "test"
+      description: "SQL injection security test suite"
+      status: "pending"
+
+  notes: |
+    Proper implementation should use:
+    - SQLAlchemy text() with bound parameters
+    - Input validation regex
+    - Search term length limits
+    - Rate limiting (max 10 searches/minute per user)
+
+# HIGH PRIORITY SECURITY ENHANCEMENTS (Priority 2)
+
+- id: "SEC-005"
+  title: "Add Input Validation and Sanitization"
+  status: "pending"
+  priority: "high"
+
+  created_date: "2025-07-13T14:20:47-07:00"
+  start_date: null
+  completion_date: null
+
+  estimated_minutes: 300
+  actual_minutes: 0
+
+  description: |
+    Implement comprehensive input validation and sanitization across all API endpoints.
+    Add protection against XSS, injection attacks, and malformed data.
+    
+    Requirements:
+    - Pydantic validators for all input models
+    - HTML sanitization for text fields
+    - File upload validation (if applicable)
+    - Request size limits
+    - Rate limiting per endpoint
+    - Input logging for security monitoring
+
+  dependencies: ["SEC-002"]
+
+  test_requirements:
+    unit_tests:
+      - description: "Test input validation for all models"
+        files: ["backend/tests/test_models/test_input_validation.py"]
+        coverage_target: "95%"
+      - description: "Test sanitization functions"
+        files: ["backend/tests/test_security/test_sanitization.py"]
+        coverage_target: "100%"
+    integration_tests:
+      - description: "Test API endpoint input validation"
+        files: ["backend/tests/test_api/test_input_validation.py"]
+        scope: "All API endpoints with various input types"
+    security_tests:
+      - description: "Test XSS and injection prevention"
+        files: ["backend/tests/test_security/test_input_security.py"]
+        scope: "XSS, script injection, malformed data attacks"
+
+  tags: ["security", "high", "backend", "validation"]
+
+  deliverables:
+    - path: "backend/src/security/validators.py"
+      type: "file"
+      description: "Custom Pydantic validators"
+      status: "pending"
+    - path: "backend/src/security/sanitizers.py"
+      type: "file"
+      description: "Input sanitization functions"
+      status: "pending"
+
+- id: "SEC-006"
+  title: "Implement Security Headers and HTTPS"
+  status: "pending"
+  priority: "high"
+
+  created_date: "2025-07-13T14:20:47-07:00"
+  start_date: null
+  completion_date: null
+
+  estimated_minutes: 180
+  actual_minutes: 0
+
+  description: |
+    Add comprehensive security headers and enforce HTTPS in production.
+    Implement protection against common web vulnerabilities.
+    
+    Requirements:
+    - Content Security Policy (CSP)
+    - HTTP Strict Transport Security (HSTS)
+    - X-Frame-Options, X-Content-Type-Options
+    - Referrer Policy
+    - HTTPS redirect middleware
+    - Certificate management documentation
+
+  dependencies: []
+
+  test_requirements:
+    unit_tests:
+      - description: "Test security header middleware"
+        files: ["backend/tests/test_api/test_security_headers.py"]
+        coverage_target: "100%"
+    integration_tests:
+      - description: "Test security headers in responses"
+        files: ["backend/tests/test_api/test_header_integration.py"]
+        scope: "All API endpoints return required headers"
+    security_tests:
+      - description: "Test security header compliance"
+        files: ["backend/tests/test_security/test_header_security.py"]
+        scope: "CSP, HSTS, frame options validation"
+
+  tags: ["security", "high", "backend", "headers"]
+
+  deliverables:
+    - path: "backend/src/api/security_middleware.py"
+      type: "file"
+      description: "Security headers middleware"
+      status: "pending"
+
+# MEDIUM PRIORITY SECURITY TASKS (Priority 3)
+
+- id: "SEC-007"
+  title: "Implement Rate Limiting and DDoS Protection"
+  status: "pending"
+  priority: "medium"
+
+  created_date: "2025-07-13T14:20:47-07:00"
+  start_date: null
+  completion_date: null
+
+  estimated_minutes: 240
+  actual_minutes: 0
+
+  description: |
+    Add rate limiting and basic DDoS protection to prevent abuse.
+    Implement different limits for different endpoint types.
+    
+    Requirements:
+    - Redis-based rate limiting
+    - Different limits per endpoint type
+    - IP-based and user-based limiting
+    - Graceful rate limit responses
+    - Rate limit headers in responses
+
+  dependencies: ["SEC-002"]
+
+  test_requirements:
+    unit_tests:
+      - description: "Test rate limiting logic"
+        files: ["backend/tests/test_security/test_rate_limiting.py"]
+        coverage_target: "100%"
+    integration_tests:
+      - description: "Test rate limiting on API endpoints"
+        files: ["backend/tests/test_api/test_rate_limits.py"]
+        scope: "Various endpoints with different rate limits"
+    performance_tests:
+      - description: "Test rate limiting performance impact"
+        files: ["backend/tests/test_security/test_rate_limit_performance.py"]
+        requirements: "< 5ms overhead per request"
+
+  tags: ["security", "medium", "backend", "rate-limiting"]
+
+- id: "SEC-008"
+  title: "Add Security Audit Logging"
+  status: "pending"
+  priority: "medium"
+
+  created_date: "2025-07-13T14:20:47-07:00"
+  start_date: null
+  completion_date: null
+
+  estimated_minutes: 180
+  actual_minutes: 0
+
+  description: |
+    Implement comprehensive security audit logging for monitoring and compliance.
+    Track authentication events, data access, and security violations.
+    
+    Requirements:
+    - Structured security event logging
+    - Failed authentication tracking
+    - Data access audit trails
+    - Security violation alerts
+    - Log retention and rotation policies
+
+  dependencies: ["SEC-002"]
+
+  test_requirements:
+    unit_tests:
+      - description: "Test audit logging functions"
+        files: ["backend/tests/test_security/test_audit_logging.py"]
+        coverage_target: "95%"
+    integration_tests:
+      - description: "Test audit logs are created for security events"
+        files: ["backend/tests/test_api/test_audit_integration.py"]
+        scope: "Authentication, authorization, data access events"
+
+  tags: ["security", "medium", "backend", "logging"]
+
+- id: "SEC-009"
+  title: "Frontend Security Hardening"
+  status: "pending"
+  priority: "medium"
+
+  created_date: "2025-07-13T14:20:47-07:00"
+  start_date: null
+  completion_date: null
+
+  estimated_minutes: 300
+  actual_minutes: 0
+
+  description: |
+    Implement frontend security best practices and vulnerability prevention.
+    Add XSS protection, secure token storage, and input validation.
+    
+    Requirements:
+    - Secure token storage (httpOnly cookies vs localStorage)
+    - XSS prevention in React components
+    - Content sanitization for user input
+    - Dependency vulnerability scanning
+    - Bundle security analysis
+
+  dependencies: ["SEC-002"]
+
+  test_requirements:
+    unit_tests:
+      - description: "Test frontend security utilities"
+        files: ["frontend/src/security/__tests__/security.test.ts"]
+        coverage_target: "100%"
+      - description: "Test secure token handling"
+        files: ["frontend/src/services/__tests__/tokenSecurity.test.ts"]
+        coverage_target: "100%"
+    integration_tests:
+      - description: "Test XSS prevention in components"
+        files: ["frontend/src/components/__tests__/xssPrevention.test.tsx"]
+        scope: "All components that render user content"
+    security_tests:
+      - description: "Test frontend security measures"
+        files: ["frontend/src/security/__tests__/frontendSecurity.test.ts"]
+        scope: "XSS prevention, token security, input validation"
+
+  tags: ["security", "medium", "frontend", "xss"]
+
+  deliverables:
+    - path: "frontend/src/security/"
+      type: "feature"
+      description: "Frontend security utilities"
+      status: "pending"
+    - path: "frontend/src/services/tokenService.ts"
+      type: "file"
+      description: "Secure token management service"
+      status: "pending"
+
+# LOW PRIORITY SECURITY IMPROVEMENTS (Priority 4)
+
+- id: "SEC-010"
+  title: "Security Documentation and Guidelines"
+  status: "pending"
+  priority: "low"
+
+  created_date: "2025-07-13T14:20:47-07:00"
+  start_date: null
+  completion_date: null
+
+  estimated_minutes: 240
+  actual_minutes: 0
+
+  description: |
+    Create comprehensive security documentation and development guidelines.
+    Document security architecture, threat model, and secure coding practices.
+    
+    Requirements:
+    - Security architecture documentation
+    - Threat model and risk assessment
+    - Secure coding guidelines
+    - Security testing procedures
+    - Incident response plan
+    - Regular security review checklist
+
+  dependencies: ["SEC-001", "SEC-002", "SEC-003", "SEC-004"]
+
+  test_requirements:
+    unit_tests: []
+    integration_tests: []
+    security_tests: []
+
+  tags: ["security", "low", "documentation"]
+
+  deliverables:
+    - path: "docs/security/"
+      type: "documentation"
+      description: "Comprehensive security documentation"
+      status: "pending"
+    - path: "docs/security/threat-model.md"
+      type: "documentation"
+      description: "System threat model and risk assessment"
+      status: "pending"
+    - path: "docs/security/secure-coding.md"
+      type: "documentation"
+      description: "Secure coding guidelines"
+      status: "pending"
+
+  notes: |
+    Documentation should cover:
+    - OWASP Top 10 compliance
+    - Security architecture diagrams
+    - Data flow security analysis
+    - Regular security review processes
+    - Penetration testing guidelines
