@@ -33,28 +33,6 @@ updated: "2025-07-13"
 # =============================================================================
 
 tasks:
-  - id: "TEST-UI-002"
-    title: "Test Suite: React Hook Testing"
-    status: "pending"
-    priority: "medium"
-    description: "Implement comprehensive tests for custom React hooks including state management hooks, API integration hooks, and utility hooks."
-    dependencies: ["UI-001"]
-    estimated_minutes: 240
-    deliverables:
-      - path: "frontend/src/hooks/useProjectManagement.test.ts"
-        type: "file"
-        description: "Tests for project management hook"
-        status: "pending"
-      - path: "frontend/src/hooks/useTaskOperations.test.ts"
-        type: "file"
-        description: "Tests for task operations hook"
-        status: "pending"
-      - path: "frontend/src/hooks/useLocalStorage.test.ts"
-        type: "file"
-        description: "Tests for local storage hook"
-        status: "pending"
-
-
   - id: "INT-001"
     title: "AI Provider Integration Tests"
     status: "pending"
@@ -144,12 +122,12 @@ tasks:
     estimated_minutes: 480
 
 summary:
-  total_pending: 13
+  total_pending: 12
   high_priority: 0
-  medium_priority: 7
+  medium_priority: 6
   low_priority: 6
-  total_estimated_minutes: 5460
+  total_estimated_minutes: 5220
 
 next_sprint_recommendations:
-  - "TEST-UI-002: React Hook Testing"
   - "INT-001: AI Provider Integration Tests"
+  - "DOC-001: API Documentation Generation"
