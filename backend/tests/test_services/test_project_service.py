@@ -130,7 +130,7 @@ class TestProjectServiceUnit:
         """Test successful project creation."""
         mock_storage.create_project.return_value = sample_project
         
-        result = project_service.create_project(sample_project_create)
+        result = project_service.create_project(sample_project_create, "test_user")
         
         assert result == sample_project
         mock_storage.create_project.assert_called_once()
@@ -149,7 +149,7 @@ class TestProjectServiceUnit:
         )
         
         with pytest.raises(ValueError, match="Project name cannot be empty"):
-            project_service.create_project(invalid_create)
+            project_service.create_project(invalid_create, "test_user")
         
         mock_storage.create_project.assert_not_called()
 
@@ -256,7 +256,7 @@ class TestProjectServiceIntegration(TestDatabaseIsolation):
     def test_project_lifecycle_integration(self, project_service, sample_project_create):
         """Test complete project lifecycle with real storage."""
         # Create project
-        created_project = project_service.create_project(sample_project_create)
+        created_project = project_service.create_project(sample_project_create, "integration_test")
         assert created_project is not None
         assert created_project.name == sample_project_create.name
         assert created_project.id is not None
@@ -297,13 +297,13 @@ class TestProjectServiceIntegration(TestDatabaseIsolation):
             status=ProjectStatus.ACTIVE,
             priority=ProjectPriority.HIGH,
             created_by="test_user"
-        ))
+        ), "integration_test")
         project2 = project_service.create_project(ProjectCreate(
             name="Medium Priority Planning",
             status=ProjectStatus.PLANNING,
             priority=ProjectPriority.MEDIUM,
             created_by="test_user"
-        ))
+        ), "integration_test")
         
         # Test status filtering
         active_projects = project_service.list_projects(status=ProjectStatus.ACTIVE)
@@ -329,7 +329,7 @@ class TestProjectServiceIntegration(TestDatabaseIsolation):
     def test_project_patch_integration(self, project_service, sample_project_create):
         """Test patch application with real storage."""
         # Create project
-        project = project_service.create_project(sample_project_create)
+        project = project_service.create_project(sample_project_create, "integration_test")
         
         # Apply patch
         patch = ProjectPatch(
@@ -357,13 +357,13 @@ class TestProjectServiceIntegration(TestDatabaseIsolation):
             project_service.create_project(ProjectCreate(
                 name="",
                 created_by="test_user"
-            ))
+            ), "integration_test")
         
         # Test duplicate name validation (if implemented)
         project1 = project_service.create_project(ProjectCreate(
             name="Unique Project Name",
             created_by="test_user"
-        ))
+        ), "integration_test")
         
         # Note: Uncomment if duplicate name validation is implemented
         # with pytest.raises(ValueError, match="Project name already exists"):
