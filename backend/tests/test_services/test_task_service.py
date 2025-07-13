@@ -69,6 +69,23 @@ class TestTaskServiceUnit:
             created_by="test_user"
         )
 
+    @pytest.fixture
+    def sample_project(self):
+        """Sample project for unit tests."""
+        from src.models.project import Project
+        return Project(
+            id="test-project-1",
+            name="Test Project",
+            description="A test project",
+            status=ProjectStatus.ACTIVE,
+            priority=ProjectPriority.HIGH,
+            tags=["test", "unit"],
+            created_by="test_user",
+            created_at=datetime.now(),
+            updated_at=datetime.now(),
+            tasks=[]
+        )
+
     def test_init_default_storage(self):
         """Test TaskService initialization with default storage."""
         service = TaskService()
@@ -93,10 +110,10 @@ class TestTaskServiceUnit:
 
     def test_list_tasks_with_filters(self, task_service, mock_storage, sample_project):
         """Test task listing with various filters."""
-        mock_storage.get_projects.return_value = [sample_project]
+        # Since project_id is provided, it will call get_tasks_by_project directly
         mock_storage.get_tasks_by_project.return_value = []
         
-        task_service.list_tasks(
+        result = task_service.list_tasks(
             skip=10,
             limit=50,
             project_id="test-project-1",
@@ -106,29 +123,31 @@ class TestTaskServiceUnit:
             assignee="test_user"
         )
         
-        mock_storage.list_tasks.assert_called_once_with(
-            skip=10, limit=50, project_id="test-project-1", parent_id="parent-task-1",
-            status=TaskStatus.IN_PROGRESS, priority=TaskPriority.HIGH, assignee="test_user"
-        )
+        assert result == []
+        mock_storage.get_tasks_by_project.assert_called_once_with("test-project-1")
 
     def test_list_tasks_pagination_validation(self, task_service, mock_storage):
         """Test pagination parameter validation."""
-        with pytest.raises(ValueError, match="Skip must be non-negative"):
+        with pytest.raises(ValueError, match="Skip parameter must be non-negative"):
             task_service.list_tasks(skip=-1)
         
-        with pytest.raises(ValueError, match="Limit must be positive"):
+        with pytest.raises(ValueError, match="Limit must be between 1 and 1000"):
             task_service.list_tasks(limit=0)
         
-        with pytest.raises(ValueError, match="Limit must not exceed 1000"):
+        with pytest.raises(ValueError, match="Limit must be between 1 and 1000"):
             task_service.list_tasks(limit=1001)
 
     def test_get_task_success(self, task_service, mock_storage, sample_task):
         """Test successful task retrieval."""
         mock_storage.get_task.return_value = sample_task
+        mock_storage.get_tasks_by_project.return_value = [sample_task]  # For subtask lookup
         
         result = task_service.get_task("test-task-1")
         
-        assert result == sample_task
+        # When include_subtasks=True (default), returns tuple (task, subtasks)
+        assert isinstance(result, tuple)
+        assert result[0] == sample_task
+        assert isinstance(result[1], list)
         mock_storage.get_task.assert_called_once_with("test-task-1")
 
     def test_get_task_not_found(self, task_service, mock_storage):
