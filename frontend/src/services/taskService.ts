@@ -154,7 +154,8 @@ export class TaskService {
       return {
         success: false,
         error: 'Failed to get current task data',
-        status: 500
+        status: 500,
+        data: {} as TaskResponse
       };
     }
 
@@ -173,7 +174,8 @@ export class TaskService {
       return {
         success: false,
         error: 'Failed to get current task data',
-        status: 500
+        status: 500,
+        data: {} as TaskResponse
       };
     }
 
