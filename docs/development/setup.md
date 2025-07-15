@@ -162,5 +162,5 @@ For common issues and solutions:
 - [API Documentation](../api/README.md) - API reference
 
 ### Project Management
-- [Current Tasks](../../CLAUDE.md) - Active development tasks
+- [Current Tasks](../../PROJECT.md) - Active development tasks and sprint focus
 - [MVP Overview](../planning/mvp-overview.md) - Product roadmap
