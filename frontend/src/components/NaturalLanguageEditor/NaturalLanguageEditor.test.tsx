@@ -1,366 +1,317 @@
-import React from 'react';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
-import { describe, it, expect, vi } from 'vitest';
+import userEvent from '@testing-library/user-event';
 import { NaturalLanguageEditor } from './NaturalLanguageEditor';
-import { Project, Task, Change, ProjectStatus, Priority, TaskStatus } from '../../types';
+import { getPlannerService } from '../../services/plannerService';
+import type { Project, Task } from '../../types';
+import type { ProviderInfo } from '../../types/api';
 
-const mockProject: Project = {
-  id: '1',
-  name: 'Test Project',
-  description: 'Test project description',
-  status: ProjectStatus.ACTIVE,
-  priority: Priority.MEDIUM,
-  tags: ['test'],
-  due_date: '2024-03-15',
-  start_date: '2024-01-10',
-  motion_project_link: null,
-  linear_project_link: null,
-  notion_page_link: null,
-  gitlab_project_link: null,
-};
-
-const mockTask: Task = {
-  id: '1',
-  title: 'Test Task',
-  description: 'Test task description',
-  project_id: '1',
-  status: TaskStatus.IN_PROGRESS,
-  priority: Priority.HIGH,
-  parent_id: null,
-  estimated_minutes: 120,
-  actual_minutes: 60,
-  dependencies: [],
-  due_date: '2024-03-15',
-  created_at: '2024-01-01T00:00:00Z',
-  updated_at: '2024-01-01T00:00:00Z',
-  assignee: null,
-  tags: [],
-  attachments: [],
-  notes: '',
-  completion_percentage: 50,
-  metadata: {},
-};
+// Mock the planner service
+vi.mock('../../services/plannerService');
 
 describe('NaturalLanguageEditor', () => {
   const mockOnApplyChanges = vi.fn();
+  const mockProject: Project = {
+    id: 'proj-1',
+    name: 'Test Project',
+    description: 'A test project',
+    status: 'ACTIVE',
+    priority: 'MEDIUM',
+    tags: [],
+    due_date: '2025-12-31',
+    start_date: '2025-01-01',
+    motion_project_link: null,
+    linear_project_link: null,
+    notion_page_link: null,
+    gitlab_project_link: null,
+  };
+
+  const mockProviders: ProviderInfo[] = [
+    {
+      name: 'openai',
+      display_name: 'OpenAI',
+      models: [
+        {
+          name: 'gpt-4',
+          display_name: 'GPT-4',
+          is_default: true,
+        },
+      ],
+      is_available: true,
+      is_default: false,
+    },
+    {
+      name: 'anthropic',
+      display_name: 'Anthropic',
+      models: [
+        {
+          name: 'claude-3',
+          display_name: 'Claude 3',
+          is_default: true,
+        },
+      ],
+      is_available: false,
+      is_default: true,
+    },
+  ];
+
+  let mockPlannerService: any;
 
   beforeEach(() => {
     vi.clearAllMocks();
+    mockPlannerService = {
+      getProviders: vi.fn(),
+      generatePlan: vi.fn(),
+    };
+    vi.mocked(getPlannerService).mockReturnValue(mockPlannerService);
   });
 
-  it('renders the natural language input', () => {
-    render(
-      <NaturalLanguageEditor
-        selectedProject={mockProject}
-        selectedTask={mockTask}
-        onApplyChanges={mockOnApplyChanges}
-      />
-    );
+  describe('Provider Loading', () => {
+    it('should show loading state initially', () => {
+      mockPlannerService.getProviders.mockReturnValue(new Promise(() => {})); // Never resolves
 
-    expect(screen.getByTestId('nl-input')).toBeInTheDocument();
-    expect(screen.getByTestId('generate-changes-button')).toBeInTheDocument();
+      render(
+        <NaturalLanguageEditor
+          selectedProject={mockProject}
+          selectedTask={null}
+          onApplyChanges={mockOnApplyChanges}
+        />
+      );
+
+      expect(screen.getByText('Loading providers...')).toBeInTheDocument();
+    });
+
+    it('should display providers after loading', async () => {
+      mockPlannerService.getProviders.mockResolvedValue({
+        success: true,
+        data: { providers: mockProviders },
+      });
+
+      render(
+        <NaturalLanguageEditor
+          selectedProject={mockProject}
+          selectedTask={null}
+          onApplyChanges={mockOnApplyChanges}
+        />
+      );
+
+      await waitFor(() => {
+        // Anthropic is default provider
+        expect(screen.getByRole('button', { name: /Anthropic/i })).toBeInTheDocument();
+      });
+    });
+
+    it('should show error message when provider loading fails', async () => {
+      mockPlannerService.getProviders.mockResolvedValue({
+        success: false,
+        error: 'Failed to load providers',
+      });
+
+      render(
+        <NaturalLanguageEditor
+          selectedProject={mockProject}
+          selectedTask={null}
+          onApplyChanges={mockOnApplyChanges}
+        />
+      );
+
+      await waitFor(() => {
+        expect(screen.getByText('Failed to load providers')).toBeInTheDocument();
+      });
+    });
   });
 
-  it('renders example commands', () => {
-    render(
-      <NaturalLanguageEditor
-        selectedProject={mockProject}
-        selectedTask={mockTask}
-        onApplyChanges={mockOnApplyChanges}
-      />
-    );
+  describe('Provider Selection', () => {
+    it('should allow changing providers', async () => {
+      mockPlannerService.getProviders.mockResolvedValue({
+        success: true,
+        data: { providers: mockProviders },
+      });
 
-    expect(screen.getByText('Example Commands:')).toBeInTheDocument();
-    expect(screen.getByText('• "Set priority to high and due next Friday"')).toBeInTheDocument();
-    expect(screen.getByText('• "Assign all design tasks to Sarah"')).toBeInTheDocument();
+      render(
+        <NaturalLanguageEditor
+          selectedProject={mockProject}
+          selectedTask={null}
+          onApplyChanges={mockOnApplyChanges}
+        />
+      );
+
+      await waitFor(() => {
+        expect(screen.getByTestId('provider-dropdown-button')).toBeInTheDocument();
+      });
+
+      // Open dropdown
+      fireEvent.click(screen.getByTestId('provider-dropdown-button'));
+
+      // Select OpenAI
+      fireEvent.click(screen.getByTestId('provider-option-openai'));
+
+      // Check that OpenAI is now shown
+      expect(screen.getByRole('button', { name: /OpenAI/i })).toBeInTheDocument();
+    });
   });
 
-  it('updates input value when typing', () => {
-    render(
-      <NaturalLanguageEditor
-        selectedProject={mockProject}
-        selectedTask={mockTask}
-        onApplyChanges={mockOnApplyChanges}
-      />
-    );
+  describe('Generation', () => {
+    it('should generate plan when clicking generate', async () => {
+      const user = userEvent.setup();
+      
+      mockPlannerService.getProviders.mockResolvedValue({
+        success: true,
+        data: { providers: mockProviders },
+      });
 
-    const input = screen.getByTestId('nl-input');
-    fireEvent.change(input, { target: { value: 'Set priority to high' } });
+      mockPlannerService.generatePlan.mockResolvedValue({
+        success: true,
+        data: {
+          success: true,
+          project: {
+            name: 'Test Generated Project',
+            description: 'A generated project',
+            status: 'planning',
+            priority: 'medium',
+            tags: [],
+          },
+          tasks: [],
+        },
+      });
 
-    expect(input).toHaveValue('Set priority to high');
+      render(
+        <NaturalLanguageEditor
+          selectedProject={mockProject}
+          selectedTask={null}
+          onApplyChanges={mockOnApplyChanges}
+        />
+      );
+
+      // Wait for providers to load
+      await waitFor(() => {
+        expect(screen.getByTestId('provider-dropdown-button')).toBeInTheDocument();
+      });
+
+      // Select OpenAI (which is available)
+      fireEvent.click(screen.getByTestId('provider-dropdown-button'));
+      fireEvent.click(screen.getByTestId('provider-option-openai'));
+
+      // Type in textarea
+      const textarea = screen.getByPlaceholderText(/Describe your project idea/i);
+      await user.type(textarea, 'Create a test project');
+
+      // Click generate
+      const generateButton = screen.getByRole('button', { name: /Generate Changes/i });
+      await user.click(generateButton);
+
+      // Wait for generation to complete - look for the display text or the value
+      await waitFor(() => {
+        expect(screen.getByText(/Test Generated Project/)).toBeInTheDocument();
+      });
+
+      expect(mockPlannerService.generatePlan).toHaveBeenCalledWith({
+        idea: 'Create a test project',
+        config: expect.objectContaining({
+          provider: 'openai',
+        }),
+        context: expect.any(Object),
+      });
+    });
+
+    it('should show error when generation fails', async () => {
+      const user = userEvent.setup();
+      
+      mockPlannerService.getProviders.mockResolvedValue({
+        success: true,
+        data: { providers: mockProviders },
+      });
+
+      mockPlannerService.generatePlan.mockResolvedValue({
+        success: false,
+        error: 'Generation failed',
+      });
+
+      render(
+        <NaturalLanguageEditor
+          selectedProject={mockProject}
+          selectedTask={null}
+          onApplyChanges={mockOnApplyChanges}
+        />
+      );
+
+      await waitFor(() => {
+        expect(screen.getByTestId('provider-dropdown-button')).toBeInTheDocument();
+      });
+
+      // Select OpenAI
+      fireEvent.click(screen.getByTestId('provider-dropdown-button'));
+      fireEvent.click(screen.getByTestId('provider-option-openai'));
+
+      const textarea = screen.getByPlaceholderText(/Describe your project idea/i);
+      await user.type(textarea, 'Test');
+
+      const generateButton = screen.getByRole('button', { name: /Generate Changes/i });
+      await user.click(generateButton);
+
+      await waitFor(() => {
+        expect(screen.getByText('Error: Generation failed')).toBeInTheDocument();
+      });
+    });
   });
 
-  it('disables generate button when input is empty', () => {
-    render(
-      <NaturalLanguageEditor
-        selectedProject={mockProject}
-        selectedTask={mockTask}
-        onApplyChanges={mockOnApplyChanges}
-      />
-    );
+  describe('Change Application', () => {
+    it('should call onApplyChanges when applying changes', async () => {
+      const user = userEvent.setup();
+      
+      mockPlannerService.getProviders.mockResolvedValue({
+        success: true,
+        data: { providers: mockProviders },
+      });
 
-    const button = screen.getByTestId('generate-changes-button');
-    expect(button).toBeDisabled();
-  });
+      mockPlannerService.generatePlan.mockResolvedValue({
+        success: true,
+        data: {
+          success: true,
+          project: { name: 'Test Project' },
+          tasks: [],
+        },
+      });
 
-  it('enables generate button when input has content', () => {
-    render(
-      <NaturalLanguageEditor
-        selectedProject={mockProject}
-        selectedTask={mockTask}
-        onApplyChanges={mockOnApplyChanges}
-      />
-    );
+      render(
+        <NaturalLanguageEditor
+          selectedProject={mockProject}
+          selectedTask={null}
+          onApplyChanges={mockOnApplyChanges}
+        />
+      );
 
-    const input = screen.getByTestId('nl-input');
-    fireEvent.change(input, { target: { value: 'Set priority to high' } });
+      await waitFor(() => {
+        expect(screen.getByTestId('provider-dropdown-button')).toBeInTheDocument();
+      });
 
-    const button = screen.getByTestId('generate-changes-button');
-    expect(button).not.toBeDisabled();
-  });
+      // Select OpenAI and generate
+      fireEvent.click(screen.getByTestId('provider-dropdown-button'));
+      fireEvent.click(screen.getByTestId('provider-option-openai'));
 
-  it('shows processing state when generating changes', async () => {
-    render(
-      <NaturalLanguageEditor
-        selectedProject={mockProject}
-        selectedTask={mockTask}
-        onApplyChanges={mockOnApplyChanges}
-      />
-    );
+      const textarea = screen.getByPlaceholderText(/Describe your project idea/i);
+      await user.type(textarea, 'Test');
 
-    const input = screen.getByTestId('nl-input');
-    fireEvent.change(input, { target: { value: 'Set priority to high' } });
+      const generateButton = screen.getByRole('button', { name: /Generate Changes/i });
+      await user.click(generateButton);
 
-    const button = screen.getByTestId('generate-changes-button');
-    fireEvent.click(button);
+      await waitFor(() => {
+        expect(screen.getByText('Apply All')).toBeInTheDocument();
+      });
 
-    expect(screen.getByText('Processing...')).toBeInTheDocument();
-    expect(button).toBeDisabled();
-  });
+      // Apply all changes
+      const applyAllButton = screen.getByText('Apply All');
+      await user.click(applyAllButton);
 
-  it('generates changes for high priority command', async () => {
-    render(
-      <NaturalLanguageEditor
-        selectedProject={mockProject}
-        selectedTask={mockTask}
-        onApplyChanges={mockOnApplyChanges}
-      />
-    );
-
-    const input = screen.getByTestId('nl-input');
-    fireEvent.change(input, { target: { value: 'Set priority to high priority' } });
-
-    const button = screen.getByTestId('generate-changes-button');
-    fireEvent.click(button);
-
-    await waitFor(() => {
-      expect(screen.getByText('Proposed Changes')).toBeInTheDocument();
-    }, { timeout: 2000 });
-
-    expect(screen.getByText('Project')).toBeInTheDocument();
-    expect(screen.getByText('- priority: MEDIUM')).toBeInTheDocument();
-    expect(screen.getByText('+ priority: HIGH')).toBeInTheDocument();
-  });
-
-  it('generates changes for due date command', async () => {
-    render(
-      <NaturalLanguageEditor
-        selectedProject={mockProject}
-        selectedTask={mockTask}
-        onApplyChanges={mockOnApplyChanges}
-      />
-    );
-
-    const input = screen.getByTestId('nl-input');
-    fireEvent.change(input, { target: { value: 'Set due next week' } });
-
-    const button = screen.getByTestId('generate-changes-button');
-    fireEvent.click(button);
-
-    await waitFor(() => {
-      expect(screen.getByText('Proposed Changes')).toBeInTheDocument();
-    }, { timeout: 2000 });
-
-    expect(screen.getByText('Project')).toBeInTheDocument();
-    expect(screen.getByText('- due_date: 2024-03-15')).toBeInTheDocument();
-  });
-
-  it('generates changes for assignee command', async () => {
-    render(
-      <NaturalLanguageEditor
-        selectedProject={mockProject}
-        selectedTask={mockTask}
-        onApplyChanges={mockOnApplyChanges}
-      />
-    );
-
-    const input = screen.getByTestId('nl-input');
-    fireEvent.change(input, { target: { value: 'assign to john' } });
-
-    const button = screen.getByTestId('generate-changes-button');
-    fireEvent.click(button);
-
-    await waitFor(() => {
-      expect(screen.getByText('Proposed Changes')).toBeInTheDocument();
-    }, { timeout: 2000 });
-
-    expect(screen.getByText('Task: 1')).toBeInTheDocument();
-    expect(screen.getByText('- assignee: None')).toBeInTheDocument();
-    expect(screen.getByText('+ assignee: John Smith')).toBeInTheDocument();
-  });
-
-  it('applies individual changes', async () => {
-    render(
-      <NaturalLanguageEditor
-        selectedProject={mockProject}
-        selectedTask={mockTask}
-        onApplyChanges={mockOnApplyChanges}
-      />
-    );
-
-    const input = screen.getByTestId('nl-input');
-    fireEvent.change(input, { target: { value: 'Set priority to high priority' } });
-
-    const button = screen.getByTestId('generate-changes-button');
-    fireEvent.click(button);
-
-    await waitFor(() => {
-      expect(screen.getByText('Proposed Changes')).toBeInTheDocument();
-    }, { timeout: 2000 });
-
-    const applyButton = screen.getByTestId('apply-change-0');
-    fireEvent.click(applyButton);
-
-    expect(mockOnApplyChanges).toHaveBeenCalledWith([
-      expect.objectContaining({
-        type: 'project',
-        field: 'priority',
-        oldValue: Priority.MEDIUM,
-        newValue: Priority.HIGH,
-      }),
-    ]);
-  });
-
-  it('rejects individual changes', async () => {
-    render(
-      <NaturalLanguageEditor
-        selectedProject={mockProject}
-        selectedTask={mockTask}
-        onApplyChanges={mockOnApplyChanges}
-      />
-    );
-
-    const input = screen.getByTestId('nl-input');
-    fireEvent.change(input, { target: { value: 'Set priority to high priority' } });
-
-    const button = screen.getByTestId('generate-changes-button');
-    fireEvent.click(button);
-
-    await waitFor(() => {
-      expect(screen.getByText('Proposed Changes')).toBeInTheDocument();
-    }, { timeout: 2000 });
-
-    const rejectButton = screen.getByTestId('reject-change-0');
-    fireEvent.click(rejectButton);
-
-    expect(screen.queryByTestId('change-item')).not.toBeInTheDocument();
-  });
-
-  it('applies all changes', async () => {
-    render(
-      <NaturalLanguageEditor
-        selectedProject={mockProject}
-        selectedTask={mockTask}
-        onApplyChanges={mockOnApplyChanges}
-      />
-    );
-
-    const input = screen.getByTestId('nl-input');
-    fireEvent.change(input, { target: { value: 'Set priority to high priority due next week' } });
-
-    const button = screen.getByTestId('generate-changes-button');
-    fireEvent.click(button);
-
-    await waitFor(() => {
-      expect(screen.getByText('Proposed Changes')).toBeInTheDocument();
-    }, { timeout: 2000 });
-
-    const applyAllButton = screen.getByTestId('apply-all-button');
-    fireEvent.click(applyAllButton);
-
-    expect(mockOnApplyChanges).toHaveBeenCalledWith(
-      expect.arrayContaining([
+      expect(mockOnApplyChanges).toHaveBeenCalledWith([
         expect.objectContaining({
           type: 'project',
-          field: 'priority',
-          newValue: Priority.HIGH,
+          field: 'name',
+          newValue: 'Test Project',
+          oldValue: null,
+          display: 'Create project: Test Project',
         }),
-        expect.objectContaining({
-          type: 'project',
-          field: 'due_date',
-        }),
-      ])
-    );
-  });
-
-  it('rejects all changes', async () => {
-    render(
-      <NaturalLanguageEditor
-        selectedProject={mockProject}
-        selectedTask={mockTask}
-        onApplyChanges={mockOnApplyChanges}
-      />
-    );
-
-    const input = screen.getByTestId('nl-input');
-    fireEvent.change(input, { target: { value: 'Set priority to high priority' } });
-
-    const button = screen.getByTestId('generate-changes-button');
-    fireEvent.click(button);
-
-    await waitFor(() => {
-      expect(screen.getByText('Proposed Changes')).toBeInTheDocument();
-    }, { timeout: 2000 });
-
-    const rejectAllButton = screen.getByTestId('reject-all-button');
-    fireEvent.click(rejectAllButton);
-
-    expect(screen.queryByText('Proposed Changes')).not.toBeInTheDocument();
-    expect(screen.getByTestId('nl-input')).toHaveValue('');
-  });
-
-  it('handles empty project and task', () => {
-    render(
-      <NaturalLanguageEditor
-        selectedProject={null}
-        selectedTask={null}
-        onApplyChanges={mockOnApplyChanges}
-      />
-    );
-
-    expect(screen.getByTestId('nl-input')).toBeInTheDocument();
-    expect(screen.getByTestId('generate-changes-button')).toBeInTheDocument();
-  });
-
-  it('shows no changes when no matching patterns', async () => {
-    render(
-      <NaturalLanguageEditor
-        selectedProject={mockProject}
-        selectedTask={mockTask}
-        onApplyChanges={mockOnApplyChanges}
-      />
-    );
-
-    const input = screen.getByTestId('nl-input');
-    fireEvent.change(input, { target: { value: 'random text with no patterns' } });
-
-    const button = screen.getByTestId('generate-changes-button');
-    fireEvent.click(button);
-
-    await waitFor(() => {
-      expect(screen.getByText('Generate Changes')).toBeInTheDocument();
-    }, { timeout: 2000 });
-
-    expect(screen.queryByText('Proposed Changes')).not.toBeInTheDocument();
+      ]);
+    });
   });
 });

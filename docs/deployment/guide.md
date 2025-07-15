@@ -1,6 +1,6 @@
 # Deployment Guide
 
-*Last Updated: 2025-01-11*
+*Last Updated: 2025-07-14*
 
 ## Table of Contents
 
@@ -141,12 +141,12 @@ python -m venv venv
 source venv/bin/activate
 pip install -r requirements.txt
 export $(cat ../.env.dev | grep -v '^#' | xargs)
-uvicorn src.main:app --reload --port $API_PORT
+uvicorn src.api.main:app --reload --port $API_PORT
 
 # Frontend (new terminal)
 cd frontend
 npm install
-npm run dev
+npm run dev -- --port $FRONTEND_PORT
 ```
 
 ### Docker Compose

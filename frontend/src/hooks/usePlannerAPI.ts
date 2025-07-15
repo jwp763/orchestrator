@@ -5,6 +5,7 @@ import type {
   ProvidersResponse,
   ConfigResponse,
   ErrorResponse,
+  CacheStats,
 } from '../types/api'
 
 const API_BASE_URL = 'http://localhost:8000/api'
@@ -15,6 +16,8 @@ interface UsePlannerAPIReturn {
   generatePlan: (request: PlannerRequest) => Promise<PlannerResponse | null>
   getProviders: () => Promise<ProvidersResponse | null>
   getConfig: () => Promise<ConfigResponse | null>
+  getCacheStats: () => Promise<CacheStats | null>
+  clearCache: () => Promise<{ success: boolean; message: string } | null>
   clearError: () => void
 }
 
@@ -86,12 +89,30 @@ export function usePlannerAPI(): UsePlannerAPIReturn {
     [handleRequest]
   )
 
+  const getCacheStats = useCallback(
+    async (): Promise<CacheStats | null> => {
+      return handleRequest<CacheStats>('/planner/cache/stats')
+    },
+    [handleRequest]
+  )
+
+  const clearCache = useCallback(
+    async (): Promise<{ success: boolean; message: string } | null> => {
+      return handleRequest<{ success: boolean; message: string }>('/planner/cache/clear', {
+        method: 'POST',
+      })
+    },
+    [handleRequest]
+  )
+
   return {
     loading,
     error,
     generatePlan,
     getProviders,
     getConfig,
+    getCacheStats,
+    clearCache,
     clearError,
   }
 }

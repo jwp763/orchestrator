@@ -51,11 +51,14 @@ export class ApiClient {
     };
 
     try {
+      console.log(`ApiClient: Fetching ${url}`, config);
       const response = await fetch(url, config);
+      console.log(`ApiClient: Response status ${response.status} for ${url}`);
       
       // Handle successful response
       if (response.ok) {
         const data = await response.json();
+        console.log(`ApiClient: Success response from ${url}:`, data);
         return {
           data,
           success: true,
@@ -68,8 +71,14 @@ export class ApiClient {
       
       try {
         const errorData = await response.json();
-        errorMessage = errorData.detail || errorData.error || errorMessage;
-        errorDetails = errorData.details || '';
+        // Handle FastAPI error format with nested detail object
+        if (errorData.detail && typeof errorData.detail === 'object') {
+          errorMessage = errorData.detail.error || errorData.detail.message || errorMessage;
+          errorDetails = errorData.detail.details || '';
+        } else {
+          errorMessage = errorData.detail || errorData.error || errorMessage;
+          errorDetails = errorData.details || '';
+        }
       } catch {
         // If error response is not JSON, use status text
       }
@@ -82,6 +91,7 @@ export class ApiClient {
       
       // Don't retry for client errors (4xx)
       if (response.status >= 400 && response.status < 500) {
+        console.log(`ApiClient: Client error for ${url}:`, apiError);
         return {
           data: null as T,
           success: false,
@@ -89,7 +99,17 @@ export class ApiClient {
         };
       }
       
-      // Retry for server errors (5xx) and network errors
+      // Don't retry for 500 errors with specific error codes (configuration issues)
+      if (response.status === 500 && apiError.details && typeof apiError.details === 'object') {
+        console.log(`ApiClient: Server configuration error for ${url}, not retrying`);
+        return {
+          data: null as T,
+          success: false,
+          error: apiError.message,
+        };
+      }
+      
+      // Retry for other server errors (5xx) and network errors
       if (attempt < this.retryAttempts) {
         console.warn(`Request failed, retrying... (${attempt}/${this.retryAttempts})`);
         await this.delay(Math.pow(2, attempt) * 1000); // Exponential backoff
@@ -103,6 +123,7 @@ export class ApiClient {
       };
       
     } catch (error) {
+      console.error(`ApiClient: Exception for ${url}:`, error);
       // Handle network errors, timeouts, etc.
       if (error instanceof Error) {
         if (error.name === 'AbortError') {

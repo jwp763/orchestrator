@@ -1,6 +1,6 @@
 version: "1.0"
 project: "databricks-orchestrator"
-updated: "2025-07-13"
+updated: "2025-07-14"
 
 # =============================================================================
 # TASK MANAGEMENT INSTRUCTIONS
@@ -33,6 +33,263 @@ updated: "2025-07-13"
 # =============================================================================
 
 tasks:
+  # Sprint 1: Basic Integration (Week 1-2) - HIGH PRIORITY
+  - id: "CHAT-001"
+    title: "Connect Frontend to Planner API"
+    status: "in_progress"
+    priority: "high"
+    created_date: "2025-07-14T01:22:32-07:00"
+    start_date: "2025-07-14T01:35:32-07:00"
+    completion_date: null
+    estimated_minutes: 480  # 8 hours
+    actual_minutes: 0
+    description: |
+      Wire up the existing AI planner functionality to the frontend UI.
+      - Wire up Natural Language Editor component
+      - Create aiService.ts to wrap existing planner endpoints
+      - Handle API calls with existing retry logic patterns
+      - Parse and apply generated patches to create projects/tasks
+    dependencies: []
+    test_requirements:
+      unit_tests:
+        - description: "Test AI service wrapper functions"
+          files: ["frontend/src/services/aiService.test.ts"]
+          coverage_target: "95%"
+        - description: "Test patch parsing logic"
+          files: ["frontend/src/utils/patchParser.test.ts"]
+          coverage_target: "100%"
+      integration_tests:
+        - description: "Test frontend-backend planner integration"
+          files: ["frontend/tests/integration/aiPlanner.test.tsx"]
+          scope: "Full API call flow with mocked responses"
+      performance_tests:
+        - description: "Test AI generation response time"
+          files: ["frontend/tests/performance/aiGeneration.test.ts"]
+          requirements: "< 3s for project generation"
+    deliverables:
+      - path: "frontend/src/services/aiService.ts"
+        type: "file"
+        description: "AI service wrapper for planner API"
+        status: "pending"
+    tags: ["frontend", "integration", "sprint-1"]
+
+  - id: "CHAT-002"
+    title: "Implement Patch Application Flow"
+    status: "pending"
+    priority: "high"
+    created_date: "2025-07-14T01:22:32-07:00"
+    start_date: null
+    completion_date: null
+    estimated_minutes: 720  # 12 hours
+    actual_minutes: 0
+    description: |
+      Implement the logic to apply AI-generated patches to create projects and tasks.
+      - Parse planner response patches
+      - Map patches to existing createProject and createTask APIs
+      - Handle transaction integrity for multiple operations
+      - Update UI state after successful application
+    dependencies: ["CHAT-001"]
+    test_requirements:
+      unit_tests:
+        - description: "Test patch application logic"
+          files: ["frontend/src/utils/patchApplicator.test.ts"]
+          coverage_target: "95%"
+        - description: "Test error handling for failed patches"
+          files: ["frontend/src/utils/patchErrors.test.ts"]
+          coverage_target: "100%"
+      integration_tests:
+        - description: "Test complete patch application flow"
+          files: ["frontend/tests/integration/patchApplication.test.tsx"]
+          scope: "End-to-end patch application with state updates"
+        - description: "Test transaction rollback on failure"
+          files: ["frontend/tests/integration/patchRollback.test.tsx"]
+          scope: "Verify partial application rollback"
+      performance_tests:
+        - description: "Test patch application performance"
+          files: ["frontend/tests/performance/patchSpeed.test.ts"]
+          requirements: "< 100ms per patch"
+    deliverables:
+      - path: "frontend/src/utils/patchApplicator.ts"
+        type: "file"
+        description: "Patch application logic"
+        status: "pending"
+      - path: "frontend/src/hooks/usePatchApplication.ts"
+        type: "file"
+        description: "React hook for patch application"
+        status: "pending"
+    tags: ["frontend", "integration", "sprint-1"]
+
+  - id: "CHAT-003"
+    title: "Add Error Handling and User Feedback"
+    status: "pending"
+    priority: "high"
+    created_date: "2025-07-14T01:22:32-07:00"
+    start_date: null
+    completion_date: null
+    estimated_minutes: 480  # 8 hours
+    actual_minutes: 0
+    description: |
+      Implement comprehensive error handling and user feedback for AI generation.
+      - Add loading states during AI generation
+      - Implement error boundaries for AI failures
+      - Create success notifications for completed generations
+      - Handle network errors, timeouts, and validation errors
+    dependencies: ["CHAT-001", "CHAT-002"]
+    test_requirements:
+      unit_tests:
+        - description: "Test error boundary component"
+          files: ["frontend/src/components/ErrorBoundary.test.tsx"]
+          coverage_target: "100%"
+        - description: "Test notification system"
+          files: ["frontend/src/components/Notifications.test.tsx"]
+          coverage_target: "95%"
+      integration_tests:
+        - description: "Test error handling flows"
+          files: ["frontend/tests/integration/errorHandling.test.tsx"]
+          scope: "Network errors, AI failures, validation errors"
+        - description: "Test user feedback during operations"
+          files: ["frontend/tests/integration/userFeedback.test.tsx"]
+          scope: "Loading states, success/error notifications"
+      performance_tests:
+        - description: "Test UI responsiveness during loading"
+          files: ["frontend/tests/performance/loadingStates.test.ts"]
+          requirements: "60fps maintained during loading animations"
+    deliverables:
+      - path: "frontend/src/components/AIGenerationFeedback.tsx"
+        type: "file"
+        description: "Feedback component for AI operations"
+        status: "pending"
+      - path: "frontend/src/hooks/useAIGeneration.ts"
+        type: "file"
+        description: "Hook managing AI generation state"
+        status: "pending"
+    tags: ["frontend", "ux", "sprint-1"]
+
+  - id: "CHAT-004"
+    title: "Provider Selection UI"
+    status: "pending"
+    priority: "high"
+    created_date: "2025-07-14T01:22:32-07:00"
+    start_date: null
+    completion_date: null
+    estimated_minutes: 360  # 6 hours
+    actual_minutes: 0
+    description: |
+      Add UI for selecting AI providers in the generation interface.
+      - Create provider dropdown component
+      - Fetch available providers from backend config
+      - Store user preference in localStorage
+      - Pass selected provider to API calls
+    dependencies: ["CHAT-001"]
+    test_requirements:
+      unit_tests:
+        - description: "Test provider selector component"
+          files: ["frontend/src/components/ProviderSelector.test.tsx"]
+          coverage_target: "95%"
+        - description: "Test provider preference storage"
+          files: ["frontend/src/utils/providerPreference.test.ts"]
+          coverage_target: "100%"
+      integration_tests:
+        - description: "Test provider selection flow"
+          files: ["frontend/tests/integration/providerSelection.test.tsx"]
+          scope: "Selection, storage, and API integration"
+    deliverables:
+      - path: "frontend/src/components/ProviderSelector.tsx"
+        type: "file"
+        description: "AI provider selection dropdown"
+        status: "pending"
+    tags: ["frontend", "ui", "sprint-1"]
+
+  - id: "CHAT-005"
+    title: "Generation Options Controls"
+    status: "pending"
+    priority: "high"
+    created_date: "2025-07-14T01:22:32-07:00"
+    start_date: null
+    completion_date: null
+    estimated_minutes: 600  # 10 hours
+    actual_minutes: 0
+    description: |
+      Implement UI controls for AI generation options.
+      - Add controls for task limits, depth, and milestones
+      - Create collapsible advanced options section
+      - Map UI controls to API parameters
+      - Validate inputs and show helpful constraints
+    dependencies: ["CHAT-001"]
+    test_requirements:
+      unit_tests:
+        - description: "Test generation options component"
+          files: ["frontend/src/components/GenerationOptions.test.tsx"]
+          coverage_target: "95%"
+        - description: "Test option validation logic"
+          files: ["frontend/src/utils/optionValidation.test.ts"]
+          coverage_target: "100%"
+      integration_tests:
+        - description: "Test options affect generation output"
+          files: ["frontend/tests/integration/generationOptions.test.tsx"]
+          scope: "Verify options passed to API and affect results"
+      performance_tests:
+        - description: "Test UI responsiveness with controls"
+          files: ["frontend/tests/performance/controlsPerformance.test.ts"]
+          requirements: "Instant feedback on control changes"
+    deliverables:
+      - path: "frontend/src/components/GenerationOptions.tsx"
+        type: "file"
+        description: "Generation options control panel"
+        status: "pending"
+      - path: "frontend/src/utils/generationConfig.ts"
+        type: "file"
+        description: "Configuration management for generation"
+        status: "pending"
+    tags: ["frontend", "ui", "sprint-1"]
+
+  - id: "CHAT-006"
+    title: "Sprint 1 Integration Testing"
+    status: "pending"
+    priority: "high"
+    created_date: "2025-07-14T01:22:32-07:00"
+    start_date: null
+    completion_date: null
+    estimated_minutes: 720  # 12 hours
+    actual_minutes: 0
+    description: |
+      Comprehensive integration testing for Sprint 1 deliverables.
+      - End-to-end testing of AI project generation
+      - Multi-provider testing
+      - Error recovery scenarios
+      - Performance benchmarking
+      - Edge case validation
+    dependencies: ["CHAT-001", "CHAT-002", "CHAT-003", "CHAT-004", "CHAT-005"]
+    test_requirements:
+      integration_tests:
+        - description: "Test complete generation flow"
+          files: ["frontend/tests/e2e/aiProjectGeneration.test.tsx"]
+          scope: "Full user journey from input to created project"
+        - description: "Test all providers"
+          files: ["frontend/tests/e2e/multiProvider.test.tsx"]
+          scope: "Verify each AI provider works correctly"
+        - description: "Test error scenarios"
+          files: ["frontend/tests/e2e/errorScenarios.test.tsx"]
+          scope: "Network failures, AI errors, validation failures"
+      performance_tests:
+        - description: "Benchmark generation times"
+          files: ["frontend/tests/performance/generationBenchmark.test.ts"]
+          requirements: "Document baseline performance metrics"
+      security_tests:
+        - description: "Test input sanitization"
+          files: ["frontend/tests/security/inputSanitization.test.ts"]
+          scope: "XSS prevention, injection attacks"
+    deliverables:
+      - path: "frontend/tests/e2e/sprint1/"
+        type: "feature"
+        description: "Complete E2E test suite for Sprint 1"
+        status: "pending"
+      - path: "docs/testing/sprint1-results.md"
+        type: "documentation"
+        description: "Test results and performance benchmarks"
+        status: "pending"
+    tags: ["testing", "integration", "sprint-1"]
+
   - id: "INT-001"
     title: "AI Provider Integration Tests"
     status: "pending"
@@ -122,12 +379,16 @@ tasks:
     estimated_minutes: 480
 
 summary:
-  total_pending: 12
-  high_priority: 0
+  total_pending: 18
+  high_priority: 6
   medium_priority: 6
   low_priority: 6
-  total_estimated_minutes: 5220
+  total_estimated_minutes: 8880  # Added 3660 minutes for Sprint 1 tasks
 
 next_sprint_recommendations:
-  - "INT-001: AI Provider Integration Tests"
-  - "DOC-001: API Documentation Generation"
+  - "CHAT-001: Connect Frontend to Planner API (Sprint 1 - Week 1)"
+  - "CHAT-002: Implement Patch Application Flow (Sprint 1 - Week 1)"
+  - "CHAT-003: Add Error Handling and User Feedback (Sprint 1 - Week 1)"
+  - "CHAT-004: Provider Selection UI (Sprint 1 - Week 2)"
+  - "CHAT-005: Generation Options Controls (Sprint 1 - Week 2)"
+  - "CHAT-006: Sprint 1 Integration Testing (Sprint 1 - Week 2)"

@@ -149,82 +149,92 @@ export interface TaskUpdateRequest {
   gitlab_issue_id?: string;
 }
 
-// Existing planner types continue below...
+// Planner API Types (aligned with backend)
 
 export interface PlannerConfig {
-  provider: 'openai' | 'anthropic' | 'gemini' | 'xai'
-  model: string
-  max_retries: number
-  create_milestones: boolean
-  max_milestones: number
-  temperature?: number
-  max_tokens?: number
+  provider: 'openai' | 'anthropic' | 'gemini' | 'xai';
+  model_name?: string; // Fixed: was 'model', backend uses 'model_name'
+  create_milestones: boolean;
+  max_milestones: number;
+  max_retries: number;
+  retry_delay?: number; // Added: backend has this field
 }
 
 export interface PlannerRequest {
-  idea: string
-  config?: PlannerConfig
-  context?: Record<string, any>
+  idea: string;
+  config?: PlannerConfig;
+  context?: Record<string, any>;
 }
 
-export interface ProjectData {
-  id: string
-  title: string
-  description: string
-  status: 'active' | 'completed' | 'on_hold'
-  priority: 'low' | 'medium' | 'high'
-  estimated_hours: number
-  created_at: string
-  updated_at: string
+// New types to match backend models
+export interface ProjectMetadata {
+  name: string;
+  description: string;
+  status: 'planning' | 'active' | 'on_hold' | 'completed' | 'archived';
+  priority: 'critical' | 'high' | 'medium' | 'low' | 'backlog';
+  tags: string[];
+  estimated_total_minutes?: number;
+  estimated_total_hours?: number; // Computed field from backend
 }
 
-export interface TaskData {
-  id: string
-  project_id: string
-  title: string
-  description: string
-  status: 'pending' | 'in_progress' | 'completed'
-  priority: 'low' | 'medium' | 'high'
-  estimated_hours: number
-  parent_task_id?: string
-  created_at: string
-  updated_at: string
+export interface TaskMetadata {
+  title: string;
+  description: string;
+  status: 'todo' | 'in_progress' | 'blocked' | 'in_review' | 'completed' | 'cancelled';
+  priority: 'critical' | 'high' | 'medium' | 'low' | 'backlog';
+  estimated_minutes?: number;
+  estimated_hours?: number; // Computed field from backend
 }
 
 export interface PlannerResponse {
-  success: boolean
-  project: ProjectData
-  tasks: TaskData[]
-  message?: string
+  success: boolean;
+  project?: ProjectMetadata; // Changed from ProjectData
+  tasks: TaskMetadata[]; // Changed from TaskData[]
+  raw_patch?: Record<string, any>; // Added: backend includes this
+  metadata?: Record<string, any>; // Added: includes provider info, cache stats
+  error?: string; // Changed from message to error
 }
 
+// Provider-related types
 export interface ProviderModel {
-  name: string
-  description: string
-  max_tokens: number
-  supports_tools: boolean
+  name: string;
+  display_name: string; // Added: backend has this
+  description?: string; // Made optional to match backend
+  is_default: boolean; // Added: backend has this
 }
 
-export interface Provider {
-  name: string
-  display_name: string
-  models: ProviderModel[]
-  default_model: string
+export interface ProviderInfo {
+  name: string;
+  display_name: string;
+  models: ProviderModel[];
+  is_available: boolean; // Added: indicates if API key is configured
+  is_default: boolean; // Added: indicates default provider
 }
 
 export interface ProvidersResponse {
-  providers: Provider[]
+  providers: ProviderInfo[]; // Changed from Provider[] to ProviderInfo[]
+  default_provider: string; // Added: backend includes this
 }
 
 export interface ConfigResponse {
-  default_config: PlannerConfig
-  providers: Provider[]
+  default_config: PlannerConfig;
+  provider_info: ProvidersResponse; // Changed from providers to provider_info
 }
 
 export interface ErrorResponse {
-  error: string
-  details?: string
-  code?: string
+  error: string;
+  details?: Record<string, any>; // Changed from string to Record
+  code?: string;
+}
+
+// Cache statistics type (new)
+export interface CacheStats {
+  cache_size: number;
+  max_cache_size: number;
+  hits: number;
+  misses: number;
+  hit_rate: number;
+  cache_keys: string[];
 }
 
 // Local Storage Types

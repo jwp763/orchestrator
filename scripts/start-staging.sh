@@ -15,7 +15,7 @@ eval $(python scripts/load-env.py staging | grep "^export")
 
 # Start backend in background
 echo "📦 Starting Backend (Port: $API_PORT)..."
-cd backend && uvicorn src.main:app --host 0.0.0.0 --port $API_PORT --reload &
+(cd backend && uvicorn src.api.main:app --host 0.0.0.0 --port $API_PORT --reload) &
 BACKEND_PID=$!
 
 # Wait a moment for backend to start
@@ -23,7 +23,7 @@ sleep 3
 
 # Start frontend
 echo "🌐 Starting Frontend (Port: $FRONTEND_PORT)..."
-cd ../frontend && npm run build && npm run preview -- --port $FRONTEND_PORT &
+(cd frontend && npm run build && npm run preview -- --port $FRONTEND_PORT) &
 FRONTEND_PID=$!
 
 # Function to cleanup on exit

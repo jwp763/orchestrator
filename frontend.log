@@ -1,0 +1,181 @@
+
+> frontend@0.0.0 dev
+> vite --port 5174
+
+
+  VITE v7.0.4  ready in 115 ms
+
+  ➜  Local:   http://localhost:5174/
+  ➜  Network: use --host to expose
+2:03:38 AM [vite] (client) hmr update /src/components/NaturalLanguageEditor/NaturalLanguageEditor.tsx, /src/index.css
+2:03:38 AM [vite] Internal server error: /Users/johnpope/databricks_orchestrator/frontend/src/components/NaturalLanguageEditor/NaturalLanguageEditor.tsx: 'return' outside of function. (76:2)
+
+  74 |   };
+  75 |
+> 76 |   return (
+     |   ^
+  77 |     <div className="w-96 bg-gray-50 border-l border-gray-200 h-full flex flex-col">
+  78 |       <div className="flex-1 flex flex-col p-4">
+  79 |         <div className="mb-4">
+  Plugin: vite:react-babel
+  File: /Users/johnpope/databricks_orchestrator/frontend/src/components/NaturalLanguageEditor/NaturalLanguageEditor.tsx:76:2
+  74 |    };
+  75 |  
+  76 |    return (
+     |    ^
+  77 |      <div className="w-96 bg-gray-50 border-l border-gray-200 h-full flex flex-col">
+  78 |        <div className="flex-1 flex flex-col p-4">
+      at constructor (/Users/johnpope/databricks_orchestrator/frontend/node_modules/@babel/parser/lib/index.js:367:19)
+      at TypeScriptParserMixin.raise (/Users/johnpope/databricks_orchestrator/frontend/node_modules/@babel/parser/lib/index.js:6627:19)
+      at TypeScriptParserMixin.parseReturnStatement (/Users/johnpope/databricks_orchestrator/frontend/node_modules/@babel/parser/lib/index.js:13136:12)
+      at TypeScriptParserMixin.parseStatementContent (/Users/johnpope/databricks_orchestrator/frontend/node_modules/@babel/parser/lib/index.js:12798:21)
+      at TypeScriptParserMixin.parseStatementContent (/Users/johnpope/databricks_orchestrator/frontend/node_modules/@babel/parser/lib/index.js:9527:18)
+      at TypeScriptParserMixin.parseStatementLike (/Users/johnpope/databricks_orchestrator/frontend/node_modules/@babel/parser/lib/index.js:12767:17)
+      at TypeScriptParserMixin.parseModuleItem (/Users/johnpope/databricks_orchestrator/frontend/node_modules/@babel/parser/lib/index.js:12744:17)
+      at TypeScriptParserMixin.parseBlockOrModuleBlockBody (/Users/johnpope/databricks_orchestrator/frontend/node_modules/@babel/parser/lib/index.js:13316:36)
+      at TypeScriptParserMixin.parseBlockBody (/Users/johnpope/databricks_orchestrator/frontend/node_modules/@babel/parser/lib/index.js:13309:10)
+      at TypeScriptParserMixin.parseProgram (/Users/johnpope/databricks_orchestrator/frontend/node_modules/@babel/parser/lib/index.js:12625:10)
+      at TypeScriptParserMixin.parseTopLevel (/Users/johnpope/databricks_orchestrator/frontend/node_modules/@babel/parser/lib/index.js:12615:25)
+      at TypeScriptParserMixin.parse (/Users/johnpope/databricks_orchestrator/frontend/node_modules/@babel/parser/lib/index.js:14492:10)
+      at TypeScriptParserMixin.parse (/Users/johnpope/databricks_orchestrator/frontend/node_modules/@babel/parser/lib/index.js:10144:18)
+      at parse (/Users/johnpope/databricks_orchestrator/frontend/node_modules/@babel/parser/lib/index.js:14526:38)
+      at parser (/Users/johnpope/databricks_orchestrator/frontend/node_modules/@babel/core/lib/parser/index.js:41:34)
+      at parser.next (<anonymous>)
+      at normalizeFile (/Users/johnpope/databricks_orchestrator/frontend/node_modules/@babel/core/lib/transformation/normalize-file.js:64:37)
+      at normalizeFile.next (<anonymous>)
+      at run (/Users/johnpope/databricks_orchestrator/frontend/node_modules/@babel/core/lib/transformation/index.js:22:50)
+      at run.next (<anonymous>)
+      at transform (/Users/johnpope/databricks_orchestrator/frontend/node_modules/@babel/core/lib/transform.js:22:33)
+      at transform.next (<anonymous>)
+      at step (/Users/johnpope/databricks_orchestrator/frontend/node_modules/gensync/index.js:261:32)
+      at /Users/johnpope/databricks_orchestrator/frontend/node_modules/gensync/index.js:273:13
+      at async.call.result.err.err (/Users/johnpope/databricks_orchestrator/frontend/node_modules/gensync/index.js:223:11)
+      at /Users/johnpope/databricks_orchestrator/frontend/node_modules/gensync/index.js:189:28
+      at /Users/johnpope/databricks_orchestrator/frontend/node_modules/@babel/core/lib/gensync-utils/async.js:67:7
+      at /Users/johnpope/databricks_orchestrator/frontend/node_modules/gensync/index.js:113:33
+      at step (/Users/johnpope/databricks_orchestrator/frontend/node_modules/gensync/index.js:287:14)
+      at /Users/johnpope/databricks_orchestrator/frontend/node_modules/gensync/index.js:273:13
+      at async.call.result.err.err (/Users/johnpope/databricks_orchestrator/frontend/node_modules/gensync/index.js:223:11)
+2:04:13 AM [vite] (client) hmr update /src/components/NaturalLanguageEditor/NaturalLanguageEditor.tsx, /src/index.css
+2:04:41 AM [vite] (client) hmr update /src/components/NaturalLanguageEditor/NaturalLanguageEditor.tsx, /src/index.css
+2:05:01 AM [vite] (client) page reload src/components/NaturalLanguageEditor/NaturalLanguageEditor.test.tsx
+2:05:18 AM [vite] (client) page reload src/components/NaturalLanguageEditor/NaturalLanguageEditor.test.tsx
+2:09:25 AM [vite] (client) hmr update /src/components/NaturalLanguageEditor/NaturalLanguageEditor.tsx, /src/index.css
+2:09:33 AM [vite] (client) hmr update /src/components/NaturalLanguageEditor/NaturalLanguageEditor.tsx, /src/index.css
+2:09:41 AM [vite] (client) hmr update /src/components/NaturalLanguageEditor/NaturalLanguageEditor.tsx, /src/index.css
+2:10:11 AM [vite] (client) page reload src/components/NaturalLanguageEditor/NaturalLanguageEditor.test.tsx
+2:10:20 AM [vite] (client) page reload src/components/NaturalLanguageEditor/NaturalLanguageEditor.test.tsx
+2:10:37 AM [vite] (client) page reload src/components/NaturalLanguageEditor/NaturalLanguageEditor.test.tsx
+2:11:04 AM [vite] (client) page reload src/components/NaturalLanguageEditor/NaturalLanguageEditor.test.tsx
+2:11:41 AM [vite] (client) page reload src/components/NaturalLanguageEditor/NaturalLanguageEditor.test.tsx
+2:13:20 AM [vite] (client) hmr update /src/components/NaturalLanguageEditor/NaturalLanguageEditor.tsx, /src/index.css
+2:14:05 AM [vite] (client) hmr update /src/App.tsx, /src/index.css
+2:14:14 AM [vite] (client) hmr update /src/App.tsx, /src/index.css
+2:14:31 AM [vite] (client) hmr update /src/index.css, /src/components/ApiTest.tsx, /src/App.tsx, /src/components/NaturalLanguageEditor/NaturalLanguageEditor.tsx
+2:14:40 AM [vite] (client) hmr update /src/index.css, /src/components/ApiTest.tsx, /src/App.tsx, /src/components/NaturalLanguageEditor/NaturalLanguageEditor.tsx
+2:15:07 AM [vite] (client) hmr update /src/index.css, /src/components/ApiTest.tsx, /src/App.tsx, /src/components/NaturalLanguageEditor/NaturalLanguageEditor.tsx
+2:15:34 AM [vite] (client) hmr update /src/components/NaturalLanguageEditor/NaturalLanguageEditor.tsx, /src/index.css
+2:15:34 AM [vite] Internal server error: /Users/johnpope/databricks_orchestrator/frontend/src/components/NaturalLanguageEditor/NaturalLanguageEditor.tsx: Missing catch or finally clause. (143:2)
+
+  141 |   });
+  142 |
+> 143 |   try {
+      |   ^
+  144 |     return (
+  145 |       <div className="w-96 bg-gray-50 border-l border-gray-200 h-full flex flex-col">
+  146 |       <div className="flex-1 flex flex-col p-4">
+  Plugin: vite:react-babel
+  File: /Users/johnpope/databricks_orchestrator/frontend/src/components/NaturalLanguageEditor/NaturalLanguageEditor.tsx:143:2
+  141|    });
+  142|  
+  143|    try {
+     |    ^
+  144|      return (
+  145|        <div className="w-96 bg-gray-50 border-l border-gray-200 h-full flex flex-col">
+      at constructor (/Users/johnpope/databricks_orchestrator/frontend/node_modules/@babel/parser/lib/index.js:367:19)
+      at TypeScriptParserMixin.raise (/Users/johnpope/databricks_orchestrator/frontend/node_modules/@babel/parser/lib/index.js:6627:19)
+      at TypeScriptParserMixin.parseTryStatement (/Users/johnpope/databricks_orchestrator/frontend/node_modules/@babel/parser/lib/index.js:13224:12)
+      at TypeScriptParserMixin.parseStatementContent (/Users/johnpope/databricks_orchestrator/frontend/node_modules/@babel/parser/lib/index.js:12804:21)
+      at TypeScriptParserMixin.parseStatementContent (/Users/johnpope/databricks_orchestrator/frontend/node_modules/@babel/parser/lib/index.js:9527:18)
+      at TypeScriptParserMixin.parseStatementLike (/Users/johnpope/databricks_orchestrator/frontend/node_modules/@babel/parser/lib/index.js:12767:17)
+      at TypeScriptParserMixin.parseStatementListItem (/Users/johnpope/databricks_orchestrator/frontend/node_modules/@babel/parser/lib/index.js:12747:17)
+      at TypeScriptParserMixin.parseBlockOrModuleBlockBody (/Users/johnpope/databricks_orchestrator/frontend/node_modules/@babel/parser/lib/index.js:13316:61)
+      at TypeScriptParserMixin.parseBlockBody (/Users/johnpope/databricks_orchestrator/frontend/node_modules/@babel/parser/lib/index.js:13309:10)
+      at TypeScriptParserMixin.parseBlock (/Users/johnpope/databricks_orchestrator/frontend/node_modules/@babel/parser/lib/index.js:13297:10)
+      at TypeScriptParserMixin.parseFunctionBody (/Users/johnpope/databricks_orchestrator/frontend/node_modules/@babel/parser/lib/index.js:12101:24)
+      at TypeScriptParserMixin.parseArrowExpression (/Users/johnpope/databricks_orchestrator/frontend/node_modules/@babel/parser/lib/index.js:12076:10)
+      at TypeScriptParserMixin.parseParenAndDistinguishExpression (/Users/johnpope/databricks_orchestrator/frontend/node_modules/@babel/parser/lib/index.js:11686:12)
+      at TypeScriptParserMixin.parseExprAtom (/Users/johnpope/databricks_orchestrator/frontend/node_modules/@babel/parser/lib/index.js:11326:23)
+      at TypeScriptParserMixin.parseExprAtom (/Users/johnpope/databricks_orchestrator/frontend/node_modules/@babel/parser/lib/index.js:4794:20)
+      at TypeScriptParserMixin.parseExprSubscripts (/Users/johnpope/databricks_orchestrator/frontend/node_modules/@babel/parser/lib/index.js:11076:23)
+      at TypeScriptParserMixin.parseUpdate (/Users/johnpope/databricks_orchestrator/frontend/node_modules/@babel/parser/lib/index.js:11061:21)
+      at TypeScriptParserMixin.parseMaybeUnary (/Users/johnpope/databricks_orchestrator/frontend/node_modules/@babel/parser/lib/index.js:11041:23)
+      at TypeScriptParserMixin.parseMaybeUnary (/Users/johnpope/databricks_orchestrator/frontend/node_modules/@babel/parser/lib/index.js:9852:18)
+      at TypeScriptParserMixin.parseMaybeUnaryOrPrivate (/Users/johnpope/databricks_orchestrator/frontend/node_modules/@babel/parser/lib/index.js:10894:61)
+      at TypeScriptParserMixin.parseExprOps (/Users/johnpope/databricks_orchestrator/frontend/node_modules/@babel/parser/lib/index.js:10899:23)
+      at TypeScriptParserMixin.parseMaybeConditional (/Users/johnpope/databricks_orchestrator/frontend/node_modules/@babel/parser/lib/index.js:10876:23)
+      at TypeScriptParserMixin.parseMaybeAssign (/Users/johnpope/databricks_orchestrator/frontend/node_modules/@babel/parser/lib/index.js:10826:21)
+      at TypeScriptParserMixin.parseMaybeAssign (/Users/johnpope/databricks_orchestrator/frontend/node_modules/@babel/parser/lib/index.js:9801:20)
+      at /Users/johnpope/databricks_orchestrator/frontend/node_modules/@babel/parser/lib/index.js:10795:39
+      at TypeScriptParserMixin.allowInAnd (/Users/johnpope/databricks_orchestrator/frontend/node_modules/@babel/parser/lib/index.js:12422:16)
+      at TypeScriptParserMixin.parseMaybeAssignAllowIn (/Users/johnpope/databricks_orchestrator/frontend/node_modules/@babel/parser/lib/index.js:10795:17)
+      at TypeScriptParserMixin.parseVar (/Users/johnpope/databricks_orchestrator/frontend/node_modules/@babel/parser/lib/index.js:13384:91)
+      at TypeScriptParserMixin.parseVarStatement (/Users/johnpope/databricks_orchestrator/frontend/node_modules/@babel/parser/lib/index.js:13230:10)
+      at TypeScriptParserMixin.parseVarStatement (/Users/johnpope/databricks_orchestrator/frontend/node_modules/@babel/parser/lib/index.js:9493:31)
+      at TypeScriptParserMixin.parseStatementContent (/Users/johnpope/databricks_orchestrator/frontend/node_modules/@babel/parser/lib/index.js:12851:23)
+      at TypeScriptParserMixin.parseStatementContent (/Users/johnpope/databricks_orchestrator/frontend/node_modules/@babel/parser/lib/index.js:9527:18)
+      at TypeScriptParserMixin.parseStatementLike (/Users/johnpope/databricks_orchestrator/frontend/node_modules/@babel/parser/lib/index.js:12767:17)
+      at TypeScriptParserMixin.parseStatementListItem (/Users/johnpope/databricks_orchestrator/frontend/node_modules/@babel/parser/lib/index.js:12747:17)
+      at TypeScriptParserMixin.parseExportDeclaration (/Users/johnpope/databricks_orchestrator/frontend/node_modules/@babel/parser/lib/index.js:13934:17)
+      at TypeScriptParserMixin.parseExportDeclaration (/Users/johnpope/databricks_orchestrator/frontend/node_modules/@babel/parser/lib/index.js:9652:85)
+      at TypeScriptParserMixin.maybeParseExportDeclaration (/Users/johnpope/databricks_orchestrator/frontend/node_modules/@babel/parser/lib/index.js:13893:31)
+      at TypeScriptParserMixin.parseExport (/Users/johnpope/databricks_orchestrator/frontend/node_modules/@babel/parser/lib/index.js:13812:29)
+      at TypeScriptParserMixin.parseExport (/Users/johnpope/databricks_orchestrator/frontend/node_modules/@babel/parser/lib/index.js:9470:20)
+      at TypeScriptParserMixin.parseStatementContent (/Users/johnpope/databricks_orchestrator/frontend/node_modules/@babel/parser/lib/index.js:12878:27)
+      at TypeScriptParserMixin.parseStatementContent (/Users/johnpope/databricks_orchestrator/frontend/node_modules/@babel/parser/lib/index.js:9527:18)
+      at TypeScriptParserMixin.parseStatementLike (/Users/johnpope/databricks_orchestrator/frontend/node_modules/@babel/parser/lib/index.js:12767:17)
+      at TypeScriptParserMixin.parseModuleItem (/Users/johnpope/databricks_orchestrator/frontend/node_modules/@babel/parser/lib/index.js:12744:17)
+      at TypeScriptParserMixin.parseBlockOrModuleBlockBody (/Users/johnpope/databricks_orchestrator/frontend/node_modules/@babel/parser/lib/index.js:13316:36)
+      at TypeScriptParserMixin.parseBlockBody (/Users/johnpope/databricks_orchestrator/frontend/node_modules/@babel/parser/lib/index.js:13309:10)
+      at TypeScriptParserMixin.parseProgram (/Users/johnpope/databricks_orchestrator/frontend/node_modules/@babel/parser/lib/index.js:12625:10)
+      at TypeScriptParserMixin.parseTopLevel (/Users/johnpope/databricks_orchestrator/frontend/node_modules/@babel/parser/lib/index.js:12615:25)
+      at TypeScriptParserMixin.parse (/Users/johnpope/databricks_orchestrator/frontend/node_modules/@babel/parser/lib/index.js:14492:10)
+      at TypeScriptParserMixin.parse (/Users/johnpope/databricks_orchestrator/frontend/node_modules/@babel/parser/lib/index.js:10144:18)
+      at parse (/Users/johnpope/databricks_orchestrator/frontend/node_modules/@babel/parser/lib/index.js:14526:38)
+2:15:59 AM [vite] (client) hmr update /src/components/NaturalLanguageEditor/NaturalLanguageEditor.tsx, /src/index.css
+2:17:28 AM [vite] (client) hmr update /src/components/NaturalLanguageEditor/NaturalLanguageEditor.tsx, /src/index.css
+2:17:39 AM [vite] (client) hmr update /src/index.css, /src/components/ApiTest.tsx, /src/App.tsx, /src/components/NaturalLanguageEditor/NaturalLanguageEditor.tsx
+2:17:51 AM [vite] (client) hmr update /src/index.css, /src/components/ApiTest.tsx, /src/App.tsx, /src/components/NaturalLanguageEditor/NaturalLanguageEditor.tsx
+2:34:16 AM [vite] (client) hmr update /src/components/NaturalLanguageEditor/NaturalLanguageEditor.tsx, /src/index.css
+2:34:27 AM [vite] (client) hmr update /src/components/NaturalLanguageEditor/NaturalLanguageEditor.tsx, /src/index.css
+2:34:39 AM [vite] (client) hmr update /src/index.css, /src/components/NaturalLanguageEditor/NaturalLanguageEditor.tsx, /src/components/ProjectDetails/ProjectDetails.tsx, /src/components/TaskDetails/TaskDetails.tsx
+2:35:02 AM [vite] (client) hmr update /src/components/NaturalLanguageEditor/NaturalLanguageEditor.tsx, /src/index.css
+2:35:13 AM [vite] (client) hmr update /src/components/NaturalLanguageEditor/NaturalLanguageEditor.tsx, /src/index.css
+2:35:24 AM [vite] (client) hmr update /src/components/NaturalLanguageEditor/NaturalLanguageEditor.tsx, /src/index.css
+2:37:53 AM [vite] (client) hmr update /src/index.css, /src/components/NaturalLanguageEditor/NaturalLanguageEditor.tsx
+2:38:03 AM [vite] (client) hmr update /src/components/NaturalLanguageEditor/NaturalLanguageEditor.tsx, /src/index.css
+2:42:40 AM [vite] (client) page reload src/services/plannerService.test.ts
+2:43:08 AM [vite] (client) page reload src/services/plannerService.test.ts
+3:06:33 AM [vite] (client) page reload src/components/NaturalLanguageEditor/NaturalLanguageEditor.test.tsx
+3:07:25 AM [vite] (client) page reload src/components/NaturalLanguageEditor/NaturalLanguageEditor.test.tsx
+3:07:43 AM [vite] (client) page reload src/services/plannerService.test.ts
+3:08:10 AM [vite] (client) page reload src/components/NaturalLanguageEditor/NaturalLanguageEditor.test.tsx
+3:08:16 AM [vite] (client) page reload src/components/NaturalLanguageEditor/NaturalLanguageEditor.test.tsx
+3:08:42 AM [vite] (client) page reload src/components/NaturalLanguageEditor/NaturalLanguageEditor.test.tsx
+3:08:48 AM [vite] (client) page reload src/components/NaturalLanguageEditor/NaturalLanguageEditor.test.tsx
+3:09:39 AM [vite] (client) page reload src/components/NaturalLanguageEditor/NaturalLanguageEditor.test.tsx
+3:09:58 AM [vite] (client) page reload src/components/NaturalLanguageEditor/NaturalLanguageEditor.test.tsx
+4:45:10 AM [vite] (client) hmr update /src/components/NaturalLanguageEditor/NaturalLanguageEditor.tsx, /src/index.css
+4:45:19 AM [vite] (client) hmr update /src/components/NaturalLanguageEditor/NaturalLanguageEditor.tsx, /src/index.css
+4:46:39 AM [vite] (client) page reload src/components/NaturalLanguageEditor/NaturalLanguageEditor.test.tsx
+4:52:27 AM [vite] (client) hmr update /src/index.css, /src/App.tsx
+4:52:41 AM [vite] (client) hmr update /src/index.css, /src/App.tsx
+4:53:41 AM [vite] (client) hmr update /src/index.css, /src/App.tsx
+4:53:55 AM [vite] (client) page reload src/utils/__tests__/patchApplicator.test.ts
+4:54:15 AM [vite] (client) hmr update /src/index.css, /src/App.tsx
+4:54:21 AM [vite] (client) hmr update /src/index.css, /src/App.tsx
+4:54:26 AM [vite] (client) page reload src/utils/__tests__/patchApplicator.test.ts
+4:54:48 AM [vite] (client) page reload src/utils/__tests__/patchApplicator.test.ts
+4:55:09 AM [vite] (client) hmr update /src/index.css, /src/App.tsx
+4:55:17 AM [vite] (client) hmr update /src/index.css, /src/App.tsx
+4:55:29 AM [vite] (client) page reload src/utils/__tests__/patchApplicator.test.ts

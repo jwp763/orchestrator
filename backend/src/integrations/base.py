@@ -5,7 +5,6 @@ from typing import Any, Dict, List
 import logging
 
 from ..models import IntegrationConfig, User
-from ..storage import DeltaManager
 
 
 logger = logging.getLogger(__name__)
@@ -37,14 +36,14 @@ class BaseIntegration(ABC):
         logger: Integration-specific logger instance
     """
 
-    def __init__(self, config: IntegrationConfig, delta_manager: DeltaManager):
+    def __init__(self, config: IntegrationConfig, delta_manager: Any):
         """
         Initialize the integration with configuration and database access.
 
         Args:
             config (IntegrationConfig): Integration configuration containing
                 credentials, API endpoints, and settings
-            delta_manager (DeltaManager): Database manager for local operations
+            delta_manager: Database manager for local operations
         """
         self.config = config
         self.delta = delta_manager
