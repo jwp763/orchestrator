@@ -1,10 +1,17 @@
 #!/bin/bash
 # Production Environment Startup Script
+# 
+# ⚠️  DEPRECATED: This script is deprecated. Please use the npm script instead:
+#    npm run prod:full
+# 
+# The npm script provides better cross-platform compatibility and process management.
 
 echo "🚀 Starting Databricks Orchestrator - Production Environment"
+echo "⚠️  NOTE: Consider using 'npm run prod:full' for improved experience"
 
-# Load production environment
-export $(cat .env.prod | grep -v '^#' | xargs)
+# Load production environment using new Python environment loader
+echo "📋 Loading environment configuration..."
+eval $(python scripts/load-env.py production | grep "^export")
 
 # Start backend in background (no reload in production)
 echo "📦 Starting Backend (Port: $API_PORT)..."

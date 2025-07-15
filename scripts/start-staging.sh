@@ -1,10 +1,17 @@
 #!/bin/bash
 # Staging Environment Startup Script
+# 
+# ⚠️  DEPRECATED: This script is deprecated. Please use the npm script instead:
+#    npm run staging:full
+# 
+# The npm script provides better cross-platform compatibility and process management.
 
 echo "🚀 Starting Databricks Orchestrator - Staging Environment"
+echo "⚠️  NOTE: Consider using 'npm run staging:full' for improved experience"
 
-# Load staging environment
-export $(cat .env.staging | grep -v '^#' | xargs)
+# Load staging environment using new Python environment loader
+echo "📋 Loading environment configuration..."
+eval $(python scripts/load-env.py staging | grep "^export")
 
 # Start backend in background
 echo "📦 Starting Backend (Port: $API_PORT)..."

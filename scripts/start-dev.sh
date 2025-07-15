@@ -1,10 +1,17 @@
 #!/bin/bash
 # Development Environment Startup Script
+# 
+# ⚠️  DEPRECATED: This script is deprecated. Please use the npm script instead:
+#    npm run dev:full
+# 
+# The npm script provides better cross-platform compatibility and process management.
 
 echo "🚀 Starting Databricks Orchestrator - Development Environment"
+echo "⚠️  NOTE: Consider using 'npm run dev:full' for improved experience"
 
-# Load development environment
-export $(cat .env.dev | grep -v '^#' | xargs)
+# Load development environment using new Python environment loader
+echo "📋 Loading environment configuration..."
+eval $(python scripts/load-env.py development | grep "^export")
 
 # Start backend in background
 echo "📦 Starting Backend (Port: $API_PORT)..."
