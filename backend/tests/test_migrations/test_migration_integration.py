@@ -27,7 +27,6 @@ class TestMigrationIntegration(TestDatabaseIsolation):
         backend_dir = Path(__file__).parent.parent.parent
         
         # Run upgrade
-        import subprocess
         result = subprocess.run(
             ['python', 'scripts/migrate.py', 'upgrade'],
             cwd=backend_dir,

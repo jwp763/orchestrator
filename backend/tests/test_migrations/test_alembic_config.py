@@ -183,8 +183,8 @@ class TestAlembicMigrationGeneration:
             # Check required elements
             assert "revision:" in content
             assert "down_revision:" in content
-            assert "def upgrade():" in content
-            assert "def downgrade():" in content
+            assert "def upgrade()" in content
+            assert "def downgrade()" in content
             assert "from alembic import op" in content
             assert "import sqlalchemy as sa" in content
 

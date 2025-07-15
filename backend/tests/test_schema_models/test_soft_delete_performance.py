@@ -16,9 +16,6 @@ from sqlalchemy.orm import sessionmaker
 from src.storage.sql_models import Base, Project, Task
 from src.models.project import ProjectStatus, ProjectPriority
 from src.models.task import TaskStatus, TaskPriority
-from migrations.add_soft_delete_fields import SoftDeleteMigration
-
-
 class TestSoftDeletePerformance:
     """Test suite for soft delete performance with indexes."""
 
@@ -28,9 +25,8 @@ class TestSoftDeletePerformance:
         engine = create_engine("sqlite:///:memory:", echo=False)
         Base.metadata.create_all(engine)
         
-        # Apply soft delete migration to ensure indexes exist
-        migration = SoftDeleteMigration(engine)
-        migration.upgrade()
+        # The current schema already includes soft delete fields and indexes
+        # No migration needed - just use the current schema
         
         return engine
 
