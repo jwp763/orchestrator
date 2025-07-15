@@ -173,7 +173,8 @@ class TestPythonDependenciesInstallation:
     @patch('subprocess.run')
     def test_install_python_dependencies_failure(self, mock_run):
         """Test Python dependencies installation failure."""
-        mock_run.return_value = MagicMock(returncode=1)
+        from subprocess import CalledProcessError
+        mock_run.side_effect = CalledProcessError(1, 'pip')
         
         result = install_python_dependencies()
         
