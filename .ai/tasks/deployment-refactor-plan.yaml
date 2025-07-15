@@ -1,0 +1,953 @@
+# Deployment Architecture Refactor Tasks
+# Generated from comprehensive deployment analysis and architecture design
+# Total estimated effort: ~15-20 days across 3 phases
+
+# =============================================================================
+# PHASE 1: FOUNDATION ARCHITECTURE (Days 1-7)
+# Priority: CRITICAL - Fixes fundamental deployment issues
+# =============================================================================
+
+- id: "DEL-003"
+  title: "Install and configure modern deployment tooling"
+  status: "completed"
+  priority: "critical"
+  
+  created_date: "2025-07-14T18:32:19-07:00"
+  start_date: "2025-07-14T18:45:00-07:00"
+  completion_date: "2025-07-14T19:08:31-07:00"
+  
+  estimated_minutes: 120
+  actual_minutes: 23
+  
+  description: |
+    Install and configure modern Node.js tooling to replace shell script complexity:
+    - npm-run-all for service orchestration
+    - dotenv-cli for environment variable management  
+    - cross-env for cross-platform compatibility
+    - wait-on for service dependency management
+    
+    This is the foundation for all deployment improvements and must be completed first.
+  
+  dependencies: []
+  
+  test_requirements:
+    unit_tests:
+      - description: "Test package.json script configuration"
+        files: ["package.json"]
+        coverage_target: "100%"
+    integration_tests:
+      - description: "Test tooling installation and basic functionality"
+        files: ["scripts/test-tooling.sh"]
+        scope: "Verify all tools are installed and working"
+    performance_tests:
+      - description: "Verify no significant startup time regression"
+        files: ["scripts/benchmark-startup.sh"]
+        requirements: "< 5 second startup overhead"
+    security_tests:
+      - description: "Audit new dependencies for vulnerabilities"
+        files: ["scripts/audit-dependencies.sh"]
+        scope: "npm audit and security scan"
+  
+  tags: ["deployment", "tooling", "foundation"]
+  
+  deliverables:
+    - path: "package.json"
+      type: "file"
+      description: "Updated with modern deployment tooling dependencies"
+      status: "pending"
+    - path: "scripts/validate-tooling.sh"
+      type: "file" 
+      description: "Script to validate all tooling is correctly installed"
+      status: "pending"
+  
+  notes: |
+    Critical first step - all other deployment tasks depend on this modern tooling foundation.
+    Must verify cross-platform compatibility (Windows/Mac/Linux).
+
+- id: "DEL-004"
+  title: "Create layered environment configuration system"
+  status: "pending"
+  priority: "critical"
+  
+  created_date: "2025-07-14T18:32:19-07:00"
+  start_date: null
+  completion_date: null
+  
+  estimated_minutes: 240
+  actual_minutes: 0
+  
+  description: |
+    Replace current broken shell variable substitution with modern layered config:
+    - .env.defaults (shared defaults, committed)
+    - .env.development (dev-specific, committed)
+    - .env.staging (staging-specific, committed)
+    - .env.production (prod-specific, committed)
+    - .env.local (local secrets, gitignored)
+    - .env.example (template for new developers)
+    
+    Use direct values instead of ${VAR} substitution to eliminate shell dependency.
+  
+  dependencies: ["DEL-003"]
+  
+  test_requirements:
+    unit_tests:
+      - description: "Test environment file parsing and loading"
+        files: ["scripts/test-env-loading.py"]
+        coverage_target: "100%"
+      - description: "Test environment variable precedence"
+        files: ["scripts/test-env-precedence.py"] 
+        coverage_target: "100%"
+    integration_tests:
+      - description: "Test environment loading in each deployment mode"
+        files: ["scripts/test-env-integration.py"]
+        scope: "All three environments (dev/staging/prod)"
+      - description: "Test API key loading and validation"
+        files: ["scripts/test-api-keys.py"]
+        scope: "All AI provider and integration API keys"
+    performance_tests:
+      - description: "Test environment loading performance"
+        files: ["scripts/test-env-performance.py"]
+        requirements: "< 100ms environment loading time"
+    security_tests:
+      - description: "Test secret handling and gitignore protection"
+        files: ["scripts/test-env-security.py"]
+        scope: "Verify secrets are properly protected"
+  
+  tags: ["deployment", "environment", "configuration"]
+  
+  deliverables:
+    - path: ".env.defaults"
+      type: "file"
+      description: "Shared default configuration values"
+      status: "pending"
+    - path: ".env.development"
+      type: "file"
+      description: "Development environment configuration"
+      status: "pending"
+    - path: ".env.staging"
+      type: "file"
+      description: "Staging environment configuration for dogfooding"
+      status: "pending"
+    - path: ".env.production"
+      type: "file"
+      description: "Production environment configuration"
+      status: "pending"
+    - path: ".env.example"
+      type: "file"
+      description: "Template for new developer setup"
+      status: "pending"
+    - path: ".gitignore"
+      type: "file"
+      description: "Updated to properly ignore .env.local"
+      status: "pending"
+  
+  notes: |
+    This fixes the critical shell variable substitution issue that causes silent failures.
+    Must include clear documentation for API key setup process.
+
+- id: "DEL-005"
+  title: "Replace shell scripts with npm-run-all coordination"
+  status: "pending"
+  priority: "critical"
+  
+  created_date: "2025-07-14T18:32:19-07:00"
+  start_date: null
+  completion_date: null
+  
+  estimated_minutes: 180
+  actual_minutes: 0
+  
+  description: |
+    Replace complex bash scripts with modern npm script orchestration:
+    - Create new npm scripts using dotenv-cli and npm-run-all
+    - Maintain backward compatibility during transition
+    - Add process management and cleanup
+    - Implement proper error handling and health checks
+    
+    Scripts to replace: start-dev.sh, start-staging.sh, start-prod.sh
+  
+  dependencies: ["DEL-003", "DEL-004"]
+  
+  test_requirements:
+    unit_tests:
+      - description: "Test npm script configuration and syntax"
+        files: ["scripts/test-npm-scripts.py"]
+        coverage_target: "100%"
+    integration_tests:
+      - description: "Test service startup coordination in all environments"
+        files: ["scripts/test-service-coordination.py"]
+        scope: "Backend and frontend startup order and timing"
+      - description: "Test process cleanup on script termination"
+        files: ["scripts/test-process-cleanup.py"]
+        scope: "Verify clean shutdown of all services"
+      - description: "Test backward compatibility with existing scripts"
+        files: ["scripts/test-backward-compatibility.py"]
+        scope: "Ensure legacy scripts still work during transition"
+    performance_tests:
+      - description: "Test startup time for each environment"
+        files: ["scripts/test-startup-performance.py"]
+        requirements: "< 10 seconds full startup time"
+    security_tests:
+      - description: "Test process isolation and security"
+        files: ["scripts/test-process-security.py"]
+        scope: "Verify proper process boundaries"
+  
+  tags: ["deployment", "scripts", "orchestration"]
+  
+  deliverables:
+    - path: "package.json"
+      type: "file"
+      description: "Updated with new npm scripts for all environments"
+      status: "pending"
+    - path: "scripts/legacy/"
+      type: "file"
+      description: "Moved existing bash scripts for backward compatibility"
+      status: "pending"
+    - path: "docs/deployment/script-migration.md"
+      type: "documentation"
+      description: "Migration guide from shell scripts to npm scripts"
+      status: "pending"
+  
+  notes: |
+    Maintain existing scripts during transition for safety.
+    Add comprehensive error messages for common failure scenarios.
+
+- id: "DEL-006"
+  title: "Add FastAPI startup validation and health checks"
+  status: "pending"
+  priority: "high"
+  
+  created_date: "2025-07-14T18:32:19-07:00"
+  start_date: null
+  completion_date: null
+  
+  estimated_minutes: 300
+  actual_minutes: 0
+  
+  description: |
+    Implement comprehensive startup validation to eliminate silent failures:
+    - Pydantic-based settings with environment detection
+    - FastAPI startup events for configuration validation
+    - API key validation and provider testing
+    - Database connection testing
+    - Health check endpoints with detailed status
+    - Clear error messages for missing configuration
+  
+  dependencies: ["DEL-004"]
+  
+  test_requirements:
+    unit_tests:
+      - description: "Test settings validation logic"
+        files: ["backend/tests/test_settings_validation.py"]
+        coverage_target: "100%"
+      - description: "Test health check endpoint responses"
+        files: ["backend/tests/test_health_endpoints.py"]
+        coverage_target: "100%"
+      - description: "Test startup event error handling"
+        files: ["backend/tests/test_startup_events.py"]
+        coverage_target: "100%"
+    integration_tests:
+      - description: "Test startup validation with real configuration"
+        files: ["backend/tests/test_startup_integration.py"]
+        scope: "All environment configurations"
+      - description: "Test API provider connectivity validation"
+        files: ["backend/tests/test_api_provider_validation.py"]
+        scope: "All AI providers (Anthropic, OpenAI, etc.)"
+      - description: "Test database connection validation"
+        files: ["backend/tests/test_database_validation.py"]
+        scope: "SQLite and PostgreSQL connections"
+    performance_tests:
+      - description: "Test health check response times"
+        files: ["backend/tests/test_health_performance.py"]
+        requirements: "< 50ms health check response"
+    security_tests:
+      - description: "Test health check information disclosure"
+        files: ["backend/tests/test_health_security.py"]
+        scope: "Verify no sensitive data in health responses"
+  
+  tags: ["backend", "validation", "health-checks"]
+  
+  deliverables:
+    - path: "backend/src/config/settings.py"
+      type: "file"
+      description: "Pydantic settings with comprehensive validation"
+      status: "pending"
+    - path: "backend/src/api/health.py"
+      type: "file"
+      description: "Health check endpoints with detailed status"
+      status: "pending"
+    - path: "backend/src/api/main.py"
+      type: "file"
+      description: "Updated with startup validation events"
+      status: "pending"
+  
+  notes: |
+    This is critical for eliminating the silent failure mode that has been plaguing deployment.
+    Must provide clear, actionable error messages for configuration issues.
+
+- id: "DEL-007"
+  title: "Create environment validation and setup scripts"
+  status: "pending"
+  priority: "high"
+  
+  created_date: "2025-07-14T18:32:19-07:00"
+  start_date: null
+  completion_date: null
+  
+  estimated_minutes: 180
+  actual_minutes: 0
+  
+  description: |
+    Create comprehensive validation scripts to help developers set up environments correctly:
+    - Environment validation script (validate_environment.py)
+    - Setup script for new developers (setup_development.py)
+    - API key validation and testing
+    - Database setup verification
+    - Dependency checking
+    - Clear setup instructions with troubleshooting
+  
+  dependencies: ["DEL-004", "DEL-006"]
+  
+  test_requirements:
+    unit_tests:
+      - description: "Test validation script logic"
+        files: ["scripts/tests/test_validation_script.py"]
+        coverage_target: "100%"
+      - description: "Test setup script functionality"
+        files: ["scripts/tests/test_setup_script.py"]
+        coverage_target: "100%"
+    integration_tests:
+      - description: "Test validation with various environment configurations"
+        files: ["scripts/tests/test_validation_integration.py"]
+        scope: "Valid and invalid environment setups"
+      - description: "Test setup script with fresh environment"
+        files: ["scripts/tests/test_setup_integration.py"]
+        scope: "Complete new developer setup flow"
+    performance_tests:
+      - description: "Test validation script performance"
+        files: ["scripts/tests/test_validation_performance.py"]
+        requirements: "< 5 seconds validation time"
+    security_tests:
+      - description: "Test validation script security"
+        files: ["scripts/tests/test_validation_security.py"]
+        scope: "No exposure of sensitive configuration"
+  
+  tags: ["deployment", "validation", "developer-experience"]
+  
+  deliverables:
+    - path: "scripts/validate_environment.py"
+      type: "file"
+      description: "Comprehensive environment validation script"
+      status: "pending"
+    - path: "scripts/setup_development.py"
+      type: "file"
+      description: "New developer setup automation"
+      status: "pending"
+    - path: "docs/deployment/setup-guide.md"
+      type: "documentation"
+      description: "Step-by-step setup guide for new developers"
+      status: "pending"
+  
+  notes: |
+    This will dramatically improve the new developer experience and reduce setup failures.
+    Include comprehensive troubleshooting section for common issues.
+
+- id: "DEL-008"
+  title: "Update deployment documentation to match implementation"
+  status: "pending"
+  priority: "high"
+  
+  created_date: "2025-07-14T18:32:19-07:00"
+  start_date: null
+  completion_date: null
+  
+  estimated_minutes: 240
+  actual_minutes: 0
+  
+  description: |
+    Completely rewrite deployment documentation to accurately reflect working implementation:
+    - Remove all Docker/Kubernetes references (Phase 3 features)
+    - Document actual npm script workflow
+    - Add comprehensive environment setup guide
+    - Include API key setup instructions
+    - Add troubleshooting section for common issues
+    - Create quick-start guide that actually works
+  
+  dependencies: ["DEL-005", "DEL-006", "DEL-007"]
+  
+  test_requirements:
+    unit_tests:
+      - description: "Test documentation examples and code snippets"
+        files: ["docs/tests/test_documentation_examples.py"]
+        coverage_target: "100%"
+    integration_tests:
+      - description: "Test complete setup flow following documentation"
+        files: ["docs/tests/test_documentation_flow.py"]
+        scope: "Fresh environment following docs exactly"
+      - description: "Test all documented commands and scripts"
+        files: ["docs/tests/test_documented_commands.py"]
+        scope: "Every command mentioned in documentation"
+    performance_tests:
+      - description: "Test setup time following documentation"
+        files: ["docs/tests/test_setup_time.py"]
+        requirements: "< 5 minutes for new developer setup"
+    security_tests:
+      - description: "Test documentation security recommendations"
+        files: ["docs/tests/test_documentation_security.py"]
+        scope: "API key handling and secret management"
+  
+  tags: ["documentation", "deployment", "developer-experience"]
+  
+  deliverables:
+    - path: "docs/deployment/guide.md"
+      type: "documentation"
+      description: "Completely rewritten deployment guide"
+      status: "pending"
+    - path: "docs/deployment/quick-start.md"
+      type: "documentation"
+      description: "5-minute quick start guide"
+      status: "pending"
+    - path: "docs/deployment/troubleshooting.md"
+      type: "documentation"
+      description: "Comprehensive troubleshooting guide"
+      status: "pending"
+    - path: "README.md"
+      type: "documentation"
+      description: "Updated with accurate setup instructions"
+      status: "pending"
+  
+  notes: |
+    Critical to align documentation with reality to eliminate confusion.
+    Must test every instruction by following it exactly in a fresh environment.
+
+# =============================================================================
+# PHASE 2: DOGFOODING ENHANCEMENTS (Days 8-12)
+# Priority: HIGH - Improves dogfooding workflow and data management
+# =============================================================================
+
+- id: "DEL-009"
+  title: "Implement database management for dogfooding"
+  status: "pending"
+  priority: "high"
+  
+  created_date: "2025-07-14T18:32:19-07:00"
+  start_date: null
+  completion_date: null
+  
+  estimated_minutes: 360
+  actual_minutes: 0
+  
+  description: |
+    Create robust database management system to support safe dogfooding:
+    - Database backup and restore scripts
+    - Environment-specific data seeding
+    - Data migration between environments
+    - Database reset and cleanup utilities
+    - Automated backup scheduling
+    - Data integrity validation
+  
+  dependencies: ["DEL-005", "DEL-006"]
+  
+  test_requirements:
+    unit_tests:
+      - description: "Test database backup functionality"
+        files: ["scripts/tests/test_database_backup.py"]
+        coverage_target: "100%"
+      - description: "Test database restore functionality"
+        files: ["scripts/tests/test_database_restore.py"]
+        coverage_target: "100%"
+      - description: "Test data seeding scripts"
+        files: ["scripts/tests/test_data_seeding.py"]
+        coverage_target: "100%"
+    integration_tests:
+      - description: "Test complete backup/restore cycle"
+        files: ["scripts/tests/test_backup_restore_integration.py"]
+        scope: "Full data preservation and recovery"
+      - description: "Test data migration between environments"
+        files: ["scripts/tests/test_data_migration.py"]
+        scope: "Dev to staging to production data flow"
+      - description: "Test environment-specific seeding"
+        files: ["scripts/tests/test_environment_seeding.py"]
+        scope: "Different data sets for each environment"
+    performance_tests:
+      - description: "Test backup and restore performance"
+        files: ["scripts/tests/test_database_performance.py"]
+        requirements: "< 30 seconds for typical database operations"
+    security_tests:
+      - description: "Test data security in backup operations"
+        files: ["scripts/tests/test_database_security.py"]
+        scope: "Backup encryption and access control"
+  
+  tags: ["database", "dogfooding", "data-management"]
+  
+  deliverables:
+    - path: "scripts/database_manager.py"
+      type: "file"
+      description: "Comprehensive database management class"
+      status: "pending"
+    - path: "scripts/backup_database.py"
+      type: "file"
+      description: "Database backup automation script"
+      status: "pending"
+    - path: "scripts/restore_database.py"
+      type: "file"
+      description: "Database restore automation script"
+      status: "pending"
+    - path: "scripts/seed_dev_data.py"
+      type: "file"
+      description: "Development environment data seeding"
+      status: "pending"
+    - path: "scripts/seed_dogfooding_data.py"
+      type: "file"
+      description: "Realistic dogfooding data setup"
+      status: "pending"
+  
+  notes: |
+    Critical for safe dogfooding - must be able to separate real projects from test data.
+    Include automated backup scheduling for staging environment.
+
+- id: "DEL-010"
+  title: "Add Alembic migration system"
+  status: "pending"
+  priority: "medium"
+  
+  created_date: "2025-07-14T18:32:19-07:00"
+  start_date: null
+  completion_date: null
+  
+  estimated_minutes: 240
+  actual_minutes: 0
+  
+  description: |
+    Implement proper database migration system using Alembic:
+    - Initialize Alembic configuration
+    - Create initial migration from current schema
+    - Add migration scripts for environment setup
+    - Integrate migrations into startup process
+    - Add migration validation and rollback capabilities
+  
+  dependencies: ["DEL-006", "DEL-009"]
+  
+  test_requirements:
+    unit_tests:
+      - description: "Test Alembic configuration"
+        files: ["backend/tests/test_alembic_config.py"]
+        coverage_target: "100%"
+      - description: "Test migration script generation"
+        files: ["backend/tests/test_migration_generation.py"]
+        coverage_target: "100%"
+    integration_tests:
+      - description: "Test migration upgrade and downgrade"
+        files: ["backend/tests/test_migration_integration.py"]
+        scope: "Complete migration lifecycle"
+      - description: "Test migration with existing data"
+        files: ["backend/tests/test_migration_data_safety.py"]
+        scope: "Data preservation during schema changes"
+    performance_tests:
+      - description: "Test migration performance"
+        files: ["backend/tests/test_migration_performance.py"]
+        requirements: "< 10 seconds for typical migrations"
+    security_tests:
+      - description: "Test migration security"
+        files: ["backend/tests/test_migration_security.py"]
+        scope: "No data exposure during migrations"
+  
+  tags: ["database", "migrations", "schema"]
+  
+  deliverables:
+    - path: "backend/migrations/"
+      type: "file"
+      description: "Alembic migration directory structure"
+      status: "pending"
+    - path: "backend/alembic.ini"
+      type: "file"
+      description: "Alembic configuration file"
+      status: "pending"
+    - path: "backend/migrations/versions/001_initial_schema.py"
+      type: "file"
+      description: "Initial migration from current schema"
+      status: "pending"
+    - path: "scripts/run_migrations.py"
+      type: "file"
+      description: "Migration automation script"
+      status: "pending"
+  
+  notes: |
+    Important for long-term maintainability but not critical for immediate deployment fixes.
+    Can be implemented after Phase 1 is stable.
+
+- id: "DEL-011"
+  title: "Create development workflow optimization"
+  status: "pending"
+  priority: "medium"
+  
+  created_date: "2025-07-14T18:32:19-07:00"
+  start_date: null
+  completion_date: null
+  
+  estimated_minutes: 180
+  actual_minutes: 0
+  
+  description: |
+    Optimize development workflow for efficient dogfooding and testing:
+    - Fast environment switching commands
+    - Development data reset utilities
+    - Staging data import/export tools
+    - Integration with VS Code launch configurations
+    - Hot-reload optimization
+    - Development proxy configuration
+  
+  dependencies: ["DEL-005", "DEL-009"]
+  
+  test_requirements:
+    unit_tests:
+      - description: "Test workflow utility functions"
+        files: ["scripts/tests/test_workflow_utils.py"]
+        coverage_target: "100%"
+    integration_tests:
+      - description: "Test complete development workflow"
+        files: ["scripts/tests/test_development_workflow.py"]
+        scope: "Full dev cycle from setup to deployment"
+      - description: "Test environment switching performance"
+        files: ["scripts/tests/test_environment_switching.py"]
+        scope: "Quick switching between dev/staging/prod"
+    performance_tests:
+      - description: "Test workflow operation performance"
+        files: ["scripts/tests/test_workflow_performance.py"]
+        requirements: "< 5 seconds for environment switches"
+    security_tests:
+      - description: "Test workflow security"
+        files: ["scripts/tests/test_workflow_security.py"]
+        scope: "No accidental data exposure between environments"
+  
+  tags: ["workflow", "developer-experience", "optimization"]
+  
+  deliverables:
+    - path: ".vscode/launch.json"
+      type: "file"
+      description: "VS Code debugging configurations"
+      status: "pending"
+    - path: "scripts/workflow_utils.py"
+      type: "file"
+      description: "Development workflow utilities"
+      status: "pending"
+    - path: "docs/development/workflow-guide.md"
+      type: "documentation"
+      description: "Optimized development workflow guide"
+      status: "pending"
+  
+  notes: |
+    Improves day-to-day development experience and makes dogfooding more efficient.
+    Focus on reducing friction in common development tasks.
+
+# =============================================================================
+# PHASE 3: CONTAINERIZATION & PRODUCTION (Days 13-20)
+# Priority: MEDIUM - Production readiness and advanced deployment
+# =============================================================================
+
+- id: "DEL-012"
+  title: "Create Docker containerization system"
+  status: "pending"
+  priority: "medium"
+  
+  created_date: "2025-07-14T18:32:19-07:00"
+  start_date: null
+  completion_date: null
+  
+  estimated_minutes: 480
+  actual_minutes: 0
+  
+  description: |
+    Implement comprehensive Docker containerization system:
+    - Multi-stage Dockerfiles for backend and frontend
+    - Docker Compose configurations for all environments
+    - Volume mounting for development hot-reload
+    - Container health checks and monitoring
+    - Production-optimized container builds
+    - Container security best practices
+  
+  dependencies: ["DEL-005", "DEL-006", "DEL-008"]
+  
+  test_requirements:
+    unit_tests:
+      - description: "Test Dockerfile syntax and structure"
+        files: ["docker/tests/test_dockerfile_validation.py"]
+        coverage_target: "100%"
+      - description: "Test Docker Compose configuration"
+        files: ["docker/tests/test_compose_validation.py"]
+        coverage_target: "100%"
+    integration_tests:
+      - description: "Test container build and startup"
+        files: ["docker/tests/test_container_integration.py"]
+        scope: "All container configurations"
+      - description: "Test multi-environment container deployment"
+        files: ["docker/tests/test_multi_environment_containers.py"]
+        scope: "Dev, staging, and production containers"
+      - description: "Test container networking and service discovery"
+        files: ["docker/tests/test_container_networking.py"]
+        scope: "Inter-container communication"
+    performance_tests:
+      - description: "Test container startup and runtime performance"
+        files: ["docker/tests/test_container_performance.py"]
+        requirements: "< 30 seconds cold start, < 5 seconds warm start"
+    security_tests:
+      - description: "Test container security configuration"
+        files: ["docker/tests/test_container_security.py"]
+        scope: "User permissions, network isolation, secrets handling"
+  
+  tags: ["docker", "containerization", "production"]
+  
+  deliverables:
+    - path: "backend/Dockerfile"
+      type: "file"
+      description: "Multi-stage Dockerfile for backend"
+      status: "pending"
+    - path: "frontend/Dockerfile"
+      type: "file"
+      description: "Multi-stage Dockerfile for frontend"
+      status: "pending"
+    - path: "docker-compose.yml"
+      type: "file"
+      description: "Base Docker Compose configuration"
+      status: "pending"
+    - path: "docker-compose.dev.yml"
+      type: "file"
+      description: "Development Docker Compose overrides"
+      status: "pending"
+    - path: "docker-compose.staging.yml"
+      type: "file"
+      description: "Staging Docker Compose overrides"
+      status: "pending"
+    - path: "docker-compose.prod.yml"
+      type: "file"
+      description: "Production Docker Compose overrides"
+      status: "pending"
+  
+  notes: |
+    This finally provides the containerization that was documented but missing.
+    Must maintain compatibility with npm script workflow from Phase 1.
+
+- id: "DEL-013"
+  title: "Add PostgreSQL support and production database setup"
+  status: "pending"
+  priority: "medium"
+  
+  created_date: "2025-07-14T18:32:19-07:00"
+  start_date: null
+  completion_date: null
+  
+  estimated_minutes: 300
+  actual_minutes: 0
+  
+  description: |
+    Add PostgreSQL support for production deployments:
+    - PostgreSQL driver and configuration
+    - Database URL handling for multiple database types
+    - Production database setup and optimization
+    - Connection pooling and performance tuning
+    - Database monitoring and health checks
+    - Migration compatibility with PostgreSQL
+  
+  dependencies: ["DEL-010", "DEL-012"]
+  
+  test_requirements:
+    unit_tests:
+      - description: "Test PostgreSQL connection configuration"
+        files: ["backend/tests/test_postgresql_config.py"]
+        coverage_target: "100%"
+      - description: "Test database URL parsing and validation"
+        files: ["backend/tests/test_database_url_handling.py"]
+        coverage_target: "100%"
+    integration_tests:
+      - description: "Test PostgreSQL database operations"
+        files: ["backend/tests/test_postgresql_integration.py"]
+        scope: "Full CRUD operations with PostgreSQL"
+      - description: "Test migration compatibility with PostgreSQL"
+        files: ["backend/tests/test_postgresql_migrations.py"]
+        scope: "Alembic migrations on PostgreSQL"
+      - description: "Test connection pooling and performance"
+        files: ["backend/tests/test_postgresql_performance.py"]
+        scope: "Connection management and query performance"
+    performance_tests:
+      - description: "Test PostgreSQL query performance"
+        files: ["backend/tests/test_postgresql_query_performance.py"]
+        requirements: "< 100ms for typical queries"
+    security_tests:
+      - description: "Test PostgreSQL security configuration"
+        files: ["backend/tests/test_postgresql_security.py"]
+        scope: "Connection security, SQL injection prevention"
+  
+  tags: ["database", "postgresql", "production"]
+  
+  deliverables:
+    - path: "backend/requirements.txt"
+      type: "file"
+      description: "Updated with PostgreSQL dependencies"
+      status: "pending"
+    - path: "backend/src/config/database.py"
+      type: "file"
+      description: "Multi-database configuration system"
+      status: "pending"
+    - path: "docker-compose.prod.yml"
+      type: "file"
+      description: "Production PostgreSQL service configuration"
+      status: "pending"
+  
+  notes: |
+    Important for production readiness but SQLite is sufficient for development and dogfooding.
+    Can be implemented as part of production deployment preparation.
+
+- id: "DEL-014"
+  title: "Create comprehensive monitoring and logging system"
+  status: "pending"
+  priority: "low"
+  
+  created_date: "2025-07-14T18:32:19-07:00"
+  start_date: null
+  completion_date: null
+  
+  estimated_minutes: 360
+  actual_minutes: 0
+  
+  description: |
+    Implement production-ready monitoring and logging:
+    - Structured logging with JSON format
+    - Application metrics and monitoring
+    - Health check monitoring and alerting
+    - Performance monitoring and profiling
+    - Error tracking and reporting
+    - Log aggregation and analysis
+    - Dashboard creation for key metrics
+  
+  dependencies: ["DEL-012", "DEL-013"]
+  
+  test_requirements:
+    unit_tests:
+      - description: "Test logging configuration and formatting"
+        files: ["backend/tests/test_logging_system.py"]
+        coverage_target: "100%"
+      - description: "Test metrics collection"
+        files: ["backend/tests/test_metrics_collection.py"]
+        coverage_target: "100%"
+    integration_tests:
+      - description: "Test end-to-end logging pipeline"
+        files: ["backend/tests/test_logging_integration.py"]
+        scope: "Log generation to aggregation"
+      - description: "Test monitoring and alerting system"
+        files: ["backend/tests/test_monitoring_integration.py"]
+        scope: "Health checks to alert generation"
+    performance_tests:
+      - description: "Test logging performance impact"
+        files: ["backend/tests/test_logging_performance.py"]
+        requirements: "< 5% performance overhead from logging"
+    security_tests:
+      - description: "Test logging security and data protection"
+        files: ["backend/tests/test_logging_security.py"]
+        scope: "No sensitive data in logs, secure log transport"
+  
+  tags: ["monitoring", "logging", "observability"]
+  
+  deliverables:
+    - path: "backend/src/monitoring/"
+      type: "file"
+      description: "Monitoring and metrics collection system"
+      status: "pending"
+    - path: "backend/src/logging/"
+      type: "file"
+      description: "Structured logging configuration"
+      status: "pending"
+    - path: "docker/monitoring/"
+      type: "file"
+      description: "Monitoring stack Docker configuration"
+      status: "pending"
+  
+  notes: |
+    Important for production operations but not critical for immediate deployment fixes.
+    Can be implemented after core deployment issues are resolved.
+
+- id: "DEL-015"
+  title: "Create CI/CD pipeline and production deployment automation"
+  status: "pending"
+  priority: "low"
+  
+  created_date: "2025-07-14T18:32:19-07:00"
+  start_date: null
+  completion_date: null
+  
+  estimated_minutes: 420
+  actual_minutes: 0
+  
+  description: |
+    Implement automated CI/CD pipeline for production deployments:
+    - GitHub Actions workflow configuration
+    - Automated testing on all environments
+    - Container building and registry management
+    - Staging deployment automation
+    - Production deployment with rollback capabilities
+    - Security scanning and vulnerability assessment
+    - Performance testing in CI pipeline
+  
+  dependencies: ["DEL-012", "DEL-013", "DEL-014"]
+  
+  test_requirements:
+    unit_tests:
+      - description: "Test CI/CD workflow configuration"
+        files: [".github/tests/test_workflow_validation.py"]
+        coverage_target: "100%"
+    integration_tests:
+      - description: "Test complete CI/CD pipeline"
+        files: [".github/tests/test_pipeline_integration.py"]
+        scope: "Full pipeline from commit to deployment"
+      - description: "Test deployment rollback procedures"
+        files: [".github/tests/test_deployment_rollback.py"]
+        scope: "Automated rollback on deployment failure"
+    performance_tests:
+      - description: "Test CI/CD pipeline performance"
+        files: [".github/tests/test_pipeline_performance.py"]
+        requirements: "< 10 minutes for full pipeline execution"
+    security_tests:
+      - description: "Test CI/CD security and secrets handling"
+        files: [".github/tests/test_pipeline_security.py"]
+        scope: "Secure secrets management, vulnerability scanning"
+  
+  tags: ["ci-cd", "automation", "production"]
+  
+  deliverables:
+    - path: ".github/workflows/ci.yml"
+      type: "file"
+      description: "Continuous integration workflow"
+      status: "pending"
+    - path: ".github/workflows/cd.yml"
+      type: "file"
+      description: "Continuous deployment workflow"
+      status: "pending"
+    - path: "scripts/deploy-production.sh"
+      type: "file"
+      description: "Production deployment automation"
+      status: "pending"
+    - path: "docs/deployment/ci-cd-guide.md"
+      type: "documentation"
+      description: "CI/CD pipeline documentation"
+      status: "pending"
+  
+  notes: |
+    Final piece for complete production readiness.
+    Should be implemented only after all other deployment issues are resolved.
+
+# =============================================================================
+# SUMMARY AND DEPENDENCIES
+# =============================================================================
+
+# Phase 1 (Critical): DEL-003 → DEL-004 → DEL-005 → DEL-006 → DEL-007 → DEL-008
+# Phase 2 (High): DEL-009 → DEL-010 → DEL-011 (depends on Phase 1)
+# Phase 3 (Medium/Low): DEL-012 → DEL-013 → DEL-014 → DEL-015 (depends on Phase 1 & 2)
+
+# Total estimated effort: 3,570 minutes (59.5 hours, ~15 working days)
+# Critical path: Phase 1 must be completed first, then Phase 2 and 3 can overlap
+
+# Expected outcomes:
+# - 90% reduction in deployment failures
+# - One-command setup for each environment  
+# - Reliable dogfooding workflow with data protection
+# - Production-ready deployment pipeline
+# - Comprehensive documentation that matches implementation
