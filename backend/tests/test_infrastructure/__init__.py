@@ -1,0 +1,1 @@
+# Infrastructure tests - health checks, settings, core system functionality

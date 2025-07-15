@@ -4,6 +4,7 @@ This guide provides comprehensive instructions for writing, running, and maintai
 
 ## Table of Contents
 
+- [Test Directory Structure](#test-directory-structure)
 - [Overview](#overview)
 - [Quick Reference](#quick-reference)
 - [Test Structure](#test-structure)
@@ -14,6 +15,18 @@ This guide provides comprehensive instructions for writing, running, and maintai
 - [Running Tests](#running-tests)
 - [Troubleshooting](#troubleshooting)
 - [Best Practices](#best-practices)
+
+## Test Directory Structure
+
+The backend tests are organized into logical directories:
+
+- **`test_agents/`** - AI agent functionality and integrations
+- **`test_api/`** - REST API endpoints, routes, and API integration tests
+- **`test_deployment/`** - Deployment tools, database management, and setup scripts
+- **`test_infrastructure/`** - Core system infrastructure (health checks, settings validation)
+- **`test_schema_models/`** - Database models, migrations, and schema validation
+- **`test_services/`** - Business logic service layer and orchestration
+- **`test_storage/`** - Storage layer implementation and database operations
 
 ## Quick Reference
 
@@ -109,15 +122,31 @@ tests/
 │   ├── test_crud_integration.py      # End-to-end CRUD tests
 │   ├── test_api_performance.py       # Performance and load tests
 │   └── test_api_security.py          # Security validation tests
-├── test_schema_models/                # Data model tests
+├── test_schema_models/                # Database models and migrations
 │   ├── __init__.py
 │   ├── test_model_integration.py     # Cross-model testing
 │   ├── test_patch_models.py          # Patch operation tests
 │   ├── test_project_models.py        # Project model tests
-│   └── test_task_models.py           # Task model tests
-├── test_storage.py                    # Storage layer tests
-├── test_soft_delete_*.py             # Soft delete functionality tests
-└── conftest.py                       # Global test configuration
+│   ├── test_task_models.py           # Task model tests
+│   ├── test_soft_delete_migration.py # Soft delete migration tests
+│   ├── test_soft_delete_models.py    # Soft delete model functionality
+│   └── test_soft_delete_performance.py # Soft delete performance tests
+├── test_deployment/                   # Deployment and database management
+│   ├── test_database_backup.py       # Database backup functionality
+│   ├── test_database_restore.py      # Database restore operations
+│   ├── test_data_seeding.py          # Data seeding for environments
+│   └── test_setup_script.py          # Environment setup automation
+├── test_infrastructure/               # Core system infrastructure
+│   ├── test_health_endpoints.py      # Health check endpoints
+│   └── test_settings_validation.py   # Configuration validation
+├── test_services/                     # Business logic services
+│   ├── test_project_service.py       # Project orchestration
+│   ├── test_task_service.py          # Task management
+│   ├── test_agent_service.py         # Agent coordination
+│   └── test_service_integration.py   # Service layer integration
+└── test_storage/                      # Storage layer implementation
+    ├── test_storage.py               # Core storage operations
+    └── test_storage_cascade.py       # Cascade delete operations
 ```
 
 ## Database Isolation
