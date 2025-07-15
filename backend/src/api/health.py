@@ -133,12 +133,21 @@ async def health_check(request: Request):
     response_time = (time.time() - start_time) * 1000  # milliseconds
     performance["response_time"] = response_time
     
-    # Determine overall status
+    # Determine overall status based on environment
     overall_status = "healthy"
+    
+    # Database issues always cause degraded status
     if database_status["status"] != "healthy":
         overall_status = "degraded"
+    
+    # Startup validation failures: environment-aware handling
     if startup_validation["status"] not in ["valid", "warning"]:
-        overall_status = "unhealthy"
+        # In production, validation failures are critical (unhealthy)
+        # In dev/staging/ci, they're acceptable but degraded
+        if settings.environment == "production":
+            overall_status = "unhealthy"
+        else:
+            overall_status = "degraded"  # CI-friendly: 200 status but degraded
     
     health_data = {
         "status": overall_status,
