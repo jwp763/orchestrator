@@ -892,10 +892,10 @@ python scripts/run_migrations.py current
 - [Database Migration Best Practices](https://www.postgresql.org/docs/current/ddl-alter.html)
 
 ### Project-Specific
-- [DEL-009: Database Management](del-009-database-management.md)
-- [DEL-006: FastAPI Startup Validation](del-006-fastapi-validation.md)
 - [Testing Guide](../testing/backend-guide.md)
 - [Development Setup](../development/setup.md)
+- [Architecture Overview](../architecture/overview.md)
+- [Deployment Guide](../deployment/guide.md)
 
 ---
 

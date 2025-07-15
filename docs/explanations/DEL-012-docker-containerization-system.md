@@ -1374,10 +1374,10 @@ cd docker && python -m pytest tests/
 ## 📚 **Additional Resources**
 
 ### Related Documentation
-- [DEL-005: NPM Script Coordination](del-005-npm-script-coordination.md)
-- [DEL-006: FastAPI Startup Validation](del-006-fastapi-validation.md)
-- [DEL-008: Documentation Update](del-008-documentation-update.md)
-- [DEL-013: PostgreSQL Support](del-013-postgresql-support.md)
+- [DEL-010: Alembic Migration System](DEL-010-alembic-migration-system.md)
+- [DEL-011: Development Workflow Optimization](DEL-011-development-workflow-optimization.md)
+- [Deployment Guide](../deployment/guide.md)
+- [Architecture Overview](../architecture/overview.md)
 
 ### External Resources
 - [Docker Best Practices](https://docs.docker.com/develop/dev-best-practices/)

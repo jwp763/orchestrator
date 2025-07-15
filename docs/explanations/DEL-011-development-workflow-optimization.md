@@ -1678,9 +1678,8 @@ npm run workflow:health
 ## 📚 **Additional Resources**
 
 ### Related Documentation
-- [DEL-005: NPM Script Coordination](del-005-npm-script-coordination.md)
-- [DEL-009: Database Management](del-009-database-management.md)
-- [DEL-010: Alembic Migration System](del-010-alembic-migration-system.md)
+- [DEL-010: Alembic Migration System](DEL-010-alembic-migration-system.md)
+- [DEL-012: Docker Containerization System](DEL-012-docker-containerization-system.md)
 - [Development Setup Guide](../development/setup.md)
 - [Testing Guide](../testing/backend-guide.md)
 
