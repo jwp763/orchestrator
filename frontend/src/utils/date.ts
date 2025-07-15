@@ -31,8 +31,12 @@ export const daysBetween = (startDate: string, endDate: string): number => {
  * @returns True if date is in the past
  */
 export const isPastDate = (dateString: string): boolean => {
-  const date = new Date(dateString + 'T12:00:00'); // Set to noon to avoid timezone issues
+  const date = new Date(dateString);
   const today = new Date();
+  
+  // Set both dates to start of day for accurate comparison
+  date.setHours(0, 0, 0, 0);
   today.setHours(0, 0, 0, 0);
+  
   return date < today;
 };
