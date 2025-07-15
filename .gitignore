@@ -1,6 +1,7 @@
 .databricks
 venv
 .env
+.env.local
 .coverage
 .vscode/
 __pycache__/
