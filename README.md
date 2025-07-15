@@ -14,17 +14,29 @@ A modern AI-powered project planning and task management system that intelligent
 ## 🚀 Quick Start
 
 ### Prerequisites
-- Python 3.9+
-- Node.js 18+
+- Python 3.8+
+- Node.js 16+
 - Git
 
 ### Installation
+
+#### Automated Setup (Recommended)
 
 ```bash
 # Clone repository
 git clone <repository-url>
 cd databricks_orchestrator
 
+# Run automated setup (installs dependencies, creates environment files)
+python scripts/setup_development.py
+
+# Validate environment
+python scripts/validate_environment.py
+```
+
+#### Manual Setup
+
+```bash
 # Install all dependencies
 npm run install:all  # Installs both backend and frontend dependencies
 
@@ -75,8 +87,13 @@ npm run start:prod     # Production without reload
 
 ## 📖 Documentation
 
+### Deployment
+- [Quick Start Guide (5 min)](docs/deployment/quick-start.md) - Get running in 5 minutes
+- [Complete Deployment Guide](docs/deployment/guide.md) - Comprehensive deployment documentation
+- [Troubleshooting Guide](docs/deployment/troubleshooting.md) - Common issues and solutions
+
 ### Development
-- [Detailed Setup Guide](docs/development/setup.md) - Complete setup instructions
+- [Development Setup Guide](docs/deployment/setup-guide.md) - Complete setup instructions
 - [AI Instructions](.ai/ai-instructions.md) - Guidelines for AI assistants
 - [Architecture Overview](docs/architecture/overview.md) - System architecture
 
@@ -127,9 +144,11 @@ databricks_orchestrator/
 ├── docs/                # Documentation
 ├── notebooks/           # Databricks notebooks
 ├── .ai/                # AI configurations
-├── .env.dev            # Development environment config
+├── .env.defaults       # Shared environment defaults  
+├── .env.development    # Development environment config
 ├── .env.staging        # Staging environment config
-└── .env.prod          # Production environment config
+├── .env.production     # Production environment config
+└── .env.local          # Personal API keys (git-ignored)
 ```
 
 ## 🔧 Development
@@ -158,9 +177,10 @@ npm run lint                    # Lint code
 
 ### Making Changes
 
-1. Backend changes auto-reload with `--reload` flag
+1. Backend changes auto-reload with `--reload` flag in development
 2. Frontend has hot module replacement via Vite
-3. See [Development Guide](docs/development/setup.md) for detailed workflow
+3. See [Development Setup Guide](docs/deployment/setup-guide.md) for detailed workflow
+4. Use [Troubleshooting Guide](docs/deployment/troubleshooting.md) for common issues
 
 ## 🤝 Contributing
 

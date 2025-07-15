@@ -214,22 +214,25 @@ Response ← API ← PatchApplication ← PlannerAgent
 - **Testing**: Vitest + React Testing Library
 
 ### Infrastructure
-- **Container**: Docker (future)
+- **Service Coordination**: npm-run-all
+- **Environment Management**: Layered configuration files
 - **CI/CD**: GitHub Actions
 - **Monitoring**: OpenTelemetry (future)
 
 ## Deployment Architecture
 
 ### Development
-- Local SQLite database
+- Multi-environment isolation (dev/staging/prod)
+- Local SQLite databases per environment
 - Hot reload for both frontend and backend
 - Mock external services
+- Automated setup and validation scripts
 
-### Production (Future)
-- PostgreSQL database
-- Redis for caching
-- Load balancer for API
-- CDN for frontend assets
+### Production
+- PostgreSQL database recommended
+- npm script coordination
+- Environment-specific configurations
+- Health monitoring and backup systems
 
 ## Integration Points
 
@@ -261,4 +264,6 @@ Response ← API ← PatchApplication ← PlannerAgent
 - [Testing Documentation](../testing.md)
 - [API Documentation](../api/README.md)
 - [Data Models](../reference/data-models.md)
-- [Development Setup](../development/setup.md)
+- [Development Setup](../deployment/setup-guide.md)
+- [Quick Start Guide](../deployment/quick-start.md)
+- [Deployment Guide](../deployment/guide.md)

@@ -10,7 +10,7 @@ Welcome to the comprehensive documentation for the Databricks Orchestrator proje
 
 | Category | Description | Links |
 |----------|-------------|-------|
-| **Getting Started** | Setup and development workflow | • [Development Setup](development/setup.md)<br>• [Contributing Guide](../CONTRIBUTING.md) |
+| **Getting Started** | Setup and development workflow | • [Quick Start (5 min)](deployment/quick-start.md)<br>• [Development Setup](deployment/setup-guide.md)<br>• [Contributing Guide](../CONTRIBUTING.md) |
 | **Architecture** | System design and patterns | • [Architecture Overview](architecture/overview.md)<br>• [Testing Architecture](testing.md)<br>• [API Design](api/README.md) |
 | **Testing** | Testing strategies and guides | • [Testing Overview](testing/overview.md)<br>• [Backend Testing](testing/backend-guide.md)<br>• [Frontend Testing](testing/frontend-guide.md) |
 | **Reference** | Quick references and lookups | • [Data Models](reference/data-models.md)<br>• [CLI Commands](reference/commands.md)<br>• [Error Codes](reference/error-codes.md) |
@@ -41,7 +41,9 @@ Welcome to the comprehensive documentation for the Databricks Orchestrator proje
 
 ### 🔧 Development
 
-- [Development Setup](development/setup.md) - Complete environment setup
+- [Quick Start Guide (5 min)](deployment/quick-start.md) - Get running fast
+- [Development Setup](deployment/setup-guide.md) - Complete environment setup
+- [Development Workflow](development/setup.md) - Development tools and workflows
 - [AI Instructions](../.ai/ai-instructions.md) - Guidelines for AI-assisted development
 - [Contributing](../CONTRIBUTING.md) - How to contribute to the project
 
@@ -68,7 +70,10 @@ Welcome to the comprehensive documentation for the Databricks Orchestrator proje
 
 ### 🚢 Deployment
 
-- [Deployment Guide](deployment/guide.md) - Production deployment instructions
+- [Quick Start Guide (5 min)](deployment/quick-start.md) - Get running in 5 minutes
+- [Complete Deployment Guide](deployment/guide.md) - Comprehensive deployment instructions
+- [Development Setup Guide](deployment/setup-guide.md) - Development environment setup
+- [Troubleshooting Guide](deployment/troubleshooting.md) - Common issues and solutions
 
 ### 📚 Reference
 

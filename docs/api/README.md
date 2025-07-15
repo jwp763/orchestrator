@@ -8,10 +8,15 @@ The Orchestrator API is a RESTful service built with FastAPI that provides compr
 
 ## Base URL
 
+The API supports multiple environments with different ports:
+
 ```
-Development: http://localhost:8000
-Production: https://api.orchestrator.example.com
+Development: http://localhost:8000    # Start with: npm run start:dev
+Staging:     http://localhost:8001    # Start with: npm run start:staging  
+Production:  http://localhost:8002    # Start with: npm run start:prod
 ```
+
+For external production deployment: `https://api.orchestrator.example.com`
 
 ## Authentication
 
@@ -163,8 +168,9 @@ See [Error Codes Reference](../reference/error-codes.md) for a complete list of 
 ## OpenAPI Specification
 
 The complete OpenAPI specification is available at:
-- Development: http://localhost:8000/openapi.json
-- Interactive Docs: http://localhost:8000/docs
+- Development: http://localhost:8000/openapi.json (Interactive: http://localhost:8000/docs)
+- Staging: http://localhost:8001/openapi.json (Interactive: http://localhost:8001/docs)
+- Production: http://localhost:8002/openapi.json (Interactive: http://localhost:8002/docs)
 
 ## Webhooks (Future)
 
@@ -175,6 +181,7 @@ Planned webhook support for:
 
 ## Related Documentation
 
-- [Development Setup](../development/setup.md)
-- [Testing Guide](../testing/overview.md)
+- [Development Setup](../deployment/setup-guide.md)
+- [Quick Start Guide](../deployment/quick-start.md)
+- [Testing Guide](../testing.md)
 - [Architecture Overview](../architecture/overview.md)
