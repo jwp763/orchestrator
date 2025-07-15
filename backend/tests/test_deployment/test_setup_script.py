@@ -196,11 +196,16 @@ class TestNodeDependenciesInstallation:
     """Test Node.js dependencies installation."""
     
     @patch('subprocess.run')
-    @patch('pathlib.Path.exists')
-    def test_install_node_dependencies_success(self, mock_exists, mock_run):
+    @patch('setup_development.Path')
+    def test_install_node_dependencies_success(self, mock_path_class, mock_run):
         """Test successful Node.js dependencies installation."""
         mock_run.return_value = MagicMock(returncode=0)
-        mock_exists.return_value = True  # Mock package.json files exist
+        
+        # Mock Path instances and their exists() method
+        mock_path_instance = MagicMock()
+        mock_path_instance.exists.return_value = True
+        mock_path_instance.__truediv__ = MagicMock(return_value=mock_path_instance)  # For frontend_dir / "package.json"
+        mock_path_class.return_value = mock_path_instance
         
         result = install_node_dependencies()
         
@@ -212,11 +217,17 @@ class TestNodeDependenciesInstallation:
         assert any("npm" in str(call) and "install" in str(call) for call in calls)
     
     @patch('subprocess.run')
-    @patch('pathlib.Path.exists')
-    def test_install_node_dependencies_failure(self, mock_exists, mock_run):
+    @patch('setup_development.Path')
+    def test_install_node_dependencies_failure(self, mock_path_class, mock_run):
         """Test Node.js dependencies installation failure."""
         from subprocess import CalledProcessError
-        mock_exists.return_value = True  # Mock package.json files exist
+        
+        # Mock Path instances and their exists() method
+        mock_path_instance = MagicMock()
+        mock_path_instance.exists.return_value = True
+        mock_path_instance.__truediv__ = MagicMock(return_value=mock_path_instance)
+        mock_path_class.return_value = mock_path_instance
+        
         mock_run.side_effect = CalledProcessError(1, 'npm')
         
         result = install_node_dependencies()
@@ -224,11 +235,16 @@ class TestNodeDependenciesInstallation:
         assert result is False
     
     @patch('subprocess.run')
-    @patch('pathlib.Path.exists')
-    def test_install_node_dependencies_with_missing_files(self, mock_exists, mock_run):
+    @patch('setup_development.Path')
+    def test_install_node_dependencies_with_missing_files(self, mock_path_class, mock_run):
         """Test Node installation when package.json files don't exist."""
         mock_run.return_value = MagicMock(returncode=0)
-        mock_exists.return_value = False  # Mock package.json files don't exist
+        
+        # Mock Path instances where exists() returns False
+        mock_path_instance = MagicMock()
+        mock_path_instance.exists.return_value = False
+        mock_path_instance.__truediv__ = MagicMock(return_value=mock_path_instance)
+        mock_path_class.return_value = mock_path_instance
         
         result = install_node_dependencies()
         
