@@ -216,6 +216,111 @@ class Settings(BaseSettings):
         # Fall back to default
         return self.default_provider, self.default_model or self.providers.providers[self.default_provider].default
 
+    def validate_required_api_keys(self) -> tuple[bool, list[str]]:
+        """
+        Validate that required API keys are configured.
+        
+        Returns:
+            tuple[bool, list[str]]: (is_valid, missing_keys)
+        """
+        required_keys = ["ANTHROPIC_API_KEY", "OPENAI_API_KEY"]
+        missing_keys = []
+        
+        for key in required_keys:
+            # Check if the corresponding setting is None or empty
+            setting_name = key.lower()
+            value = getattr(self, setting_name, None)
+            if not value:
+                missing_keys.append(key)
+        
+        return len(missing_keys) == 0, missing_keys
+
+    def validate_database_connection(self) -> tuple[bool, Optional[str]]:
+        """
+        Validate database connection.
+        
+        Returns:
+            tuple[bool, Optional[str]]: (is_valid, error_message)
+        """
+        try:
+            import sqlalchemy
+            from pathlib import Path
+            
+            if self.database_url.startswith("sqlite:///"):
+                # SQLite validation
+                db_path = self.database_url.replace("sqlite:///", "")
+                if not os.path.isabs(db_path):
+                    # Relative path - check if parent directory exists
+                    parent_dir = Path(db_path).parent
+                    if not parent_dir.exists():
+                        return False, f"Database directory does not exist: {parent_dir}"
+                
+                # Try to create engine and connect
+                engine = sqlalchemy.create_engine(self.database_url)
+                with engine.connect() as conn:
+                    conn.execute(sqlalchemy.text("SELECT 1"))
+                return True, None
+            else:
+                # PostgreSQL or other database validation
+                engine = sqlalchemy.create_engine(self.database_url)
+                with engine.connect() as conn:
+                    conn.execute(sqlalchemy.text("SELECT 1"))
+                return True, None
+                
+        except Exception as e:
+            return False, f"Database connection failed: {str(e)}"
+
+    def validate_startup_configuration(self) -> Any:
+        """
+        Perform comprehensive startup validation.
+        
+        Returns:
+            ValidationResult: Comprehensive validation results
+        """
+        from dataclasses import dataclass
+        
+        @dataclass
+        class ValidationResult:
+            is_valid: bool
+            errors: list[dict]
+            warnings: list[dict]
+        
+        errors = []
+        warnings = []
+        
+        # Validate API keys
+        api_valid, missing_keys = self.validate_required_api_keys()
+        if not api_valid:
+            for key in missing_keys:
+                errors.append({
+                    "type": "missing_api_key",
+                    "message": f"{key} is required for AI provider functionality",
+                    "action": f"Set {key} in .env.local file"
+                })
+        
+        # Validate database connection
+        db_valid, db_error = self.validate_database_connection()
+        if not db_valid:
+            errors.append({
+                "type": "database_connection",
+                "message": f"Database connection failed: {db_error}",
+                "action": "Check database configuration and ensure database is accessible"
+            })
+        
+        # Add warnings for optional configurations
+        if not self.xai_api_key:
+            warnings.append({
+                "type": "optional_api_key",
+                "message": "XAI_API_KEY is not configured",
+                "action": "Add XAI API key for additional provider support"
+            })
+        
+        return ValidationResult(
+            is_valid=len(errors) == 0,
+            errors=errors,
+            warnings=warnings
+        )
+
 
 @lru_cache()
 def get_settings() -> Settings:
