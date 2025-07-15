@@ -43,12 +43,13 @@
 - ✅ **Documentation**: Comprehensive testing architecture and troubleshooting guides
 - ✅ **Multi-Environment Setup**: Complete dev/staging/prod isolation with automated scripts
 - ✅ **Soft Delete Implementation**: Complete cascading soft delete with 14 comprehensive tests passing
+- ✅ **Deployment Documentation**: Complete deployment guide overhaul with npm script workflow
 
 ### 📋 Task Summary
 
-- **Completed**: 10 tasks (MVP-001, MVP-002, MVP-003a/b, UI-001, UI-002, API-001, API-002, TEST-API-001, FIX-001, UI-007, DEL-001, DEL-002)
+- **Completed**: 11 tasks (MVP-001, MVP-002, MVP-003a/b, UI-001, UI-002, API-001, API-002, TEST-API-001, FIX-001, UI-007, DEL-001, DEL-002, DEL-008)
 - **In Progress**: 0 tasks
-- **Pending**: 15 tasks (prioritized by dependencies and business value)
+- **Pending**: 14 tasks (prioritized by dependencies and business value)
 
 ---
 

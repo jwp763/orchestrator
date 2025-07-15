@@ -1,235 +1,576 @@
 # Deployment Guide
 
-*Last Updated: 2025-01-11*
+*Last Updated: 2025-07-15*
+
+A comprehensive guide for deploying the Orchestrator across development, staging, and production environments using the modern npm script workflow.
 
 ## Table of Contents
 
 - [Overview](#overview)
 - [Prerequisites](#prerequisites)
+- [Environment Architecture](#environment-architecture)
+- [Quick Setup](#quick-setup)
+- [Manual Setup](#manual-setup)
 - [Environment Configuration](#environment-configuration)
-- [Local Development](#local-development)
+- [API Provider Setup](#api-provider-setup)
+- [Database Management](#database-management)
+- [Service Coordination](#service-coordination)
+- [Development Workflow](#development-workflow)
 - [Production Deployment](#production-deployment)
-- [Cloud Deployments](#cloud-deployments)
-- [Kubernetes Deployment](#kubernetes-deployment)
-- [Monitoring & Logging](#monitoring--logging)
-- [Security Hardening](#security-hardening)
+- [Monitoring & Health Checks](#monitoring--health-checks)
 - [Backup & Recovery](#backup--recovery)
-- [Deployment Checklist](#deployment-checklist)
-- [Rollback Procedures](#rollback-procedures)
+- [Security Best Practices](#security-best-practices)
+- [Performance Optimization](#performance-optimization)
+- [Troubleshooting](#troubleshooting)
 
 ## Overview
 
-This guide covers deploying the Databricks Orchestrator to various environments, from local development to production cloud infrastructure.
+The Orchestrator uses a modern npm script-based deployment system with multi-environment isolation. Each environment (development, staging, production) runs independently with separate databases, ports, and configurations.
+
+### Architecture Highlights
+
+- **Service Coordination**: npm-run-all for parallel service management
+- **Environment Isolation**: Separate databases and ports per environment
+- **Configuration Management**: Layered environment files with secret protection
+- **Health Monitoring**: Built-in health checks and validation
+- **Database Management**: Automated backup, restore, and migration support
 
 ## Prerequisites
 
 ### System Requirements
-- Python 3.8+
-- Node.js 16+
-- PostgreSQL 13+ (production)
-- Redis 6+ (optional, for caching)
-- Docker 20+ (for containerized deployment)
 
-### Required Tools
+- **Python 3.8+** with pip
+- **Node.js 16+** with npm
+- **Git** for version control
+- **SQLite 3** (included with Python)
+- **PostgreSQL 13+** (production recommended)
+
+### Development Tools
+
 ```bash
-# Install deployment tools
-pip install ansible fabric
-npm install -g pm2
+# Verify prerequisites
+python --version   # Should be 3.8+
+node --version     # Should be 16+
+git --version      # Any recent version
+sqlite3 --version  # Should be 3.x+
+```
+
+### Required Dependencies
+
+The setup script automatically installs:
+
+**Backend (Python)**:
+- FastAPI, SQLAlchemy, Pydantic
+- AI provider SDKs (OpenAI, Anthropic, etc.)
+- Testing and validation tools
+
+**Frontend (TypeScript)**:
+- React 18, Vite, TypeScript
+- Tailwind CSS, React Testing Library
+
+**Development Tools**:
+- npm-run-all, cross-env, wait-on
+- dotenv-cli for environment management
+
+## Environment Architecture
+
+### Multi-Environment Isolation
+
+The system supports three isolated environments:
+
+| Environment | Backend Port | Frontend Port | Database | Configuration |
+|-------------|--------------|---------------|----------|---------------|
+| **Development** | 8000 | 5174 | `orchestrator_dev.db` | `.env.development` |
+| **Staging** | 8001 | 5175 | `orchestrator_staging.db` | `.env.staging` |
+| **Production** | 8002 | 5176 | `orchestrator_prod.db` | `.env.production` |
+
+### Service Coordination
+
+Each environment runs coordinated services:
+
+```
+┌─────────────────┐    ┌─────────────────┐
+│   Frontend      │    │   Backend       │
+│   React + Vite  │◄──►│   FastAPI       │
+│   Port 5174     │    │   Port 8000     │
+└─────────────────┘    └─────────────────┘
+         │                       │
+         └───────────────────────┘
+                   │
+         ┌─────────────────┐
+         │   Database      │
+         │   SQLite/       │
+         │   PostgreSQL    │
+         └─────────────────┘
+```
+
+## Quick Setup
+
+### Automated Setup (Recommended)
+
+```bash
+# Clone and enter project
+git clone <repository-url>
+cd databricks_orchestrator
+
+# Run automated setup
+python scripts/setup_development.py
+
+# Validate environment
+python scripts/validate_environment.py
+
+# Start development environment
+npm run start:dev
+```
+
+**Success Indicators**:
+- Frontend accessible at http://localhost:5174
+- Backend API docs at http://localhost:8000/api/docs  
+- Health check returns `{"status": "healthy"}` at http://localhost:8000/health
+
+### Setup Options
+
+```bash
+# Interactive setup with prompts
+python scripts/setup_development.py
+
+# Non-interactive setup
+python scripts/setup_development.py --no-interactive
+
+# Setup specific environment
+python scripts/setup_development.py --environment staging
+
+# Skip test verification
+python scripts/setup_development.py --skip-tests
+```
+
+## Manual Setup
+
+### Backend Setup
+
+```bash
+# Create and activate virtual environment
+cd backend
+python -m venv venv
+source venv/bin/activate  # Windows: venv\Scripts\activate
+
+# Install dependencies
+pip install -r requirements.txt
+
+# Verify installation
+python -c "import fastapi; print('FastAPI installed')"
+```
+
+### Frontend Setup
+
+```bash
+# Install dependencies
+cd frontend
+npm install
+
+# Verify installation
+npm run build --dry-run
+```
+
+### Root Dependencies
+
+```bash
+# Install coordination tools
+npm install
+
+# Verify npm scripts
+npm run --silent
 ```
 
 ## Environment Configuration
 
-### Pre-configured Environments
+### Configuration Architecture
 
-The project includes three pre-configured environments with isolated databases and ports:
+The system uses layered configuration files:
 
-| Environment | Backend Port | Frontend Port | Database | Configuration File |
-|-------------|--------------|---------------|-----------|-----------------|
-| Development | 8000 | 5174 | orchestrator_dev.db | .env.dev |
-| Staging | 8001 | 5175 | orchestrator_staging.db | .env.staging |
-| Production | 8002 | 5176 | orchestrator_prod.db | .env.prod |
+```
+.env.defaults       # Shared defaults (committed)
+    ↓ overridden by
+.env.development    # Development settings (committed)  
+    ↓ overridden by
+.env.local         # Personal secrets (git-ignored)
+```
 
-### Environment Variables
+### Environment Files
 
-Each environment has its own configuration file:
-
+#### `.env.defaults` (Shared Settings)
 ```bash
-# .env.dev - Development
-DATABASE_URL=sqlite:///backend/orchestrator_dev.db
+# Application
+APP_NAME=orchestrator
+VERSION=1.0.0
+
+# Logging
+LOG_LEVEL=INFO
+
+# API Settings
+API_HOST=0.0.0.0
+
+# Frontend
+VITE_APP_NAME=Orchestrator
+```
+
+#### `.env.development` (Development)
+```bash
+# Environment
+ENVIRONMENT=development
+DEBUG=true
+
+# Services
 API_PORT=8000
 FRONTEND_PORT=5174
-ENVIRONMENT=development
-BACKUP_ENABLED=false
-DEBUG=true
-LOG_LEVEL=DEBUG
-RELOAD=true
 
-# .env.staging - Staging
-DATABASE_URL=sqlite:///backend/orchestrator_staging.db
+# Database
+DATABASE_URL=sqlite:///orchestrator_dev.db
+
+# Development Features
+RELOAD=true
+HOT_RELOAD=true
+```
+
+#### `.env.staging` (Staging)
+```bash
+# Environment  
+ENVIRONMENT=staging
+DEBUG=false
+
+# Services
 API_PORT=8001
 FRONTEND_PORT=5175
-ENVIRONMENT=staging
-BACKUP_ENABLED=true
-DEBUG=false
-LOG_LEVEL=INFO
-RELOAD=true
 
-# .env.prod - Production
-DATABASE_URL=sqlite:///backend/orchestrator_prod.db
+# Database
+DATABASE_URL=sqlite:///orchestrator_staging.db
+
+# Staging Features
+RELOAD=false
+BACKUP_ENABLED=true
+```
+
+#### `.env.production` (Production)
+```bash
+# Environment
+ENVIRONMENT=production
+DEBUG=false
+
+# Services
 API_PORT=8002
 FRONTEND_PORT=5176
-ENVIRONMENT=production
-BACKUP_ENABLED=true
-DEBUG=false
-LOG_LEVEL=WARNING
+
+# Database (PostgreSQL recommended)
+DATABASE_URL=postgresql://user:password@localhost:5432/orchestrator
+
+# Production Features
 RELOAD=false
+BACKUP_ENABLED=true
+LOG_LEVEL=WARNING
 ```
 
-### Switching to PostgreSQL (Production)
+#### `.env.local` (Secrets)
+```bash
+# AI Provider API Keys (configure at least one)
+ANTHROPIC_API_KEY=sk-ant-your-key-here
+OPENAI_API_KEY=sk-your-openai-key-here
+GEMINI_API_KEY=your-gemini-key-here
+XAI_API_KEY=xai-your-key-here
 
-For production deployments with PostgreSQL:
+# Production Database (if using PostgreSQL)
+DATABASE_URL=postgresql://user:secure_password@host:port/database
+
+# Optional: Override any defaults
+# LOG_LEVEL=DEBUG
+```
+
+### Configuration Loading
+
+Environment variables are loaded in this order:
+1. System environment variables
+2. `.env.local` (highest priority)
+3. `.env.{environment}` 
+4. `.env.defaults` (lowest priority)
+
+## API Provider Setup
+
+### Supported Providers
+
+The system supports multiple AI providers:
+
+- **Anthropic Claude** (recommended)
+- **OpenAI GPT**
+- **Google Gemini**  
+- **xAI Grok**
+
+### API Key Configuration
+
+#### Interactive Setup
+```bash
+# Run setup with API key configuration
+python scripts/setup_development.py
+
+# Follow prompts to configure providers
+```
+
+#### Manual Configuration
+```bash
+# Edit .env.local file
+nano .env.local
+
+# Add your API keys
+ANTHROPIC_API_KEY=sk-ant-your-key-here
+OPENAI_API_KEY=sk-your-openai-key-here
+```
+
+### Getting API Keys
+
+| Provider | URL | Key Format |
+|----------|-----|------------|
+| **Anthropic** | https://console.anthropic.com | `sk-ant-*` |
+| **OpenAI** | https://platform.openai.com | `sk-*` |
+| **Google** | https://makersuite.google.com | Various formats |
+| **xAI** | https://x.ai | `xai-*` |
+
+### Validation
 
 ```bash
-# Update .env.prod
-DATABASE_URL=postgresql://user:pass@host:5432/orchestrator_prod
+# Validate API key configuration
+python scripts/validate_environment.py
+
+# Test specific provider
+python -c "
+from backend.src.config.settings import Settings
+settings = Settings()
+print(f'Anthropic key configured: {bool(settings.anthropic_api_key)}')
+"
 ```
 
-### Configuration Files
+## Database Management
 
-```yaml
-# config/production.yaml
-database:
-  pool_size: 20
-  max_overflow: 10
-  pool_timeout: 30
+### SQLite (Development/Staging)
 
-redis:
-  host: redis.example.com
-  port: 6379
-  db: 0
+#### Database Files
+- Development: `orchestrator_dev.db`
+- Staging: `orchestrator_staging.db`
+- Production: `orchestrator_prod.db`
 
-ai:
-  timeout: 30
-  max_retries: 3
-  
-security:
-  jwt_expiry: 3600
-  refresh_token_expiry: 604800
-```
-
-## Local Development
-
-### Quick Start
-
-#### Using Environment Scripts (Recommended)
+#### Basic Operations
 ```bash
-# Development environment (hot-reload enabled)
-npm run start:dev
+# Check database
+sqlite3 orchestrator_dev.db ".tables"
 
-# Staging environment (production builds)
-npm run start:staging
-
-# Production environment (optimized)
-npm run start:prod
+# Database size
+ls -lh *.db
 ```
 
-#### Manual Setup
-```bash
-# Backend
-cd backend
-python -m venv venv
-source venv/bin/activate
-pip install -r requirements.txt
-export $(cat ../.env.dev | grep -v '^#' | xargs)
-uvicorn src.main:app --reload --port $API_PORT
+### PostgreSQL (Production)
 
-# Frontend (new terminal)
-cd frontend
-npm install
-npm run dev
-```
-
-### Docker Compose
-```yaml
-# docker-compose.yml
-version: '3.8'
-
-services:
-  backend:
-    build: ./backend
-    ports:
-      - "8000:8000"
-    environment:
-      - DATABASE_URL=postgresql://postgres:password@db:5432/orchestrator
-    depends_on:
-      - db
-      
-  frontend:
-    build: ./frontend
-    ports:
-      - "3000:80"
-    environment:
-      - VITE_API_URL=http://backend:8000
-      
-  db:
-    image: postgres:15
-    environment:
-      - POSTGRES_PASSWORD=password
-      - POSTGRES_DB=orchestrator
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
-      
-  redis:
-    image: redis:7-alpine
-    ports:
-      - "6379:6379"
-
-volumes:
-  postgres_data:
-```
-
-## Production Deployment
-
-### 1. Database Setup
-
-#### PostgreSQL Configuration
+#### Setup
 ```sql
--- Create production database
+-- Create database and user
 CREATE DATABASE orchestrator;
 CREATE USER orchestrator_user WITH ENCRYPTED PASSWORD 'secure_password';
 GRANT ALL PRIVILEGES ON DATABASE orchestrator TO orchestrator_user;
 
--- Performance tuning
+-- Performance optimization
 ALTER SYSTEM SET shared_buffers = '256MB';
 ALTER SYSTEM SET effective_cache_size = '1GB';
-ALTER SYSTEM SET maintenance_work_mem = '64MB';
 ```
 
-#### Run Migrations
+#### Configuration
 ```bash
-export DATABASE_URL=postgresql://user:pass@host:5432/orchestrator
+# Update .env.production or .env.local
+DATABASE_URL=postgresql://orchestrator_user:secure_password@localhost:5432/orchestrator
+```
+
+### Database Scripts
+
+```bash
+# Backup production database
+npm run db:backup
+
+# Copy production data to staging
+npm run db:copy-prod-to-staging
+
+# Reset development database
+npm run db:reset-dev
+```
+
+#### Backup Features
+- Timestamped backups in `backups/` directory
+- Automatic retention (keeps last 10 backups)
+- Size reporting and verification
+- Cross-environment data copying
+
+## Service Coordination
+
+### npm Script Architecture
+
+The system uses npm-run-all for service coordination:
+
+```bash
+# Full stack development
+npm run start:dev
+# Runs: backend:dev + frontend:dev in parallel
+
+# Backend only
+npm run backend:dev
+# Loads environment + starts FastAPI with reload
+
+# Frontend only  
+npm run frontend:dev
+# Starts Vite dev server with hot reload
+```
+
+### Service Dependencies
+
+Services start with dependency management:
+
+```bash
+# Health check coordination
+npm run services:health
+# Waits for: backend health + frontend ready
+
+# Custom coordination
+wait-on http://localhost:8000/health && echo "Backend ready"
+wait-on http://localhost:5174 && echo "Frontend ready"
+```
+
+### Process Management
+
+#### Development (Auto-restart)
+```bash
+# Backend: uvicorn with --reload
+# Frontend: Vite with hot module replacement
+npm run start:dev
+```
+
+#### Production (Stable)
+```bash
+# Backend: uvicorn without reload
+# Frontend: Built static files
+npm run start:prod
+```
+
+### Environment Switching
+
+```bash
+# Switch between environments instantly
+npm run start:dev      # Development (8000/5174)
+npm run start:staging  # Staging (8001/5175)  
+npm run start:prod     # Production (8002/5176)
+
+# Run multiple environments simultaneously
+npm run start:dev &
+npm run start:staging &
+# Each uses different ports and databases
+```
+
+## Development Workflow
+
+### Daily Development
+
+```bash
+# Start development environment
+npm run start:dev
+
+# In separate terminals:
+# Run tests continuously
+npm run test:all
+
+# Code quality checks
+npm run lint:all
+
+# Database operations
+npm run db:reset-dev  # Reset dev database
+```
+
+### Code Quality
+
+```bash
+# Backend linting and formatting
+cd backend
+black .                # Format Python code
+mypy .                 # Type checking
+pytest --cov=src       # Tests with coverage
+
+# Frontend linting and formatting  
+cd frontend
+npm run lint:fix       # ESLint fixes
+npm run format         # Prettier formatting
+npm test               # Vitest tests
+```
+
+### Testing
+
+```bash
+# Run all tests
+npm run test:all
+
+# Individual test suites
+npm run test:backend   # Python tests
+npm run test:frontend  # TypeScript tests
+
+# With coverage
+cd backend && pytest --cov=src --cov-report=html
+cd frontend && npm run test:coverage
+```
+
+## Production Deployment
+
+### Production Environment Setup
+
+#### Prerequisites
+- PostgreSQL database server
+- Reverse proxy (nginx recommended)
+- SSL certificates
+- Process supervisor (systemd recommended)
+
+#### Environment Configuration
+```bash
+# Create production environment file
+cp .env.example .env.production
+
+# Edit production settings
+nano .env.production
+
+# Configure production database
+DATABASE_URL=postgresql://user:password@host:5432/orchestrator
+ENVIRONMENT=production
+DEBUG=false
+```
+
+#### Database Setup
+```bash
+# Run production database migrations
+export DATABASE_URL=postgresql://user:password@host:5432/orchestrator
+cd backend
 alembic upgrade head
 ```
 
-### 2. Backend Deployment
+### Production Deployment Process
 
-#### Using Gunicorn
+#### 1. Build Frontend
 ```bash
-# Install production dependencies
-pip install gunicorn uvloop httptools
-
-# Run with Gunicorn
-gunicorn src.main:app \
-  --workers 4 \
-  --worker-class uvicorn.workers.UvicornWorker \
-  --bind 0.0.0.0:8000 \
-  --log-level info \
-  --access-logfile - \
-  --error-logfile - \
-  --preload
+cd frontend
+npm run build
+# Creates optimized build in dist/
 ```
 
-#### Systemd Service
+#### 2. Configure Backend
+```bash
+# Install production dependencies
+cd backend
+pip install gunicorn uvloop httptools
+
+# Test production server
+gunicorn src.main:app --workers 4 --worker-class uvicorn.workers.UvicornWorker
+```
+
+#### 3. Process Management
+
+##### Systemd Service
 ```ini
 # /etc/systemd/system/orchestrator-backend.service
 [Unit]
@@ -242,29 +583,20 @@ User=orchestrator
 Group=orchestrator
 WorkingDirectory=/opt/orchestrator/backend
 Environment="PATH=/opt/orchestrator/venv/bin"
-EnvironmentFile=/opt/orchestrator/.env.prod
+EnvironmentFile=/opt/orchestrator/.env.production
 ExecStart=/opt/orchestrator/venv/bin/gunicorn src.main:app \
   --workers 4 \
   --worker-class uvicorn.workers.UvicornWorker \
-  --bind unix:/tmp/orchestrator.sock \
-  --log-level info
+  --bind unix:/tmp/orchestrator.sock
 Restart=always
 
 [Install]
 WantedBy=multi-user.target
 ```
 
-### 3. Frontend Deployment
+#### 4. Reverse Proxy
 
-#### Build for Production
-```bash
-cd frontend
-npm run build
-
-# Output in dist/ directory
-```
-
-#### Nginx Configuration
+##### Nginx Configuration
 ```nginx
 # /etc/nginx/sites-available/orchestrator
 server {
@@ -280,7 +612,7 @@ server {
     ssl_certificate /etc/ssl/certs/orchestrator.crt;
     ssl_certificate_key /etc/ssl/private/orchestrator.key;
     
-    # Frontend
+    # Frontend static files
     location / {
         root /opt/orchestrator/frontend/dist;
         try_files $uri $uri/ /index.html;
@@ -292,524 +624,403 @@ server {
         }
     }
     
-    # API proxy
+    # Backend API
     location /api {
         proxy_pass http://unix:/tmp/orchestrator.sock;
         proxy_http_version 1.1;
-        proxy_set_header Upgrade $http_upgrade;
-        proxy_set_header Connection 'upgrade';
         proxy_set_header Host $host;
         proxy_set_header X-Real-IP $remote_addr;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
         proxy_set_header X-Forwarded-Proto $scheme;
         
-        # Timeouts for long-running AI requests
+        # AI request timeouts
         proxy_read_timeout 300s;
         proxy_connect_timeout 75s;
     }
     
-    # WebSocket support
-    location /ws {
+    # Health check
+    location /health {
         proxy_pass http://unix:/tmp/orchestrator.sock;
-        proxy_http_version 1.1;
-        proxy_set_header Upgrade $http_upgrade;
-        proxy_set_header Connection "upgrade";
+        access_log off;
     }
 }
 ```
 
-### 4. Process Management
+### Production Startup
 
-#### PM2 Configuration
-```javascript
-// ecosystem.config.js
-module.exports = {
-  apps: [{
-    name: 'orchestrator-backend',
-    script: 'gunicorn',
-    args: 'src.main:app --workers 4 --worker-class uvicorn.workers.UvicornWorker --bind 0.0.0.0:8000',
-    cwd: '/opt/orchestrator/backend',
-    env: {
-      NODE_ENV: 'production',
-      DATABASE_URL: process.env.DATABASE_URL
-    },
-    error_file: '/var/log/orchestrator/error.log',
-    out_file: '/var/log/orchestrator/out.log',
-    log_file: '/var/log/orchestrator/combined.log',
-    time: true
-  }]
-};
-```
-
-## Cloud Deployments
-
-### AWS Deployment
-
-#### Using Elastic Beanstalk
-```yaml
-# .elasticbeanstalk/config.yml
-branch-defaults:
-  main:
-    environment: orchestrator-prod
-    
-global:
-  application_name: orchestrator
-  default_platform: Python 3.9
-  default_region: us-east-1
-  
-option_settings:
-  aws:elasticbeanstalk:application:environment:
-    DATABASE_URL: "postgresql://..."
-    AI_API_KEY: "sk-..."
-```
-
-#### Using ECS
-```json
-// task-definition.json
-{
-  "family": "orchestrator",
-  "taskRoleArn": "arn:aws:iam::123456789012:role/orchestratorTask",
-  "executionRoleArn": "arn:aws:iam::123456789012:role/ecsTaskExecutionRole",
-  "networkMode": "awsvpc",
-  "containerDefinitions": [
-    {
-      "name": "backend",
-      "image": "123456789012.dkr.ecr.us-east-1.amazonaws.com/orchestrator:latest",
-      "portMappings": [
-        {
-          "containerPort": 8000,
-          "protocol": "tcp"
-        }
-      ],
-      "environment": [
-        {
-          "name": "DATABASE_URL",
-          "valueFrom": "arn:aws:secretsmanager:us-east-1:123456789012:secret:orchestrator/db"
-        }
-      ],
-      "logConfiguration": {
-        "logDriver": "awslogs",
-        "options": {
-          "awslogs-group": "/ecs/orchestrator",
-          "awslogs-region": "us-east-1",
-          "awslogs-stream-prefix": "backend"
-        }
-      }
-    }
-  ]
-}
-```
-
-### Google Cloud Platform
-
-#### Using App Engine
-```yaml
-# app.yaml
-runtime: python39
-
-env_variables:
-  DATABASE_URL: "postgresql://..."
-
-automatic_scaling:
-  target_cpu_utilization: 0.65
-  min_instances: 2
-  max_instances: 10
-
-handlers:
-- url: /api/.*
-  script: auto
-  secure: always
-  
-- url: /.*
-  static_files: frontend/dist/index.html
-  upload: frontend/dist/index.html
-  secure: always
-```
-
-#### Using Cloud Run
-```dockerfile
-# Dockerfile.cloudrun
-FROM python:3.9-slim
-
-WORKDIR /app
-
-COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
-
-COPY . .
-
-CMD exec gunicorn --bind :$PORT --workers 1 --threads 8 --timeout 0 src.main:app
-```
-
-### Kubernetes Deployment
-
-#### Deployment Manifest
-```yaml
-# k8s/deployment.yaml
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: orchestrator-backend
-spec:
-  replicas: 3
-  selector:
-    matchLabels:
-      app: orchestrator-backend
-  template:
-    metadata:
-      labels:
-        app: orchestrator-backend
-    spec:
-      containers:
-      - name: backend
-        image: orchestrator/backend:latest
-        ports:
-        - containerPort: 8000
-        env:
-        - name: DATABASE_URL
-          valueFrom:
-            secretKeyRef:
-              name: orchestrator-secrets
-              key: database-url
-        resources:
-          requests:
-            memory: "512Mi"
-            cpu: "500m"
-          limits:
-            memory: "1Gi"
-            cpu: "1000m"
-        livenessProbe:
-          httpGet:
-            path: /health
-            port: 8000
-          initialDelaySeconds: 30
-          periodSeconds: 10
-        readinessProbe:
-          httpGet:
-            path: /health
-            port: 8000
-          initialDelaySeconds: 5
-          periodSeconds: 5
-```
-
-#### Service & Ingress
-```yaml
-# k8s/service.yaml
-apiVersion: v1
-kind: Service
-metadata:
-  name: orchestrator-backend
-spec:
-  selector:
-    app: orchestrator-backend
-  ports:
-  - port: 80
-    targetPort: 8000
-
----
-# k8s/ingress.yaml
-apiVersion: networking.k8s.io/v1
-kind: Ingress
-metadata:
-  name: orchestrator-ingress
-  annotations:
-    kubernetes.io/ingress.class: nginx
-    cert-manager.io/cluster-issuer: letsencrypt-prod
-spec:
-  tls:
-  - hosts:
-    - orchestrator.example.com
-    secretName: orchestrator-tls
-  rules:
-  - host: orchestrator.example.com
-    http:
-      paths:
-      - path: /api
-        pathType: Prefix
-        backend:
-          service:
-            name: orchestrator-backend
-            port:
-              number: 80
-      - path: /
-        pathType: Prefix
-        backend:
-          service:
-            name: orchestrator-frontend
-            port:
-              number: 80
-```
-
-## Monitoring & Logging
-
-### Application Monitoring
-
-#### Prometheus Metrics
-```python
-# src/monitoring.py
-from prometheus_client import Counter, Histogram, Gauge
-
-# Define metrics
-request_count = Counter(
-    'orchestrator_requests_total',
-    'Total requests',
-    ['method', 'endpoint', 'status']
-)
-
-request_duration = Histogram(
-    'orchestrator_request_duration_seconds',
-    'Request duration',
-    ['method', 'endpoint']
-)
-
-active_projects = Gauge(
-    'orchestrator_active_projects',
-    'Number of active projects'
-)
-```
-
-#### Health Checks
-```python
-# src/health.py
-@app.get("/health")
-async def health_check():
-    checks = {
-        "database": await check_database(),
-        "redis": await check_redis(),
-        "ai_provider": await check_ai_provider()
-    }
-    
-    status = "healthy" if all(checks.values()) else "unhealthy"
-    status_code = 200 if status == "healthy" else 503
-    
-    return JSONResponse(
-        status_code=status_code,
-        content={
-            "status": status,
-            "checks": checks,
-            "timestamp": datetime.utcnow().isoformat()
-        }
-    )
-```
-
-### Logging Configuration
-
-#### Structured Logging
-```python
-# src/logging_config.py
-import structlog
-
-structlog.configure(
-    processors=[
-        structlog.stdlib.filter_by_level,
-        structlog.stdlib.add_logger_name,
-        structlog.stdlib.add_log_level,
-        structlog.stdlib.render_to_log_kwargs,
-        structlog.processors.TimeStamper(fmt="iso"),
-        structlog.processors.StackInfoRenderer(),
-        structlog.processors.format_exc_info,
-        structlog.processors.UnicodeDecoder(),
-        structlog.processors.JSONRenderer()
-    ],
-    context_class=dict,
-    logger_factory=structlog.stdlib.LoggerFactory(),
-    cache_logger_on_first_use=True,
-)
-```
-
-#### Log Aggregation
-```yaml
-# filebeat.yml
-filebeat.inputs:
-- type: log
-  enabled: true
-  paths:
-    - /var/log/orchestrator/*.log
-  json.keys_under_root: true
-  json.add_error_key: true
-
-output.elasticsearch:
-  hosts: ["elasticsearch:9200"]
-  index: "orchestrator-%{+yyyy.MM.dd}"
-```
-
-## Security Hardening
-
-### SSL/TLS Configuration
 ```bash
-# Generate certificates with Let's Encrypt
-certbot --nginx -d orchestrator.example.com
+# Start backend service
+sudo systemctl start orchestrator-backend
+sudo systemctl enable orchestrator-backend
 
-# Strong SSL configuration
-ssl_protocols TLSv1.2 TLSv1.3;
-ssl_ciphers HIGH:!aNULL:!MD5;
-ssl_prefer_server_ciphers on;
+# Verify backend health
+curl http://localhost/health
+
+# Start nginx
+sudo systemctl start nginx
+sudo systemctl enable nginx
+
+# Verify full stack
+curl https://orchestrator.example.com/health
 ```
 
-### Security Headers
-```nginx
-# Security headers
-add_header X-Frame-Options "SAMEORIGIN" always;
-add_header X-Content-Type-Options "nosniff" always;
-add_header X-XSS-Protection "1; mode=block" always;
-add_header Referrer-Policy "no-referrer-when-downgrade" always;
-add_header Content-Security-Policy "default-src 'self' https:; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline';" always;
+## Monitoring & Health Checks
+
+### Health Check Endpoints
+
+#### Backend Health
+```bash
+# Basic health check
+curl http://localhost:8000/health
+
+# Response:
+{
+  "status": "healthy",
+  "timestamp": "2025-07-15T06:42:05Z",
+  "checks": {
+    "database": true,
+    "ai_providers": true
+  }
+}
 ```
 
-### API Rate Limiting
-```python
-# src/middleware/rate_limit.py
-from slowapi import Limiter
-from slowapi.util import get_remote_address
+#### Detailed Health
+```bash
+# Detailed health information
+curl http://localhost:8000/health?detailed=true
 
-limiter = Limiter(key_func=get_remote_address)
+# Response includes:
+# - Database connection status
+# - AI provider connectivity
+# - System resource usage
+# - Service uptime
+```
 
-@app.post("/api/planner/generate")
-@limiter.limit("10/minute")
-async def generate_plan(request: Request):
-    # Implementation
+### Service Monitoring
+
+#### Health Check Scripts
+```bash
+# Check all services
+npm run services:health
+
+# Individual service checks
+wait-on http://localhost:8000/health
+wait-on http://localhost:5174
+```
+
+#### Monitoring Commands
+```bash
+# Service status
+ps aux | grep -E "(uvicorn|node)"
+
+# Port usage
+netstat -tlnp | grep -E "(8000|5174)"
+
+# Log monitoring
+tail -f backend/logs/app.log
+```
+
+### Performance Monitoring
+
+#### Backend Metrics
+```bash
+# Request stats
+curl http://localhost:8000/metrics
+
+# Database performance
+sqlite3 orchestrator_dev.db ".stats"
+
+# Memory usage
+ps -o pid,vsz,rss,comm -p $(pgrep uvicorn)
 ```
 
 ## Backup & Recovery
 
-### Automated Backup Scripts
+### Automated Backup System
 
-The project includes built-in backup scripts:
+The built-in backup system provides:
 
 ```bash
 # Backup production database
 npm run db:backup
-# Or: ./scripts/backup-prod.sh
 
 # Features:
-# - Timestamped backups in backups/ directory
-# - Automatic retention (keeps last 10 backups)
-# - Size reporting
-# - Backup verification
+# - Timestamped backups: backups/orchestrator_prod_backup_20250715_064205.db
+# - Automatic retention (keeps last 10)
+# - Size reporting and verification
+# - Backup integrity checking
 ```
 
-### Database Backups
+### Backup Scripts
 
-#### SQLite Backup (Default)
+#### Production Backup
 ```bash
 #!/bin/bash
-# Built into ./scripts/backup-prod.sh
+# ./scripts/backup-prod.sh
+
 TIMESTAMP=$(date +"%Y%m%d_%H%M%S")
-BACKUP_FILE="backups/orchestrator_prod_backup_${TIMESTAMP}.db"
-cp backend/orchestrator_prod.db "$BACKUP_FILE"
+BACKUP_DIR="backups"
+SOURCE_DB="backend/orchestrator_prod.db"
+BACKUP_FILE="${BACKUP_DIR}/orchestrator_prod_backup_${TIMESTAMP}.db"
+
+# Create backup directory
+mkdir -p "$BACKUP_DIR"
+
+# Create backup
+cp "$SOURCE_DB" "$BACKUP_FILE"
+
+# Verify backup
+sqlite3 "$BACKUP_FILE" "PRAGMA integrity_check;"
+
+# Report
+echo "Backup created: $BACKUP_FILE"
+ls -lh "$BACKUP_FILE"
 ```
 
-#### PostgreSQL Backup
-```bash
-#!/bin/bash
-# backup-postgres.sh
-TIMESTAMP=$(date +%Y%m%d_%H%M%S)
-BACKUP_DIR="/backups"
-
-# PostgreSQL backup
-pg_dump $DATABASE_URL > $BACKUP_DIR/orchestrator_$TIMESTAMP.sql
-
-# Compress and encrypt
-gzip $BACKUP_DIR/orchestrator_$TIMESTAMP.sql
-gpg --encrypt --recipient backup@example.com $BACKUP_DIR/orchestrator_$TIMESTAMP.sql.gz
-
-# Upload to S3
-aws s3 cp $BACKUP_DIR/orchestrator_$TIMESTAMP.sql.gz.gpg s3://orchestrator-backups/
-
-# Cleanup old backups
-find $BACKUP_DIR -name "*.sql.gz.gpg" -mtime +7 -delete
-```
-
-### Environment Management
+### Environment Data Management
 
 ```bash
-# Copy production to staging for testing
+# Copy production to staging
 npm run db:copy-prod-to-staging
 
-# Reset development database
+# Reset development database  
 npm run db:reset-dev
+
+# Manual backup
+cp orchestrator_prod.db "backup_$(date +%Y%m%d).db"
 ```
 
 ### Disaster Recovery
-```yaml
-# disaster-recovery.yaml
-recovery_objectives:
-  rto: 4 hours  # Recovery Time Objective
-  rpo: 1 hour   # Recovery Point Objective
 
-backup_strategy:
-  database:
-    frequency: hourly
-    retention: 7 days
-    location: 
-      - primary: s3://orchestrator-backups
-      - secondary: glacier://orchestrator-archives
-  
-  files:
-    frequency: daily
-    retention: 30 days
-    
-failover_procedure:
-  - promote_read_replica
-  - update_dns_records
-  - verify_application_health
-  - notify_stakeholders
-```
+#### Recovery Procedure
+1. **Identify backup**: List available backups
+2. **Stop services**: Stop all running services
+3. **Restore database**: Copy backup to production location
+4. **Verify integrity**: Check database integrity
+5. **Restart services**: Start services and verify
+6. **Health check**: Confirm full system health
 
-## Deployment Checklist
-
-### Pre-deployment
-- [ ] All tests passing
-- [ ] Security scan completed
-- [ ] Environment variables configured
-- [ ] Database migrations ready
-- [ ] SSL certificates valid
-- [ ] Backup strategy in place
-
-### Deployment Steps
-- [ ] Create database backup
-- [ ] Deploy backend changes
-- [ ] Run database migrations
-- [ ] Deploy frontend changes
-- [ ] Clear caches
-- [ ] Verify health checks
-- [ ] Update documentation
-
-### Post-deployment
-- [ ] Monitor error rates
-- [ ] Check performance metrics
-- [ ] Verify AI integrations
-- [ ] Test critical paths
-- [ ] Update status page
-- [ ] Notify team
-
-## Rollback Procedures
-
-### Quick Rollback
 ```bash
-# Backend rollback
-kubectl rollout undo deployment/orchestrator-backend
-
-# Database rollback
-alembic downgrade -1
-
-# Frontend rollback
-aws s3 sync s3://orchestrator-frontend-previous/ s3://orchestrator-frontend-current/ --delete
+# Recovery example
+sudo systemctl stop orchestrator-backend
+cp backups/orchestrator_prod_backup_20250715_064205.db orchestrator_prod.db
+sqlite3 orchestrator_prod.db "PRAGMA integrity_check;"
+sudo systemctl start orchestrator-backend
+curl http://localhost/health
 ```
 
-### Full Rollback Plan
-1. Stop incoming traffic
-2. Restore database from backup
-3. Deploy previous backend version
-4. Deploy previous frontend version
-5. Clear all caches
-6. Verify system health
-7. Resume traffic
-8. Incident post-mortem
+## Security Best Practices
+
+### API Key Security
+
+#### Storage
+- Store keys in `.env.local` (git-ignored)
+- Never commit API keys to version control
+- Use environment-specific keys
+- Rotate keys regularly
+
+#### Validation
+```bash
+# Validate key configuration
+python scripts/validate_environment.py
+
+# Check for exposed secrets
+git log --all -p | grep -i "api.*key"  # Should find nothing
+```
+
+### Environment Security
+
+#### File Permissions
+```bash
+# Secure environment files
+chmod 600 .env.local
+chmod 644 .env.development .env.staging .env.production
+```
+
+#### Secret Management
+```bash
+# Check git ignore
+cat .gitignore | grep -E "\.env\.local"
+
+# Verify no secrets in git
+git ls-files | xargs grep -l "sk-" || echo "No secrets found"
+```
+
+### Network Security
+
+#### Firewall Configuration
+```bash
+# Allow only necessary ports
+sudo ufw allow 22    # SSH
+sudo ufw allow 80    # HTTP
+sudo ufw allow 443   # HTTPS
+sudo ufw deny 8000   # Block direct backend access
+```
+
+#### SSL/TLS
+```bash
+# Generate certificates with Let's Encrypt
+certbot --nginx -d orchestrator.example.com
+
+# Verify SSL configuration
+curl -I https://orchestrator.example.com
+```
+
+### Input Validation
+
+The backend implements comprehensive input validation:
+- Request payload validation with Pydantic
+- SQL injection prevention with SQLAlchemy
+- XSS protection with input sanitization
+- Rate limiting on API endpoints
+
+## Performance Optimization
+
+### Backend Performance
+
+#### Database Optimization
+```bash
+# SQLite optimization
+sqlite3 orchestrator_prod.db "PRAGMA optimize;"
+
+# PostgreSQL optimization (production)
+psql -d orchestrator -c "VACUUM ANALYZE;"
+```
+
+#### Service Configuration
+```bash
+# Production backend with optimal workers
+gunicorn src.main:app \
+  --workers 4 \
+  --worker-class uvicorn.workers.UvicornWorker \
+  --max-requests 1000 \
+  --max-requests-jitter 50 \
+  --timeout 300 \
+  --keep-alive 5
+```
+
+### Frontend Performance
+
+#### Build Optimization
+```bash
+cd frontend
+
+# Production build with optimization
+npm run build
+
+# Analyze bundle size
+npm run build -- --analyze
+
+# Serve optimized build
+npm run preview
+```
+
+#### Asset Optimization
+- Code splitting with Vite
+- Tree shaking for unused code
+- Asset minification and compression
+- CDN-ready static assets
+
+### System Performance
+
+#### Resource Monitoring
+```bash
+# Memory usage
+free -h
+
+# CPU usage
+top -p $(pgrep -d',' uvicorn)
+
+# Disk I/O
+iostat -x 1 5
+
+# Network
+netstat -i
+```
+
+#### Performance Benchmarks
+- **Backend startup**: < 3 seconds
+- **Frontend build**: < 30 seconds
+- **API response time**: < 100ms (typical)
+- **Database queries**: < 50ms (SQLite)
+- **Health checks**: < 50ms
+
+## Troubleshooting
+
+### Common Issues
+
+#### Setup Problems
+```bash
+# Python version too old
+python --version  # Must be 3.8+
+# Solution: Install Python 3.8+ from python.org
+
+# Node.js not found
+node --version  # Must be 16+
+# Solution: Install Node.js 16+ from nodejs.org
+
+# Permission errors
+# Solution: Check file permissions and user access
+```
+
+#### Service Issues
+```bash
+# Port already in use
+netstat -tlnp | grep 8000
+# Solution: Kill process or use different environment
+
+# Database locked
+# Solution: Stop all services, remove .db-wal files
+
+# API key validation failed
+python scripts/validate_environment.py
+# Solution: Check .env.local configuration
+```
+
+#### Performance Issues
+```bash
+# High memory usage
+ps aux --sort=-%mem | head
+
+# Slow database queries
+sqlite3 orchestrator_dev.db "PRAGMA stats;"
+
+# Frontend build failures
+cd frontend && npm run build --verbose
+```
+
+### Diagnostic Tools
+
+```bash
+# Environment validation
+python scripts/validate_environment.py --json
+
+# Service health
+curl http://localhost:8000/health?detailed=true
+
+# Log analysis  
+tail -f backend/logs/app.log | grep ERROR
+
+# Network debugging
+curl -v http://localhost:8000/health
+```
+
+### Getting Help
+
+1. **Run validation**: `python scripts/validate_environment.py`
+2. **Check logs**: Review application and error logs
+3. **Health checks**: Verify all services are healthy
+4. **Documentation**: See [Troubleshooting Guide](troubleshooting.md)
+5. **Issues**: Create GitHub issue with validation output
 
 ## Related Documentation
 
-- [Architecture Overview](../architecture/overview.md)
-- [API Documentation](../api/README.md)
-- [Testing Documentation](../testing.md)
-- [Development Setup](../development/setup.md)
+- [Quick Start Guide](quick-start.md) - 5-minute setup guide
+- [Troubleshooting Guide](troubleshooting.md) - Common issues and solutions
+- [Architecture Overview](../architecture/overview.md) - System architecture
+- [API Documentation](../api/README.md) - API reference
+- [Testing Documentation](../testing.md) - Testing strategies
+
+---
+
+*This deployment guide reflects the actual implementation using npm scripts, environment isolation, and validation tooling. No Docker or Kubernetes knowledge required.*
