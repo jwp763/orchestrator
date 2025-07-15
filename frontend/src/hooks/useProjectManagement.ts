@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import type { Project, Task, Change } from '../types';
 import { projectService } from '../services/projectService';
 import { taskService } from '../services/taskService';
+import { applyChanges } from '../utils/patchApplicator';
 import type { 
   ProjectResponse, 
   TaskResponse, 
@@ -327,24 +328,63 @@ export const useProjectManagement = () => {
   // Apply changes from natural language editor
   const handleApplyChanges = useCallback(async (changes: Change[]) => {
     setError(null);
-    for (const change of changes) {
-      try {
-        if (change.type === 'project' && selectedProject) {
-          const updatedProject = { ...selectedProject, [change.field]: change.newValue };
-          await handleUpdateProject(updatedProject);
-        } else if (change.type === 'task' && change.taskId) {
-          const task = tasks.find(t => t.id === change.taskId);
-          if (task) {
-            const updatedTask = { ...task, [change.field]: change.newValue };
-            await handleUpdateTask(updatedTask);
+    setIsLoading(true);
+    
+    try {
+      const result = await applyChanges(changes, {
+        selectedProject,
+        existingTasks: tasks,
+        currentUser: 'user@example.com' // TODO: Get from auth context
+      });
+      
+      if (result.success) {
+        // Update local state with created/updated items
+        if (result.createdProjects.length > 0) {
+          setProjects(prev => [...prev, ...result.createdProjects]);
+          // If we created a project and don't have one selected, select the first one
+          if (!selectedProject && result.createdProjects.length > 0) {
+            setSelectedProject(result.createdProjects[0]);
           }
         }
-      } catch (err) {
-        setError(err instanceof Error ? err.message : 'Failed to apply changes');
-        break;
+        
+        if (result.updatedProjects.length > 0) {
+          setProjects(prev => prev.map(p => {
+            const updated = result.updatedProjects.find(up => up.id === p.id);
+            return updated || p;
+          }));
+          
+          // Update selected project if it was updated
+          const updatedSelectedProject = result.updatedProjects.find(p => p.id === selectedProject?.id);
+          if (updatedSelectedProject) {
+            setSelectedProject(updatedSelectedProject);
+          }
+        }
+        
+        if (result.createdTasks.length > 0) {
+          setTasks(prev => [...prev, ...result.createdTasks]);
+        }
+        
+        if (result.updatedTasks.length > 0) {
+          setTasks(prev => prev.map(t => {
+            const updated = result.updatedTasks.find(ut => ut.id === t.id);
+            return updated || t;
+          }));
+        }
+        
+        // Refresh to ensure consistency
+        await loadProjects();
+        if (selectedProject) {
+          await loadTasks(selectedProject.id);
+        }
+      } else {
+        setError(result.errors.join(', '));
       }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to apply changes');
+    } finally {
+      setIsLoading(false);
     }
-  }, [selectedProject, tasks, handleUpdateProject, handleUpdateTask]);
+  }, [selectedProject, tasks, loadProjects, loadTasks]);
 
   // Toggle project collapse
   const handleToggleProjectCollapse = useCallback(() => {

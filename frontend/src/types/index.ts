@@ -103,7 +103,7 @@ export interface NaturalLanguageEditorProps {
 }
 
 export interface Change {
-  type: 'project' | 'task';
+  type: 'project' | 'task' | 'error';
   taskId?: string;
   field: string;
   oldValue: any;

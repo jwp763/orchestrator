@@ -1,6 +1,7 @@
 """API routes for the PlannerAgent functionality."""
 
 import logging
+import time
 from typing import Dict, Any
 from functools import lru_cache
 
@@ -89,7 +90,13 @@ async def generate_project_plan(request: PlannerRequest, settings = Depends(get_
         )
         
         # Generate the project plan
+        logger.info(f"Starting generation with {request.config.provider}:{model_name}")
+        start_time = time.time()
+        
         result = await agent.get_diff(request.idea, context=request.context)
+        
+        elapsed_time = time.time() - start_time
+        logger.info(f"Generation completed in {elapsed_time:.2f} seconds")
         
         # Extract project metadata
         project_metadata = None

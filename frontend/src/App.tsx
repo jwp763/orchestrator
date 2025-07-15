@@ -6,6 +6,7 @@ import {
   TaskDetails, 
   NaturalLanguageEditor 
 } from './components';
+import { ErrorBoundary } from './components/ErrorBoundary';
 import { useProjectManagement } from './hooks';
 
 export default function App() {
@@ -153,11 +154,24 @@ export default function App() {
       </div>
 
       {/* Natural Language Editor */}
-      <NaturalLanguageEditor
-        selectedProject={selectedProject}
-        selectedTask={selectedTask}
-        onApplyChanges={handleApplyChanges}
-      />
+      <ErrorBoundary
+        fallback={
+          <div className="w-96 bg-gray-50 border-l border-gray-200 h-full p-4">
+            <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+              <h3 className="text-red-800 font-medium">Natural Language Editor Error</h3>
+              <p className="text-red-600 text-sm mt-2">
+                Failed to load the Natural Language Editor. Please refresh the page.
+              </p>
+            </div>
+          </div>
+        }
+      >
+        <NaturalLanguageEditor
+          selectedProject={selectedProject}
+          selectedTask={selectedTask}
+          onApplyChanges={handleApplyChanges}
+        />
+      </ErrorBoundary>
 
       {/* Task Details Modal */}
       {selectedTask && (
