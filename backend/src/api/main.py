@@ -10,7 +10,9 @@ from fastapi.responses import JSONResponse
 from .planner_routes import router as planner_router
 from .project_routes import router as project_router
 from .task_routes import router as task_router
+from .health import router as health_router
 from .models import ErrorResponse
+from ..config.settings import get_settings
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -21,6 +23,54 @@ logger = logging.getLogger(__name__)
 async def lifespan(app: FastAPI):
     """Lifespan context manager for FastAPI application."""
     logger.info("Starting Databricks Orchestrator API...")
+    
+    # Run startup validation
+    settings = get_settings()
+    try:
+        logger.info("Running startup configuration validation...")
+        validation_result = settings.validate_startup_configuration()
+        
+        if not validation_result.is_valid:
+            logger.error("Startup validation failed!")
+            for error in validation_result.errors:
+                logger.error(f"  ERROR: {error.get('message', error)}")
+            
+            # Log warnings but don't fail startup
+            for warning in validation_result.warnings:
+                logger.warning(f"  WARNING: {warning.get('message', warning)}")
+                
+            # In production, we might want to fail startup on critical errors
+            if settings.environment == "production" and validation_result.errors:
+                raise RuntimeError(f"Startup validation failed with {len(validation_result.errors)} errors")
+        else:
+            logger.info(f"✅ Startup validation passed (environment: {settings.environment})")
+            if validation_result.warnings:
+                logger.info(f"  {len(validation_result.warnings)} warnings found")
+            
+        # Log configuration summary
+        logger.info("Configuration summary:")
+        logger.info(f"  Environment: {settings.environment}")
+        logger.info(f"  Database: {settings.database_url[:50]}...")
+        
+        # Count configured API providers
+        api_providers = []
+        if settings.anthropic_api_key:
+            api_providers.append("Anthropic")
+        if settings.openai_api_key:
+            api_providers.append("OpenAI")
+        if settings.gemini_api_key:
+            api_providers.append("Gemini")
+        if settings.xai_api_key:
+            api_providers.append("XAI")
+        
+        logger.info(f"  API Providers: {', '.join(api_providers) if api_providers else 'None configured'}")
+        
+    except Exception as e:
+        logger.error(f"Startup validation failed with exception: {e}")
+        if settings.environment == "production":
+            raise
+        logger.warning("Continuing startup despite validation errors (non-production environment)")
+    
     yield
     logger.info("Shutting down Databricks Orchestrator API...")
 
@@ -48,6 +98,7 @@ def create_app() -> FastAPI:
     )
     
     # Include routers
+    app.include_router(health_router, tags=["health"])  # Health endpoints at root level
     app.include_router(planner_router, prefix="/api/planner", tags=["planner"])
     app.include_router(project_router, prefix="/api", tags=["projects"])
     app.include_router(task_router, prefix="/api", tags=["tasks"])
@@ -66,10 +117,10 @@ def create_app() -> FastAPI:
             ).model_dump()
         )
     
-    # Health check endpoint
-    @app.get("/health")
-    async def health_check():
-        """Health check endpoint."""
+    # Legacy health check endpoint (kept for backwards compatibility)
+    @app.get("/api/health")
+    async def legacy_health_check():
+        """Legacy health check endpoint for backwards compatibility."""
         return {"status": "healthy", "service": "databricks-orchestrator-api"}
     
     return app
