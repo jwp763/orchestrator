@@ -168,7 +168,7 @@ class TestPythonDependenciesInstallation:
         
         # Should install both backend and root dependencies
         calls = mock_run.call_args_list
-        assert any("pip install" in str(call) for call in calls)
+        assert any("-m" in str(call) and "pip" in str(call) and "install" in str(call) for call in calls)
     
     @patch('subprocess.run')
     def test_install_python_dependencies_failure(self, mock_run):
